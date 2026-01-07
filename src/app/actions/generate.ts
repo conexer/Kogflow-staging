@@ -15,6 +15,10 @@ export async function generateImageAction(formData: FormData) {
     const userId = formData.get('userId') as string;
     const aspectRatio = formData.get('aspectRatio') as string;
 
+    if (file) {
+        console.log(`[Generate] Processing file: ${file.name}, Type: ${file.type}, Size: ${file.size}`);
+    }
+
     if (!file) {
         return { error: 'No image provided' };
     }
@@ -122,8 +126,10 @@ export async function generateImageAction(formData: FormData) {
             const taskId = createResult.data?.taskId || createResult.taskId || createResult.data?.id;
 
             if (!taskId) {
-                console.error('[Kie.ai] Full response:', createResult);
-                throw new Error('No taskId returned from Kie.ai');
+                console.error('[Kie.ai] Missing taskId. Full response:', JSON.stringify(createResult, null, 2));
+                // Return usage details or error message if available in the response
+                const msg = createResult.message || createResult.error || JSON.stringify(createResult);
+                throw new Error(`Kie.ai Error: ${msg}`);
             }
 
             // Step 2: Poll for result (with timeout)

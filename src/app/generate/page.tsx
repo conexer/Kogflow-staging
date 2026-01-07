@@ -49,15 +49,48 @@ export default function GeneratePage() {
                 const width = img.naturalWidth;
                 const height = img.naturalHeight;
 
+                // Calculate aspect ratio
                 const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
                 const divisor = gcd(width, height);
-                // Simplify but keep it reasonable. If it's effectively 16:9, it should simplify to that.
-                // For odd dimensions, it might be weird (e.g. 1921:1080). 
-                // Ideally we pass "width:height" if the API accepts it for exact match.
-                // Let's pass the exact simplified ratio.
                 const ratio = `${width / divisor}:${height / divisor}`;
                 console.log(`Detected aspect ratio: ${ratio} (${width}x${height})`);
                 setAspectRatio(ratio);
+
+                // Resize logic
+                const MAX_DIM = 2048;
+                if (width > MAX_DIM || height > MAX_DIM) {
+                    const canvas = document.createElement('canvas');
+                    let newWidth = width;
+                    let newHeight = height;
+
+                    if (width > height) {
+                        newWidth = MAX_DIM;
+                        newHeight = (height / width) * MAX_DIM;
+                    } else {
+                        newHeight = MAX_DIM;
+                        newWidth = (width / height) * MAX_DIM;
+                    }
+
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                                type: "image/jpeg",
+                                lastModified: Date.now(),
+                            });
+                            console.log(`Resized image from ${file.size} to ${resizedFile.size}`);
+                            setImage(resizedFile);
+                            const resizedUrl = URL.createObjectURL(resizedFile);
+                            setPreviewUrl(resizedUrl);
+                        }
+                    }, 'image/jpeg', 0.9);
+                } else {
+                    // No resize needed
+                }
             };
             img.src = url;
         } else {
@@ -119,9 +152,9 @@ export default function GeneratePage() {
                 }
                 toast.success('Staging complete!');
             }
-        } catch (error) {
-            toast.error('Something went wrong. Please try again.');
+        } catch (error: any) {
             console.error(error);
+            toast.error(error.message || 'Something went wrong. Please try again.');
         } finally {
             setIsGenerating(false);
         }
@@ -208,7 +241,7 @@ export default function GeneratePage() {
                                 <input
                                     type="file"
                                     id="imageUpload"
-                                    accept="image/*"
+                                    accept="image/png, image/jpeg, image/webp"
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {
@@ -273,7 +306,7 @@ export default function GeneratePage() {
             </main>
 
             <footer className="py-8 border-t border-border/40 text-center text-sm text-muted-foreground">
-                <p>© 2026 Kogflow. All rights reserved.</p>
+                <p>© 2026 Kogflow. All rights reserved. (v1.1 - Debug)</p>
             </footer>
         </div>
     );
