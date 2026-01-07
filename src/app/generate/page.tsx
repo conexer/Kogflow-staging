@@ -8,7 +8,7 @@ import { ComparisonSlider } from '@/components/comparison-slider';
 import { toast } from 'sonner';
 import { History, ChevronRight, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
-import { generateImageAction } from '@/app/actions/generate';
+import { startGeneration, checkGenerationStatus } from '@/app/actions/generate';
 import { useAuth } from '@/lib/auth-context';
 import { getUserProfile } from '@/app/actions/credits';
 import { Navbar } from '@/components/navbar';
@@ -130,7 +130,8 @@ export default function GeneratePage() {
                 formData.append('style', style);
             }
 
-            const result = await generateImageAction(formData);
+            // Start the generation task
+            const result = await startGeneration(formData);
 
             if (result.error) {
                 if (result.needsUpgrade) {
@@ -143,15 +144,61 @@ export default function GeneratePage() {
                 } else {
                     toast.error(result.error);
                 }
-            } else if (result.success && result.url) {
-                setResultImage(result.url);
-                // Refresh credits if logged in
-                if (user) {
-                    const profile = await getUserProfile(user.id);
-                    setUserProfile(profile);
-                }
-                toast.success('Staging complete!');
+                return;
             }
+
+            if (result.isMock && result.url) {
+                // Mock result (no polling)
+                setResultImage(result.url);
+                toast.success('Staging complete! (Mock)');
+                return;
+            }
+
+            if (result.success && result.taskId) {
+                // Start polling
+                const toastId = toast.loading('Generating your image... (this may take a minute)');
+
+                const poll = async () => {
+                    // Safety timeout (e.g. 2 minutes)
+                    const startTime = Date.now();
+
+                    while (true) {
+                        if (Date.now() - startTime > 120000) {
+                            toast.dismiss(toastId);
+                            throw new Error('Timed out waiting for server.');
+                        }
+
+                        const statusResult = await checkGenerationStatus(result.taskId, {
+                            userId: user?.id,
+                            originalUrl: result.originalUrl,
+                            mode: result.mode,
+                            style: result.style
+                        });
+
+                        if (statusResult.status === 'success' && statusResult.url) {
+                            toast.dismiss(toastId);
+                            setResultImage(statusResult.url);
+
+                            // Refresh credits if logged in
+                            if (user) {
+                                const profile = await getUserProfile(user.id);
+                                setUserProfile(profile);
+                            }
+                            toast.success('Staging complete!');
+                            return;
+                        } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+                            toast.dismiss(toastId);
+                            throw new Error(statusResult.error || 'Generation failed');
+                        }
+
+                        // Wait 2 seconds before next poll
+                        await new Promise(r => setTimeout(r, 2000));
+                    }
+                };
+
+                await poll();
+            }
+
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Something went wrong. Please try again.');
@@ -306,7 +353,7 @@ export default function GeneratePage() {
             </main>
 
             <footer className="py-8 border-t border-border/40 text-center text-sm text-muted-foreground">
-                <p>© 2026 Kogflow. All rights reserved. (v1.1 - Debug)</p>
+                <p>© 2026 Kogflow. All rights reserved. (v1.2 - Async Polling)</p>
             </footer>
         </div>
     );
