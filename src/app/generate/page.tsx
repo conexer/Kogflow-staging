@@ -12,14 +12,19 @@ import { startGeneration, checkGenerationStatus } from '@/app/actions/generate';
 import { useAuth } from '@/lib/auth-context';
 import { getUserProfile } from '@/app/actions/credits';
 import { Navbar } from '@/components/navbar';
+import { EditImageModal as ImageModal } from '@/components/edit-image-modal';
 
 export default function GeneratePage() {
     const { user, signOut } = useAuth();
+    console.log('GeneratePage v2 rendered'); // Force rebuild check
     const router = useRouter();
     const [image, setImage] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [mode, setMode] = useState<StagingMode>('add_furniture');
     const [style, setStyle] = useState<StagingStyle>('scandinavian');
+    const [roomType, setRoomType] = useState<any>('living_room');
+    const [customRoomType, setCustomRoomType] = useState('');
+    const [customStyle, setCustomStyle] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<any>(null);
@@ -120,6 +125,14 @@ export default function GeneratePage() {
             const formData = new FormData();
             formData.append('image', image);
             formData.append('mode', mode);
+
+            // Add Room Type and Custom inputs to FormData
+            if (roomType === 'custom' && customRoomType) {
+                formData.append('roomType', customRoomType);
+            } else {
+                formData.append('roomType', roomType.replace('_', ' '));
+            }
+
             if (user) {
                 formData.append('userId', user.id);
             }
@@ -127,7 +140,14 @@ export default function GeneratePage() {
                 formData.append('aspectRatio', aspectRatio);
             }
             if (mode === 'add_furniture') {
-                formData.append('style', style);
+                // If custom style is present, prefer it or combine? The request implies adding a custom style.
+                // I will send both, or assume custom overrides if sending just one.
+                // Let's send the effective style.
+                if (customStyle) {
+                    formData.append('style', customStyle);
+                } else {
+                    formData.append('style', style);
+                }
             }
 
             // Start the generation task
@@ -154,50 +174,54 @@ export default function GeneratePage() {
                 return;
             }
 
-            if (result.success && result.taskId) {
-                // Start polling
-                const toastId = toast.loading('Generating your image... (this may take a minute)');
-
-                const poll = async () => {
-                    // Safety timeout (e.g. 2 minutes)
-                    const startTime = Date.now();
-
-                    while (true) {
-                        if (Date.now() - startTime > 120000) {
-                            toast.dismiss(toastId);
-                            throw new Error('Timed out waiting for server.');
-                        }
-
-                        const statusResult = await checkGenerationStatus(result.taskId, {
-                            userId: user?.id,
-                            originalUrl: result.originalUrl,
-                            mode: result.mode,
-                            style: result.style
-                        });
-
-                        if (statusResult.status === 'success' && statusResult.url) {
-                            toast.dismiss(toastId);
-                            setResultImage(statusResult.url);
-
-                            // Refresh credits if logged in
-                            if (user) {
-                                const profile = await getUserProfile(user.id);
-                                setUserProfile(profile);
-                            }
-                            toast.success('Staging complete!');
-                            return;
-                        } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
-                            toast.dismiss(toastId);
-                            throw new Error(statusResult.error || 'Generation failed');
-                        }
-
-                        // Wait 2 seconds before next poll
-                        await new Promise(r => setTimeout(r, 2000));
-                    }
-                };
-
-                await poll();
+            if (!result.taskId) {
+                throw new Error('No task ID returned');
             }
+
+            toast.success('Generation started! This usually takes ~15 seconds.');
+
+            // Start Polling
+            const toastId = toast.loading('Designing your room...');
+
+            const poll = async () => {
+                // Safety timeout (e.g. 2 minutes)
+                const startTime = Date.now();
+
+                while (true) {
+                    if (Date.now() - startTime > 120000) {
+                        toast.dismiss(toastId);
+                        throw new Error('Timed out waiting for server.');
+                    }
+
+                    const statusResult = await checkGenerationStatus(result.taskId, {
+                        userId: user?.id,
+                        originalUrl: result.originalUrl,
+                        mode: result.mode,
+                        style: customStyle || result.style // Use the style we actually sent
+                    });
+
+                    if (statusResult.status === 'success' && statusResult.url) {
+                        toast.dismiss(toastId);
+                        setResultImage(statusResult.url);
+
+                        // Refresh credits if logged in
+                        if (user) {
+                            const profile = await getUserProfile(user.id);
+                            setUserProfile(profile);
+                        }
+                        toast.success('Staging complete!');
+                        return;
+                    } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+                        toast.dismiss(toastId);
+                        throw new Error(statusResult.error || 'Generation failed');
+                    }
+
+                    // Wait 2 seconds before next poll
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            };
+
+            await poll();
 
         } catch (error: any) {
             console.error(error);
@@ -207,6 +231,8 @@ export default function GeneratePage() {
         }
     };
 
+    const [modalData, setModalData] = useState<{ resultUrl: string; originalUrl?: string } | null>(null);
+
     return (
         <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20">
             <Navbar />
@@ -215,19 +241,95 @@ export default function GeneratePage() {
                 {/* Hero Section */}
                 <section className="text-center space-y-6 pt-8 pb-4">
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-                        Virtual Staging with a Click.
+                        Virtual Staging in Seconds
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                        Upload your listing, choose a style, and let our AI transform empty rooms into sold homes.
+                        Transform empty listings into sold homes. Upload a photo, choose a style, and let AI handle the rest.
                     </p>
+
+                    {/* Upload Zone (Visible if no image) */}
+                    {!previewUrl && (
+                        <div className="max-w-xl mx-auto mt-8 p-12 bg-background/50 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors animate-in fade-in zoom-in-95 duration-500">
+                            <input
+                                type="file"
+                                id="imageUpload"
+                                accept="image/png, image/jpeg, image/webp"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        handleImageSelect(file);
+                                    }
+                                }}
+                                className="hidden"
+                            />
+                            <label htmlFor="imageUpload" className="cursor-pointer flex flex-col items-center gap-4">
+                                <div className="p-4 bg-primary/10 rounded-full">
+                                    <UploadCloud className="w-10 h-10 text-primary" />
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <h3 className="text-xl font-bold">Upload a photo</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        JPG, PNG, WEBP up to 20MB
+                                    </p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        onClick={() => document.getElementById('imageUpload')?.click()}
+                                        className="flex-1 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl"
+                                    >
+                                        Select Image
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => document.getElementById('cameraUpload')?.click()}
+                                        className="flex-1 px-8 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-all shadow-lg hover:shadow-xl"
+                                    >
+                                        Take Photo
+                                    </button>
+                                </div>
+                            </label>
+                            <input
+                                type="file"
+                                id="cameraUpload"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        handleImageSelect(file);
+                                    }
+                                }}
+                                className="hidden"
+                            />
+                        </div>
+                    )}
                 </section>
 
-                {/* Interface Grid */}
-                <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
-                    {/* Left: Viewport */}
-                    <div className="w-full space-y-6">
-                        {previewUrl ? (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+                    {/* Controls Sidebar */}
+                    <div className="w-full lg:w-[400px] lg:sticky lg:top-24 space-y-6">
+                        <StagingControls
+                            mode={mode}
+                            setMode={setMode}
+                            style={style}
+                            setStyle={setStyle}
+                            roomType={roomType}
+                            setRoomType={setRoomType}
+                            customRoomType={customRoomType}
+                            setCustomRoomType={setCustomRoomType}
+                            customStyle={customStyle}
+                            setCustomStyle={setCustomStyle}
+                            isGenerating={isGenerating}
+                            onGenerate={handleGenerate}
+                            disabled={!image}
+                        />
+                    </div>
+
+                    {/* Right: Viewport (Visible only if image exists) */}
+                    {previewUrl && (
+                        <div className="flex-1 w-full space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                            <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xl font-bold">{resultImage ? 'Result' : 'Preview'}</h2>
                                     <button
@@ -244,10 +346,15 @@ export default function GeneratePage() {
                                 </div>
 
                                 {resultImage ? (
-                                    <ComparisonSlider
-                                        beforeImage={previewUrl}
-                                        afterImage={resultImage}
-                                    />
+                                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted/50 border border-border shadow-xl">
+                                        <img
+                                            src={resultImage}
+                                            alt="Result"
+                                            className="w-full h-full object-contain"
+                                            onClick={() => setModalData({ resultUrl: resultImage!, originalUrl: previewUrl || undefined })}
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted/50 border border-border">
                                         <img
@@ -258,103 +365,92 @@ export default function GeneratePage() {
                                     </div>
                                 )}
 
+                                {/* Main Viewport Watermark Overlay (Immediate Feedback) */}
+                                {resultImage && (!userProfile || (userProfile.subscription_tier !== 'starter' && userProfile.subscription_tier !== 'pro' && userProfile.subscription_tier !== 'agency')) && (
+                                    <div className="absolute inset-0 pointer-events-none flex items-end justify-center pb-[5%] z-10">
+                                        <span className="text-white/40 text-4xl sm:text-6xl font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] select-none">
+                                            KogFlow.com
+                                        </span>
+                                    </div>
+                                )}
+
                                 {resultImage && (
                                     <div className="flex justify-end gap-2">
+                                        <p className="text-xs text-muted-foreground mr-auto self-center">
+                                            Click image to zoom/share
+                                        </p>
                                         <button
-                                            onClick={async () => {
-                                                if (resultImage) {
-                                                    const response = await fetch(resultImage);
-                                                    const blob = await response.blob();
-                                                    const url = window.URL.createObjectURL(blob);
-                                                    const a = document.createElement('a');
-                                                    a.href = url;
-                                                    a.download = `kogflow-${Date.now()}.jpg`;
-                                                    document.body.appendChild(a);
-                                                    a.click();
-                                                    document.body.removeChild(a);
-                                                    window.URL.revokeObjectURL(url);
-                                                    toast.success('Image downloaded!');
-                                                }
-                                            }}
+                                            onClick={() => setModalData({ resultUrl: resultImage!, originalUrl: previewUrl || undefined })}
                                             className="px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-md font-medium text-sm transition-colors"
                                         >
-                                            Download HD
+                                            View & Download
                                         </button>
                                     </div>
                                 )}
                             </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-[600px] bg-background/50 rounded-xl border-2 border-dashed border-muted-foreground/30">
-                                <input
-                                    type="file"
-                                    id="imageUpload"
-                                    accept="image/png, image/jpeg, image/webp"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            handleImageSelect(file);
-                                        }
-                                    }}
-                                    className="hidden"
-                                />
-                                <label htmlFor="imageUpload">
-                                    <button
-                                        type="button"
-                                        onClick={() => document.getElementById('imageUpload')?.click()}
-                                        className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors flex items-center gap-3 shadow-lg hover:shadow-xl"
+                        </div>
+                    )}
+                </div>
+
+                {/* History Section (Moved to Bottom) */}
+                <div className="w-full pt-12 border-t border-border/40">
+                    <div className="max-w-6xl mx-auto space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-2xl font-bold flex items-center gap-3">
+                                <History className="w-6 h-6 text-muted-foreground" />
+                                Recent Generations
+                            </h3>
+                            <Link href="/history" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                                View Full History <ChevronRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {/* Real History Preview */}
+                            {userProfile?.recentGenerations?.length > 0 ? (
+                                userProfile.recentGenerations.slice(0, 6).map((gen: any) => (
+                                    <div
+                                        key={gen.id}
+                                        className="aspect-square rounded-lg bg-muted overflow-hidden relative cursor-pointer hover:ring-2 ring-primary transition-all group shadow-sm hover:shadow-md"
+                                        onClick={() => {
+                                            setModalData({
+                                                resultUrl: gen.result_url,
+                                                originalUrl: gen.original_url
+                                            });
+                                        }}
                                     >
-                                        <UploadCloud className="w-6 h-6" />
-                                        Upload Image for Free
-                                    </button>
-                                </label>
-                                <p className="mt-4 text-sm text-muted-foreground">
-                                    Supports JPG, PNG, WEBP
+                                        <img
+                                            src={gen.result_url}
+                                            alt="Result"
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="col-span-full text-center text-muted-foreground py-12 bg-muted/20 rounded-xl border border-dashed border-border">
+                                    No generations yet. Upload a photo to get started!
                                 </p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right: Controls */}
-                    <div className="lg:sticky lg:top-24 space-y-8">
-                        <StagingControls
-                            mode={mode}
-                            setMode={setMode}
-                            style={style}
-                            setStyle={setStyle}
-                            isGenerating={isGenerating}
-                            onGenerate={handleGenerate}
-                            disabled={!image}
-                        />
-
-                        {/* History Section (Mini) */}
-                        <div className="rounded-xl border border-border bg-card/50 p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-semibold flex items-center gap-2">
-                                    <History className="w-4 h-4 text-muted-foreground" />
-                                    History
-                                </h3>
-                                <Link href="/history" className="text-xs text-primary hover:underline flex items-center">
-                                    View All <ChevronRight className="w-3 h-3" />
-                                </Link>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2">
-                                {/* Placeholder history items */}
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="aspect-square rounded-md bg-muted animate-pulse" />
-                                ))}
-                            </div>
-                            <p className="text-xs text-muted-foreground text-center pt-2">
-                                Your past generations will appear here.
-                            </p>
+                            )}
                         </div>
                     </div>
                 </div>
+
             </main>
 
             <footer className="py-8 border-t border-border/40 text-center text-sm text-muted-foreground">
                 <p>© 2026 Kogflow. All rights reserved. (v1.2 - Async Polling)</p>
             </footer>
-        </div>
+
+            {/* Modal */}
+            {modalData && (
+                <ImageModal
+                    isOpen={!!modalData}
+                    onClose={() => setModalData(null)}
+                    resultUrl={modalData.resultUrl}
+                    originalUrl={modalData.originalUrl}
+                    user={user}
+                />
+            )}
+        </div >
     );
 }

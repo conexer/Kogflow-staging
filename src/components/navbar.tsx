@@ -15,13 +15,19 @@ export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
-        async function loadProfile() {
+        async function loadCredits() {
             if (user) {
                 const profile = await getUserProfile(user.id);
                 setUserProfile(profile);
+            } else {
+                // Fetch guest credits
+                // Dynamic import to avoid server-action issues if needed, or just call direct
+                const { getGuestCredits } = await import('@/app/actions/credits');
+                const credits = await getGuestCredits();
+                setUserProfile({ credits, subscription_tier: 'Guest' });
             }
         }
-        loadProfile();
+        loadCredits();
     }, [user]);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -72,6 +78,10 @@ export function Navbar() {
                         </div>
                     ) : (
                         <div className="flex items-center gap-3 pl-6 border-l border-border/40">
+                            <div className="flex flex-col items-end leading-none mr-2">
+                                <span className="text-xs text-muted-foreground">Guest</span>
+                                <span className="text-sm font-bold text-primary">{userProfile?.credits !== undefined ? userProfile.credits : 2} Free Credits</span>
+                            </div>
                             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                                 Log in
                             </Link>

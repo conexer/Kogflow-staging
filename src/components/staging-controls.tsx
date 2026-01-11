@@ -1,20 +1,35 @@
-'use client';
-
 import { Check, Sofa, Armchair, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export type StagingMode = 'add_furniture' | 'remove_furniture';
 export type StagingStyle = 'scandinavian' | 'minimalist' | 'modern' | 'industrial' | 'coast' | 'boho';
+export type RoomType = 'living_room' | 'bedroom' | 'kitchen' | 'dining_room' | 'bathroom' | 'home_office';
 
 interface StagingControlsProps {
     mode: StagingMode;
     setMode: (mode: StagingMode) => void;
     style: StagingStyle;
     setStyle: (style: StagingStyle) => void;
+    roomType: RoomType | 'custom';
+    setRoomType: (type: RoomType | 'custom') => void;
+    customRoomType: string;
+    setCustomRoomType: (value: string) => void;
+    customStyle: string;
+    setCustomStyle: (value: string) => void;
     isGenerating: boolean;
     onGenerate: () => void;
     disabled?: boolean;
 }
+
+const ROOM_TYPES: { id: RoomType; label: string }[] = [
+    { id: 'living_room', label: 'Living Room' },
+    { id: 'bedroom', label: 'Bedroom' },
+    { id: 'kitchen', label: 'Kitchen' },
+    { id: 'dining_room', label: 'Dining Room' },
+    { id: 'bathroom', label: 'Bathroom' },
+    { id: 'home_office', label: 'Home Office' },
+];
 
 const STYLES: { id: StagingStyle; label: string; color: string }[] = [
     { id: 'scandinavian', label: 'Scandinavian', color: 'bg-emerald-500' },
@@ -30,6 +45,12 @@ export function StagingControls({
     setMode,
     style,
     setStyle,
+    roomType,
+    setRoomType,
+    customRoomType,
+    setCustomRoomType,
+    customStyle,
+    setCustomStyle,
     isGenerating,
     onGenerate,
     disabled
@@ -48,7 +69,7 @@ export function StagingControls({
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
                         )}
-                        disabled={disabled}
+                        disabled={isGenerating}
                     >
                         <Sofa className="w-4 h-4" />
                         Stage Room
@@ -61,11 +82,56 @@ export function StagingControls({
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
                         )}
-                        disabled={disabled}
+                        disabled={isGenerating}
                     >
                         <Armchair className="w-4 h-4" />
                         Clear Room
                     </button>
+                </div>
+            </div>
+
+            {/* Room Type Selection */}
+            <div className="space-y-3">
+                <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Room Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                    {ROOM_TYPES.map((r) => (
+                        <button
+                            key={r.id}
+                            onClick={() => setRoomType(r.id)}
+                            disabled={isGenerating}
+                            className={cn(
+                                "group relative flex items-center justify-between px-3 py-3 border rounded-lg text-left transition-all overflow-hidden",
+                                roomType === r.id
+                                    ? "border-primary bg-primary/5 shadow-[0_0_15px_-3px_var(--color-primary)] text-primary font-medium"
+                                    : "border-border hover:border-primary/50 hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <span className="z-10 text-sm">{r.label}</span>
+                            {roomType === r.id && <Check className="w-4 h-4 text-primary" />}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity bg-primary" />
+                        </button>
+                    ))}
+                </div>
+                {/* Custom Room Input */}
+                <div className={cn(
+                    "transition-all duration-200 relative z-10",
+                    roomType === 'custom' ? "opacity-100" : "opacity-80 hover:opacity-100"
+                )}>
+                    <Input
+                        placeholder="Custom Room (e.g. Game Room)"
+                        value={customRoomType}
+                        onFocus={() => setRoomType('custom')}
+                        onChange={(e) => {
+                            setCustomRoomType(e.target.value);
+                            if (roomType !== 'custom') setRoomType('custom');
+                        }}
+                        disabled={isGenerating}
+                        className={cn(
+                            "bg-background/50",
+                            roomType === 'custom' && "border-primary ring-1 ring-primary/20",
+                            "cursor-text" // Ensure cursor shows
+                        )}
+                    />
                 </div>
             </div>
 
@@ -79,11 +145,14 @@ export function StagingControls({
                     {STYLES.map((s) => (
                         <button
                             key={s.id}
-                            onClick={() => setStyle(s.id)}
-                            disabled={disabled || mode === 'remove_furniture'}
+                            onClick={() => {
+                                setStyle(s.id);
+                                setCustomStyle('');
+                            }}
+                            disabled={isGenerating || mode === 'remove_furniture'}
                             className={cn(
                                 "group relative flex items-center justify-between px-3 py-3 border rounded-lg text-left transition-all overflow-hidden",
-                                style === s.id
+                                style === s.id && !customStyle
                                     ? "border-primary bg-primary/5 shadow-[0_0_15px_-3px_var(--color-primary)]"
                                     : "border-border hover:border-primary/50 hover:bg-accent/50"
                             )}
@@ -97,6 +166,21 @@ export function StagingControls({
                         </button>
                     ))}
                 </div>
+
+                {/* Custom Style Input */}
+                <Input
+                    placeholder="Custom Style (e.g. Mid-century modern)"
+                    value={customStyle}
+                    onFocus={() => {
+                        // Optional: Clear selection? Or just let user type.
+                    }}
+                    onChange={(e) => setCustomStyle(e.target.value)}
+                    disabled={isGenerating || mode === 'remove_furniture'}
+                    className={cn(
+                        "bg-background/50 placeholder:text-muted-foreground/50 relative z-10",
+                        customStyle && "border-primary ring-1 ring-primary/20"
+                    )}
+                />
             </div>
 
             {/* Generate Button */}

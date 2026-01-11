@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { UploadCloud, CheckCircle, Zap, DollarSign, LayoutTemplate, Sparkles } from 'lucide-react';
 import { ComparisonSlider } from '@/components/comparison-slider';
+import { HeroSlideshow } from '@/components/hero-slideshow';
 
 export default function Home() {
   return (
@@ -13,37 +14,30 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col w-full">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-20 text-center space-y-8 max-w-5xl">
+        <section className="container mx-auto px-4 pt-5 pb-20 text-center space-y-8 max-w-5xl">
+          <div className="relative w-full aspect-[16/9] max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-border/50">
+            {/* Slideshow */}
+            <HeroSlideshow />
+          </div>
+
           <div className="space-y-4">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
-              Fully Staged in Seconds with One Click
+              Virtually Staged with One Click
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
               Turn empty cold rooms into warm, inviting homes in seconds with our AI.
             </p>
           </div>
 
-          <div className="flex flex-col items-center gap-2 pt-8">
+          <div className="flex flex-col items-center gap-2 pt-4">
             <Link
               href="/generate"
-              className="px-8 py-6 bg-primary text-primary-foreground rounded-xl font-bold text-xl hover:bg-primary/90 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+              className="px-16 py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xl hover:bg-primary/90 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <UploadCloud className="w-8 h-8" />
               Try It For Free
             </Link>
             <p className="text-sm text-muted-foreground font-medium">No sign up | No credit card</p>
-          </div>
-
-          <div className="pt-12 relative w-full aspect-[16/9] max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-border/50">
-            {/* Placeholder for "media like images, video, just have a image" */}
-            <div className="absolute inset-0 bg-muted flex items-center justify-center">
-              <Image
-                src="/images/hero-after.png"
-                alt="Virtual Staging Demo"
-                fill
-                className="object-cover"
-              />
-            </div>
           </div>
         </section>
 

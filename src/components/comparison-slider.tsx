@@ -9,9 +9,10 @@ interface ComparisonSliderProps {
     beforeImage: string;
     afterImage: string;
     className?: string;
+    aspectRatio?: string; // e.g. "16/9"
 }
 
-export function ComparisonSlider({ beforeImage, afterImage, className }: ComparisonSliderProps) {
+export function ComparisonSlider({ beforeImage, afterImage, className, aspectRatio }: ComparisonSliderProps) {
     const [sliderPosition, setSliderPosition] = useState(50);
     const [isResizing, setIsResizing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,11 @@ export function ComparisonSlider({ beforeImage, afterImage, className }: Compari
 
     return (
         <div
-            className={cn("relative w-full h-[500px] select-none overflow-hidden rounded-xl border border-border bg-muted", className)}
+            className={cn("relative w-full select-none overflow-hidden rounded-xl border border-border bg-muted", className)}
+            style={{
+                height: aspectRatio ? 'auto' : '500px',
+                aspectRatio: aspectRatio ? aspectRatio.replace(':', '/') : undefined
+            }}
             ref={containerRef}
         >
             <div className="absolute inset-0 w-full h-full">
@@ -61,7 +66,7 @@ export function ComparisonSlider({ beforeImage, afterImage, className }: Compari
                     src={afterImage}
                     alt="After"
                     fill
-                    className="object-cover object-center"
+                    className="object-contain object-center"
                     priority
                 />
                 <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 text-xs rounded uppercase font-bold tracking-wider backdrop-blur-md">
@@ -77,7 +82,7 @@ export function ComparisonSlider({ beforeImage, afterImage, className }: Compari
                     src={beforeImage}
                     alt="Before"
                     fill
-                    className="object-cover object-center"
+                    className="object-contain object-center"
                     priority
                 />
                 <div className="absolute top-4 left-4 bg-black/50 text-white px-2 py-1 text-xs rounded uppercase font-bold tracking-wider backdrop-blur-md">

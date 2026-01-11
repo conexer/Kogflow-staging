@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { getGenerationsAction } from '@/app/actions/history';
 
+import { EditImageModal as ImageModal } from '@/components/edit-image-modal';
+
 interface Generation {
     id: string;
     original_url: string;
@@ -16,49 +18,40 @@ interface Generation {
     created_at: string;
 }
 
+import { useAuth } from '@/lib/auth-context';
+
 export default function HistoryPage() {
+    const { user } = useAuth();
     const [generations, setGenerations] = useState<Generation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<Generation | null>(null);
 
     useEffect(() => {
         async function loadHistory() {
-            const { generations: data } = await getGenerationsAction('mock-user-id'); // Replace with real user ID
+            if (!user) {
+                setIsLoading(false);
+                return;
+            }
+            const { generations: data } = await getGenerationsAction(user.id);
             setGenerations(data);
             setIsLoading(false);
         }
         loadHistory();
-    }, []);
+    }, [user]);
 
-    const handleDownload = async (url: string, id: string) => {
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = `kogflow-${id}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(downloadUrl);
-            toast.success('Image downloaded!');
-        } catch (error) {
-            toast.error('Failed to download image');
-        }
-    };
+
 
     return (
         <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20">
             {/* Navbar */}
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
                 <div className="container flex h-16 items-center justify-between px-4">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tighter">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <span>Kogflow</span>
-                    </div>
+                    </Link>
 
                     <nav className="flex items-center gap-6">
                         <Link
@@ -123,15 +116,6 @@ export default function HistoryPage() {
                                             <span className="text-xs text-muted-foreground">
                                                 {new Date(gen.created_at).toLocaleDateString()}
                                             </span>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDownload(gen.result_url, gen.id);
-                                                }}
-                                                className="p-2 hover:bg-muted rounded-md transition-colors"
-                                            >
-                                                <Download className="w-4 h-4" />
-                                            </button>
                                         </div>
                                         <div className="text-sm">
                                             <span className="font-medium capitalize">{gen.mode.replace('_', ' ')}</span>
@@ -145,54 +129,15 @@ export default function HistoryPage() {
                 </div>
             </main>
 
-            {/* Image Detail Modal */}
+            {/* Image Detail Modal - Reusing Shared Component */}
             {selectedImage && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <div
-                        className="relative max-w-6xl w-full max-h-[90vh] rounded-xl overflow-hidden bg-background"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="grid md:grid-cols-2 gap-4 p-6">
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-semibold text-muted-foreground">Original</h3>
-                                <div className="aspect-[4/3] relative rounded-lg overflow-hidden border border-border">
-                                    <Image
-                                        src={selectedImage.original_url}
-                                        alt="Original"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-semibold text-muted-foreground">Generated</h3>
-                                <div className="aspect-[4/3] relative rounded-lg overflow-hidden border border-border">
-                                    <Image
-                                        src={selectedImage.result_url}
-                                        alt="Generated"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="px-6 pb-6 flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                {new Date(selectedImage.created_at).toLocaleString()}
-                            </div>
-                            <button
-                                onClick={() => handleDownload(selectedImage.result_url, selectedImage.id)}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-                            >
-                                <Download className="w-4 h-4" />
-                                Download HD
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ImageModal
+                    isOpen={!!selectedImage}
+                    onClose={() => setSelectedImage(null)}
+                    resultUrl={selectedImage.result_url}
+                    originalUrl={selectedImage.original_url}
+                    user={user}
+                />
             )}
 
             <footer className="py-8 border-t border-border/40 text-center text-sm text-muted-foreground">
