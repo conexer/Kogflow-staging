@@ -31,7 +31,7 @@ export default function Home() {
 
           <div className="flex flex-col items-center gap-2 pt-4">
             <Link
-              href="/generate"
+              href="/dashboard"
               className="px-16 py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xl hover:bg-primary/90 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <UploadCloud className="w-8 h-8" />
@@ -223,7 +223,7 @@ export default function Home() {
 
             <div className="pt-4 flex flex-col items-center gap-2">
               <Link
-                href="/generate"
+                href="/dashboard"
                 className="px-8 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl inline-flex items-center gap-2"
               >
                 <UploadCloud className="w-5 h-5" />
