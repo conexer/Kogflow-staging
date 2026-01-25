@@ -30,21 +30,20 @@ export async function startGeneration(formData: FormData) {
         isGuest = true;
         const cookieStore = await cookies();
         const guestCookie = cookieStore.get('guest_credits');
-        let guestData = { remaining: 2, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
+        let guestData = { remaining: 5, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
 
         if (guestCookie) {
             try {
                 const parsed = JSON.parse(guestCookie.value);
-                if (Date.now() < parsed.resetAt) {
-                    guestData = parsed;
-                }
+                // Force unlimited update even if they have old cookie
+                guestData = { ...parsed, remaining: 5, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
             } catch (e) {
-                // Invalid cookie, reset
+                // Invalid cookie, use default
             }
         }
 
         if (guestData.remaining <= 0) {
-            return { error: 'Daily guest limit reached (2/24h). Log in for more.', needsUpgrade: true };
+            return { error: 'Daily guest limit reached. Log in for more.', needsUpgrade: true };
         }
 
         // Decrement guest credits (optimistic/pre-check, actual decrement happens on completion or we accept the risk of "started but failed" consuming a slot?
@@ -162,9 +161,38 @@ export async function startGeneration(formData: FormData) {
 }
 
 export async function startEditGeneration(formData: FormData) {
-    const imageUrl = formData.get('imageUrl') as string;
+    let imageUrl = formData.get('imageUrl') as string;
+    const imageFile = formData.get('imageFile') as File | null;
     const prompt = formData.get('prompt') as string;
     const userId = formData.get('userId') as string;
+    const projectId = formData.get('projectId') as string;
+
+    // upload file if present
+    if (imageFile) {
+        if (supabaseUrl && supabaseKey) {
+            try {
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                const buffer = await imageFile.arrayBuffer();
+                const filename = `edits/${Date.now()}_original_${imageFile.name.replace(/\s/g, '_')}`;
+
+                const { error } = await supabase.storage
+                    .from('uploads')
+                    .upload(filename, buffer, { contentType: imageFile.type });
+
+                if (error) throw error;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('uploads')
+                    .getPublicUrl(filename);
+
+                imageUrl = publicUrl;
+                console.log(`[Edit] Uploaded local file to: ${imageUrl}`);
+            } catch (err) {
+                console.error("Failed to upload local file for edit:", err);
+                return { error: 'Failed to upload image for processing' };
+            }
+        }
+    }
 
     if (!imageUrl || !prompt) {
         return { error: 'Missing image or prompt' };
@@ -176,21 +204,20 @@ export async function startEditGeneration(formData: FormData) {
         isGuest = true;
         const cookieStore = await cookies();
         const guestCookie = cookieStore.get('guest_credits');
-        let guestData = { remaining: 2, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
+        let guestData = { remaining: 5, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
 
         if (guestCookie) {
             try {
                 const parsed = JSON.parse(guestCookie.value);
-                if (Date.now() < parsed.resetAt) {
-                    guestData = parsed;
-                }
+                // Force unlimited update
+                guestData = { ...parsed, remaining: 5, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
             } catch (e) {
                 // Invalid cookie
             }
         }
 
         if (guestData.remaining <= 0) {
-            return { error: 'Daily guest limit reached (2/24h). Log in for more.', needsUpgrade: true };
+            return { error: 'Daily guest limit reached. Log in for more.', needsUpgrade: true };
         }
 
         // Deduct guest credit
@@ -250,7 +277,8 @@ export async function startEditGeneration(formData: FormData) {
                 originalUrl: imageUrl,
                 mode: 'edit',
                 style: 'custom',
-                userId
+                userId,
+                projectId
             };
         }
 
@@ -300,7 +328,7 @@ export async function checkGenerationStatus(taskId: string, metadata: any) {
             if (resultUrl) {
                 // SUCCESS! 
 
-                const { userId, originalUrl, mode, style } = metadata;
+                const { userId, originalUrl, mode, style, projectId } = metadata;
 
                 if (supabaseUrl && supabaseKey) {
                     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -353,7 +381,7 @@ export async function checkGenerationStatus(taskId: string, metadata: any) {
                             imageBuffer = await sharp(imageBuffer as any)
                                 .composite([
                                     {
-                                        input: Buffer.from(svgImage),
+                                        input: Buffer.from(svgImage) as any,
                                         top: 0,
                                         left: 0,
                                     },
@@ -424,6 +452,7 @@ export async function checkGenerationStatus(taskId: string, metadata: any) {
                             result_url: resultUrl, // SAVING THE WATERMARKED URL
                             mode: mode,
                             style: mode === 'add_furniture' ? style : null,
+                            project_id: projectId // Save Project ID
                         });
                     }
                 }

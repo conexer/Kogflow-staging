@@ -13,13 +13,13 @@ export async function getGuestCredits() {
         try {
             const parsed = JSON.parse(guestCookie.value);
             // If expired, effectively they have full credits again (logic in generate.ts handles reset)
-            if (Date.now() > parsed.resetAt) return 2;
+            if (Date.now() > parsed.resetAt) return 5;
             return parsed.remaining;
         } catch {
-            return 2;
+            return 5;
         }
     }
-    return 2;
+    return 5;
 }
 
 export async function checkCredits(userId: string) {
@@ -43,10 +43,10 @@ export async function checkCredits(userId: string) {
             // Reset credits
             await supabase
                 .from('users')
-                .update({ credits: 2, last_credit_reset: now.toISOString() })
+                .update({ credits: 5, last_credit_reset: now.toISOString() })
                 .eq('id', userId);
 
-            return { credits: 2, canGenerate: true, tier: user.subscription_tier };
+            return { credits: 5, canGenerate: true, tier: user.subscription_tier };
         }
     }
 

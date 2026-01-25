@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sparkles, History, ArrowLeft, Download } from 'lucide-react';
+import { Sparkles, History, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { getGenerationsAction } from '@/app/actions/history';
+import { getGenerationsAction, deleteGenerationAction } from '@/app/actions/history';
+import { Trash2, Pencil, Check, X, Download } from 'lucide-react';
+import { downloadImage } from '@/lib/client-download';
+import { getUserProfile } from '@/app/actions/credits';
 
 import { EditImageModal as ImageModal } from '@/components/edit-image-modal';
 
@@ -25,19 +28,100 @@ export default function HistoryPage() {
     const [generations, setGenerations] = useState<Generation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<Generation | null>(null);
+    const [activeCardId, setActiveCardId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [userProfile, setUserProfile] = useState<any>(null); // For checking tier
 
     useEffect(() => {
-        async function loadHistory() {
+        async function loadData() {
             if (!user) {
                 setIsLoading(false);
                 return;
             }
-            const { generations: data } = await getGenerationsAction(user.id);
-            setGenerations(data);
+
+            // Load history and profile in parallel
+            const [historyRes, profileRes] = await Promise.all([
+                getGenerationsAction(user.id),
+                getUserProfile(user.id)
+            ]);
+
+            setGenerations(historyRes.generations);
+            setUserProfile(profileRes);
             setIsLoading(false);
         }
-        loadHistory();
+        loadData();
     }, [user]);
+
+    // Handle clicks outside to close overlay
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (activeCardId && !(e.target as Element).closest('.generation-card')) {
+                setActiveCardId(null);
+                setConfirmDeleteId(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [activeCardId]);
+
+    const handleDelete = async (e: React.MouseEvent, genId: string) => {
+        e.stopPropagation();
+
+        if (confirmDeleteId !== genId) {
+            setConfirmDeleteId(genId);
+            return;
+        }
+
+        if (!user) return;
+
+        setIsDeleting(true);
+        const result = await deleteGenerationAction(genId, user.id);
+
+        if (result.success) {
+            setGenerations(prev => prev.filter(g => g.id !== genId));
+            toast.success('Image deleted');
+        } else {
+            toast.error('Failed to delete image');
+        }
+
+        setIsDeleting(false);
+        setConfirmDeleteId(null);
+        setActiveCardId(null);
+    };
+
+    const handleEditClick = (e: React.MouseEvent, gen: Generation) => {
+        e.stopPropagation();
+        setSelectedImage(gen);
+        setActiveCardId(null);
+    };
+
+    const handleDownloadClick = async (e: React.MouseEvent, gen: Generation) => {
+        e.stopPropagation();
+
+        const isPaidTier = userProfile?.subscription_tier === 'starter' ||
+            userProfile?.subscription_tier === 'pro' ||
+            userProfile?.subscription_tier === 'agency';
+
+        await downloadImage({
+            url: gen.result_url,
+            isPremium: isPaidTier,
+            filename: `kogflow-render-${gen.id}.jpg`
+        });
+
+        setActiveCardId(null);
+    };
+
+    const toggleOverlay = (e: React.MouseEvent, genId: string) => {
+        e.stopPropagation();
+        if (activeCardId === genId) {
+            setActiveCardId(null);
+            setConfirmDeleteId(null);
+        } else {
+            setActiveCardId(genId);
+            setConfirmDeleteId(null);
+        }
+    };
 
 
 
@@ -99,8 +183,8 @@ export default function HistoryPage() {
                             {generations.map((gen) => (
                                 <div
                                     key={gen.id}
-                                    className="group relative rounded-xl border border-border overflow-hidden bg-card hover:shadow-lg transition-all cursor-pointer"
-                                    onClick={() => setSelectedImage(gen)}
+                                    className={`generation-card group relative rounded-xl border border-border overflow-hidden bg-card transition-all cursor-pointer ${activeCardId === gen.id ? 'ring-2 ring-primary' : 'hover:shadow-lg'}`}
+                                    onClick={(e) => toggleOverlay(e, gen.id)}
                                 >
                                     <div className="aspect-[4/3] relative">
                                         <Image
@@ -109,7 +193,61 @@ export default function HistoryPage() {
                                             fill
                                             className="object-cover"
                                         />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+
+                                        {/* Overlay - Active State */}
+                                        <div className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity flex flex-col items-center justify-center gap-4 ${activeCardId === gen.id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                            <button
+                                                onClick={(e) => handleEditClick(e, gen)}
+                                                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 transition-transform hover:scale-105"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                                AI Edit
+                                            </button>
+
+                                            <button
+                                                onClick={(e) => handleDownloadClick(e, gen)}
+                                                className="flex items-center gap-2 px-6 py-2.5 bg-secondary text-secondary-foreground rounded-full font-medium hover:bg-secondary/80 transition-transform hover:scale-105"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                Download
+                                            </button>
+
+                                            <button
+                                                onClick={(e) => handleDelete(e, gen.id)}
+                                                disabled={isDeleting}
+                                                className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-medium transition-all hover:scale-105 ${confirmDeleteId === gen.id
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                                    }`}
+                                            >
+                                                {isDeleting ? (
+                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : confirmDeleteId === gen.id ? (
+                                                    <>
+                                                        <Check className="w-4 h-4" />
+                                                        Confirm
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Delete
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {/* Cancel confirmation if active */}
+                                            {confirmDeleteId === gen.id && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setConfirmDeleteId(null);
+                                                    }}
+                                                    className="text-white/50 text-xs mt-1 hover:text-white"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="p-4 space-y-2">
                                         <div className="flex items-center justify-between">

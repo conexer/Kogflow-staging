@@ -58,9 +58,32 @@ export async function getGenerationsAction(userId: string) {
 
         if (error) throw error;
 
+
         return { generations: data || [] };
     } catch (error: any) {
         console.error('Get generations error:', error);
         return { generations: [] };
+    }
+}
+
+export async function deleteGenerationAction(generationId: string, userId: string) {
+    if (!supabaseUrl || !supabaseKey) {
+        return { error: 'Database not configured' };
+    }
+
+    try {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { error } = await supabase
+            .from('generations')
+            .delete()
+            .match({ id: generationId, user_id: userId });
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error: any) {
+        console.error('Delete generation error:', error);
+        return { error: error.message };
     }
 }

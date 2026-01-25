@@ -7,7 +7,35 @@ import { UploadCloud, CheckCircle, Zap, DollarSign, LayoutTemplate, Sparkles } f
 import { ComparisonSlider } from '@/components/comparison-slider';
 import { HeroSlideshow } from '@/components/hero-slideshow';
 
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const router = useRouter();
+
+  const handleTryFree = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Check if user has projects (guest mode mainly)
+    const saved = localStorage.getItem('guest_projects');
+    let projects = saved ? JSON.parse(saved) : [];
+
+    if (projects.length === 0) {
+      // Create Project 1 automatically
+      const newProject = {
+        id: crypto.randomUUID(),
+        name: 'Project 1',
+        created_at: new Date().toISOString(),
+        active: true
+      };
+      projects.push(newProject);
+      localStorage.setItem('guest_projects', JSON.stringify(projects));
+      router.push(`/dashboard?project=${newProject.id}`);
+    } else {
+      // Redirect to most recent or first
+      router.push(`/dashboard?project=${projects[0].id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-primary/20 bg-background text-foreground">
       <Navbar />
@@ -30,13 +58,13 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center gap-2 pt-4">
-            <Link
-              href="/dashboard"
+            <button
+              onClick={handleTryFree}
               className="px-16 py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xl hover:bg-primary/90 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <UploadCloud className="w-8 h-8" />
               Try It For Free
-            </Link>
+            </button>
             <p className="text-sm text-muted-foreground font-medium">No sign up | No credit card</p>
           </div>
         </section>
@@ -222,13 +250,13 @@ export default function Home() {
             </div>
 
             <div className="pt-4 flex flex-col items-center gap-2">
-              <Link
-                href="/dashboard"
+              <button
+                onClick={handleTryFree}
                 className="px-8 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl inline-flex items-center gap-2"
               >
                 <UploadCloud className="w-5 h-5" />
                 Start Staging For Free
-              </Link>
+              </button>
               <p className="text-sm text-primary-foreground/80 font-medium">No sign up | No credit card</p>
             </div>
           </div>

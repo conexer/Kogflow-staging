@@ -20,12 +20,22 @@ import {
     Trash2
 } from 'lucide-react';
 import { createProject, getProjects, renameProject, deleteProject } from '@/app/actions/projects';
-import { useEffect } from 'react';
+import { CreateProjectModal } from '@/components/create-project-modal';
+import { useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 
-export function DashboardSidebar() {
+// -----------------------------------------------------------------------------
+// MAIN SIDEBAR COMPONENT (Wrapped in Suspense)
+// -----------------------------------------------------------------------------
+
+function DashboardSidebarContent() {
     const { user, signOut } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const activeProjectId = searchParams.get('project');
 
     // State for projects
     const [projects, setProjects] = useState<any[]>([]);
@@ -60,6 +70,19 @@ export function DashboardSidebar() {
         }
     }, [user]);
 
+    // Sync active state with URL
+    useEffect(() => {
+        if (projects.length > 0) {
+            if (activeProjectId) {
+                setProjects(prev => prev.map(p => ({ ...p, active: p.id === activeProjectId })));
+            } else {
+                // If no project in URL, maybe default to first?
+                // For now, let's select the first one if none selected
+                router.replace(`?project=${projects[0].id}`);
+            }
+        }
+    }, [activeProjectId, projects.length]);
+
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
     const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
@@ -85,38 +108,18 @@ export function DashboardSidebar() {
         }
     };
 
-    const handleCreateProject = async () => {
-        const newName = `Project ${projects.length + 1}`;
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
-        if (user) {
-            // Authenticated: Save to DB
-            const res = await createProject(user.id, newName);
-            if (res.success && res.project) {
-                const newProject = {
-                    ...res.project,
-                    date: new Date(res.project.created_at).toLocaleDateString(),
-                    active: true
-                };
-                setProjects(prev => {
-                    const updated = [...prev.map(p => ({ ...p, active: false })), newProject];
-                    return updated;
-                });
-            }
-        } else {
-            // Guest: Save to LocalStorage
-            const newProject = {
-                id: `guest-${Date.now()}`,
-                name: newName,
-                date: new Date().toLocaleDateString(),
-                active: true,
-                created_at: new Date().toISOString() // match structure roughly
-            };
-            setProjects(prev => {
-                const updated = [...prev.map(p => ({ ...p, active: false })), newProject];
-                localStorage.setItem('guest_projects', JSON.stringify(updated));
-                return updated;
-            });
-        }
+    const handleProjectCreated = (newProject: any) => {
+        // Add to list and select it
+        setProjects(prev => {
+            const updated = prev.map(p => ({ ...p, active: false }));
+            return [...updated, { ...newProject, active: true, date: new Date().toLocaleDateString() }];
+        });
+
+        // Auto-redirect to the new project
+        router.push(`/dashboard?project=${newProject.id}`);
+        setShowCreateModal(false);
     };
 
     const startEditing = (e: React.MouseEvent, project: any) => {
@@ -153,12 +156,12 @@ export function DashboardSidebar() {
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-card border-r border-border/40">
             {/* Logo */}
-            <div className="p-4 border-b border-border/40 flex items-center gap-2">
+            <Link href="/" className="p-4 border-b border-border/40 flex items-center gap-2 hover:bg-muted/50 transition-colors">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
                     <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-bold text-xl tracking-tighter">Kogflow</span>
-            </div>
+            </Link>
 
             {/* Search and Create */}
             <div className="p-4 space-y-3">
@@ -171,7 +174,7 @@ export function DashboardSidebar() {
                     />
                 </div>
                 <button
-                    onClick={handleCreateProject}
+                    onClick={() => setShowCreateModal(true)}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
                 >
                     <Plus className="w-4 h-4" />
@@ -193,7 +196,11 @@ export function DashboardSidebar() {
                             )}
                             onClick={() => {
                                 if (editingId === null) {
+                                    // Update URL - Force navigation to main dashboard
+                                    router.push(`/dashboard?project=${project.id}`);
+                                    // Local state update mostly visual until reload/sync
                                     setProjects(projects.map(p => ({ ...p, active: p.id === project.id })));
+                                    setIsMobileMenuOpen(false);
                                 }
                             }}
                         >
@@ -272,13 +279,26 @@ export function DashboardSidebar() {
                         <User className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
-                        <button onClick={() => signOut()} className="text-xs text-muted-foreground hover:text-destructive transition-colors">
-                            Sign out
-                        </button>
+                        <p className="text-sm font-medium truncate">{user?.email || 'Guest User'}</p>
+                        {user ? (
+                            <button onClick={() => signOut()} className="text-xs text-muted-foreground hover:text-destructive transition-colors">
+                                Sign out
+                            </button>
+                        ) : (
+                            <Link href="/login" className="text-xs text-primary hover:underline">
+                                Sign in to save
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
+
+            <CreateProjectModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                userId={user?.id || 'guest'}
+                onProjectCreated={handleProjectCreated}
+            />
         </div>
     );
 
@@ -291,15 +311,26 @@ export function DashboardSidebar() {
 
             {/* Mobile Header */}
             <div className="md:hidden flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-0 z-30">
-                <div className="flex items-center gap-2">
+                {/* Left: Menu Toggle */}
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1">
+                    {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+
+                {/* Center: Logo */}
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-bold text-xl tracking-tighter">Kogflow</span>
-                </div>
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                    {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
+                </Link>
+
+                {/* Right: Profile */}
+                <Link href="/account" className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden border border-border">
+                    {user?.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="w-4 h-4 text-muted-foreground" />
+                    )}
+                </Link>
             </div>
 
             {/* Mobile Overlay Menu */}
@@ -311,5 +342,13 @@ export function DashboardSidebar() {
                 </div>
             )}
         </>
+    );
+}
+
+export function DashboardSidebar() {
+    return (
+        <Suspense fallback={<div className="w-72 hidden md:block border-r border-border/40 bg-card" />}>
+            <DashboardSidebarContent />
+        </Suspense>
     );
 }

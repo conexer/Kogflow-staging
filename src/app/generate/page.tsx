@@ -13,6 +13,8 @@ import { useAuth } from '@/lib/auth-context';
 import { getUserProfile } from '@/app/actions/credits';
 import { Navbar } from '@/components/navbar';
 import { EditImageModal as ImageModal } from '@/components/edit-image-modal';
+import { downloadImage } from '@/lib/client-download';
+import { Sparkles, Download } from 'lucide-react';
 
 export default function GeneratePage() {
     const { user, signOut } = useAuth();
@@ -411,7 +413,7 @@ export default function GeneratePage() {
                                 userProfile.recentGenerations.slice(0, 6).map((gen: any) => (
                                     <div
                                         key={gen.id}
-                                        className="aspect-square rounded-lg bg-muted overflow-hidden relative cursor-pointer hover:ring-2 ring-primary transition-all group shadow-sm hover:shadow-md"
+                                        className="aspect-square rounded-lg bg-muted overflow-hidden relative cursor-pointer group shadow-sm hover:shadow-md border border-border"
                                         onClick={() => {
                                             setModalData({
                                                 resultUrl: gen.result_url,
@@ -422,8 +424,46 @@ export default function GeneratePage() {
                                         <img
                                             src={gen.result_url}
                                             alt="Result"
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            className="w-full h-full object-cover transition-transform duration-500"
                                         />
+
+                                        {/* Overlay */}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    // Trigger edit modal via parent state or special handling?
+                                                    // For now, open modal is easiest entry to edit
+                                                    setModalData({
+                                                        resultUrl: gen.result_url,
+                                                        originalUrl: gen.original_url
+                                                    });
+                                                }}
+                                                className="p-2 bg-background/90 hover:bg-background text-foreground rounded-full shadow-sm backdrop-blur-sm transition-colors"
+                                                title="Edit"
+                                            >
+                                                <Sparkles className="w-4 h-4 text-primary" />
+                                            </button>
+
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    const isPaidTier = userProfile?.subscription_tier === 'starter' ||
+                                                        userProfile?.subscription_tier === 'pro' ||
+                                                        userProfile?.subscription_tier === 'agency';
+
+                                                    await downloadImage({
+                                                        url: gen.result_url,
+                                                        isPremium: isPaidTier,
+                                                        filename: `kogflow-recent-${gen.id}.jpg`
+                                                    });
+                                                }}
+                                                className="p-2 bg-background/90 hover:bg-background text-foreground rounded-full shadow-sm backdrop-blur-sm transition-colors"
+                                                title="Download"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
