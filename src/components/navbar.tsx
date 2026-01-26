@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { getUserProfile } from '@/app/actions/credits';
-import { Sparkles, History, CreditCard, User, Menu, X, LogOut } from 'lucide-react';
+import { Sparkles, History, CreditCard, User, Menu, X, LogOut, ChevronDown, Video, LayoutTemplate } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,7 @@ export function Navbar() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<any>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isProductsOpen, setIsProductsOpen] = useState(false);
 
     useEffect(() => {
         async function loadCredits() {
@@ -45,6 +46,36 @@ export function Navbar() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-6">
+                    {/* Products Dropdown */}
+                    <div className="relative group">
+                        <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2">
+                            <span>Products</span>
+                            <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                        </button>
+                        <div className="absolute left-0 top-full mt-1 w-64 rounded-xl border border-border bg-card shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                            <div className="p-2 space-y-1">
+                                <Link href="/1-click-product-video" className="flex items-start gap-3 p-3 hover:bg-muted rounded-lg transition-colors group/item">
+                                    <div className="mt-1 w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500 group-hover/item:bg-violet-500 group-hover/item:text-white transition-colors">
+                                        <Video className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-sm">1-Click Product Video</div>
+                                        <div className="text-xs text-muted-foreground">Turn photos into viral videos</div>
+                                    </div>
+                                </Link>
+                                <Link href="/" className="flex items-start gap-3 p-3 hover:bg-muted rounded-lg transition-colors group/item">
+                                    <div className="mt-1 w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover/item:bg-blue-500 group-hover/item:text-white transition-colors">
+                                        <LayoutTemplate className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-sm">Virtual Staging</div>
+                                        <div className="text-xs text-muted-foreground">AIC-powered interior design</div>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
                     <Link href="/history" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         <History className="w-4 h-4" />
                         <span>History</span>
@@ -105,7 +136,38 @@ export function Navbar() {
             {/* Mobile Navigation Dropdown */}
             {isMenuOpen && (
                 <div className="md:hidden bg-background border-b border-border/40 animate-in slide-in-from-top-2">
-                    <div className="container py-4 flex flex-col gap-4 px-4">
+                    <div className="container py-4 flex flex-col gap-4 px-4 overflow-y-auto max-h-[80vh]">
+                        {/* Mobile Products Menu */}
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => setIsProductsOpen(!isProductsOpen)}
+                                className="flex items-center justify-between w-full text-sm font-medium py-2 px-2 hover:bg-muted/50 rounded-md"
+                            >
+                                <span>Products</span>
+                                <ChevronDown className={cn("w-4 h-4 transition-transform", isProductsOpen && "rotate-180")} />
+                            </button>
+
+                            {isProductsOpen && (
+                                <div className="pl-4 space-y-1">
+                                    <Link
+                                        href="/1-click-product-video"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-3 p-2 text-sm hover:bg-muted/50 rounded-md text-muted-foreground"
+                                    >
+                                        <Video className="w-4 h-4" />
+                                        1-Click Product Video
+                                    </Link>
+                                    <Link
+                                        href="/"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-3 p-2 text-sm hover:bg-muted/50 rounded-md text-muted-foreground"
+                                    >
+                                        <LayoutTemplate className="w-4 h-4" />
+                                        Virtual Staging
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                         <Link
                             href="/history"
                             className="flex items-center gap-2 text-sm font-medium py-2 hover:bg-muted/50 rounded-md px-2"
