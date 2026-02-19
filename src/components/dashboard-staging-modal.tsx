@@ -85,7 +85,7 @@ export function DashboardStagingModal({ isOpen, onClose, imageUrl, onGenerate, i
                 <X className="w-6 h-6 text-foreground" />
             </button>
 
-            <div className="bg-background w-full h-full md:max-w-6xl md:h-[90vh] md:rounded-2xl md:shadow-2xl flex flex-col md:flex-row-reverse overflow-y-auto md:overflow-hidden border-none md:border md:border-border">
+            <div className="bg-background w-full h-[100dvh] md:max-w-6xl md:h-[90vh] md:rounded-2xl md:shadow-2xl flex flex-col md:flex-row-reverse overflow-y-auto md:overflow-hidden border-none md:border md:border-border">
 
                 {/* Right Area - Image Preview (First in DOM, Top on Mobile, Right on Desktop) */}
                 <div className="w-full md:flex-1 bg-muted/10 md:bg-muted/30 relative p-0 md:p-8 flex flex-col items-center justify-center shrink-0 min-h-[40vh]">
@@ -123,7 +123,7 @@ export function DashboardStagingModal({ isOpen, onClose, imageUrl, onGenerate, i
                                                     link.click();
                                                     document.body.removeChild(link);
                                                 }}
-                                                className="px-4 py-2 bg-white/90 text-foreground text-sm font-bold rounded-lg shadow-lg flex items-center gap-2 hover:bg-white"
+                                                className="px-4 py-2 bg-white/90 text-black text-sm font-bold rounded-lg shadow-lg flex items-center gap-2 hover:bg-white"
                                             >
                                                 <Download className="w-4 h-4" />
                                                 Download
@@ -361,7 +361,7 @@ export function DashboardStagingModal({ isOpen, onClose, imageUrl, onGenerate, i
                                 <div className="relative">
                                     <select className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm appearance-none focus:ring-1 focus:ring-primary outline-none font-medium">
                                         <option>None</option>
-                                        <option>Watermarked</option>
+                                        <option>Ai Generated</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
                                 </div>
@@ -391,7 +391,7 @@ export function DashboardStagingModal({ isOpen, onClose, imageUrl, onGenerate, i
                         <button
                             onClick={() => onGenerate({ mode, roomType, style: selectedStyle, customPrompt, resolution, editOption })}
                             disabled={isGenerating}
-                            className="w-full py-3.5 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-auto mx-auto px-12 md:w-full md:mx-0 md:px-0 py-3.5 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isGenerating ? (
                                 <>

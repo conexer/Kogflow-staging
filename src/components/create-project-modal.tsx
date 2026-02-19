@@ -38,6 +38,17 @@ export function CreateProjectModal({
         try {
             // Handle Guest Mode
             if (userId === 'guest' || userId.startsWith('guest')) {
+                // Check for duplicate name
+                const saved = localStorage.getItem('guest_projects');
+                const projects = saved ? JSON.parse(saved) : [];
+                const duplicate = projects.find((p: any) => p.name.toLowerCase() === name.toLowerCase());
+
+                if (duplicate) {
+                    setError('A project with this name already exists');
+                    setIsSubmitting(false);
+                    return;
+                }
+
                 const newProject = {
                     id: `guest-${Date.now()}`, // Consistent ID format
                     name: name,
@@ -45,8 +56,6 @@ export function CreateProjectModal({
                 };
 
                 // Save to LocalStorage
-                const saved = localStorage.getItem('guest_projects');
-                const projects = saved ? JSON.parse(saved) : [];
                 const updated = [...projects, newProject];
                 localStorage.setItem('guest_projects', JSON.stringify(updated));
 

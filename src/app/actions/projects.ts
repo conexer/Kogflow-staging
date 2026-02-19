@@ -14,6 +14,21 @@ export async function createProject(userId: string, name: string) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Check for duplicate name
+        const { data: existing, error: checkError } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('name', name)
+            .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+            return { error: 'A project with this name already exists' };
+        }
+
+        // Create project
         const { data, error } = await supabase
             .from('projects')
             .insert({

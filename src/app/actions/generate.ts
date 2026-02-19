@@ -365,13 +365,13 @@ export async function checkGenerationStatus(taskId: string, metadata: any) {
                             const height = metadata.height || 1024;
 
                             // Create SVG Overlay for crisp text
-                            const fontSize = Math.floor(width * 0.06); // 6% of width
-                            const text = "KogFlow.com";
+                            const fontSize = Math.floor(width * 0.03); // 3% of width (small text)
+                            const text = "Ai Generated";
 
                             const svgImage = `
                             <svg width="${width}" height="${height}">
                               <style>
-                                .title { fill: rgba(255, 255, 255, 0.5); font-size: ${fontSize}px; font-weight: bold; font-family: sans-serif; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8)); }
+                                .title { fill: rgba(255, 255, 255, 0.5); font-size: ${fontSize}px; font-weight: bold; font-family: sans-serif; filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.8)); }
                               </style>
                               <text x="50%" y="90%" text-anchor="middle" class="title">${text}</text>
                             </svg>

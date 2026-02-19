@@ -85,9 +85,21 @@ export async function getProjectAssets(projectId: string) {
 
         if (genError) throw genError;
 
+        // Fetch Real Stitched Videos
+        const { data: videos, error: videoError } = await supabase
+            .from('videos')
+            .select('*')
+            .eq('project_id', projectId)
+            .order('created_at', { ascending: false });
+
+        if (videoError && !videoError.message.includes('does not exist')) {
+            throw videoError;
+        }
+
         return {
             assets: assets || [],
-            generations: generations || []
+            generations: generations || [],
+            videos: videos || []
         };
 
     } catch (error: any) {
