@@ -109,3 +109,38 @@ export async function downloadImage({
         }
     }
 }
+/**
+ * Downloads a video file.
+ */
+export async function downloadVideo({
+    url,
+    filename = `kogflow-video-${Date.now()}.mp4`,
+    onSuccess,
+    onError
+}: Omit<DownloadOptions, 'isPremium'>) {
+    const toastId = toast.loading('Preparing video download...');
+
+    try {
+        const response = await fetch(`/api/download?url=${encodeURIComponent(url)}`);
+        if (!response.ok) throw new Error('Fetch failed');
+        const blob = await response.blob();
+
+        const objectUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(objectUrl);
+
+        toast.dismiss(toastId);
+        toast.success('Video download started');
+        onSuccess?.();
+    } catch (error) {
+        console.error(error);
+        toast.dismiss(toastId);
+        toast.error('Video download failed');
+        onError?.(error);
+    }
+}

@@ -77,8 +77,8 @@ export async function POST(req: Request) {
         // Prepare video filters
         const filters: string[] = [];
 
-        // 1. Motion Interpolation (Fix choppiness) - Blend frames to reach smooth 30fps
-        filters.push('minterpolate=fps=30:mi_mode=blend');
+        // 1. Motion Interpolation (Fix choppiness) - Blend frames to reach buttery smooth 60fps
+        filters.push('minterpolate=fps=60:mi_mode=blend');
 
         if (fontPath) {
             const escapedFontPath = fontPath.replace(/\\/g, '/').replace(/:/g, '\\:');

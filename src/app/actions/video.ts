@@ -84,19 +84,19 @@ export async function generateVideo(data: VideoGenerationRequest) {
                     {
                         nodeId: "44",
                         fieldName: "string",
-                        fieldValue: "the camera very slowly glides into the scene in a linear path, 1280p high quality 30fps steady motion",
+                        fieldValue: "fairly slow linear walk through of the room, or very slow linear camera orbit around the room, photorealistic, 1280p high quality",
                         description: "Prompt words"
                     },
                     {
                         nodeId: "45",
                         fieldName: "string",
-                        fieldValue: "5", // Default to 5s per clip
+                        fieldValue: "4", // 4s per clip as requested
                         description: "Video duration"
                     },
                     {
                         nodeId: "91",
                         fieldName: "string",
-                        fieldValue: `constant 30 fps, 1280p, high quality, smooth motion, aspect ratio: ${data.aspectRatio || '16:9'}`,
+                        fieldValue: `constant 60 fps, 1280p, high quality, buttery smooth motion, aspect ratio: ${data.aspectRatio || '16:9'}`,
                         description: "Special requirements"
                     }
                 ],

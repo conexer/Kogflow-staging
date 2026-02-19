@@ -259,7 +259,16 @@ function DashboardContent() {
                                     <div className="aspect-video relative overflow-hidden">
                                         <video src={vid.video_url} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" muted onMouseOver={(e: any) => e.target.play()} onMouseOut={(e: any) => { e.target.pause(); e.target.currentTime = 0; }} loop />
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 gap-4">
-                                            <a href={vid.video_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-110 transition-transform"><Play className="w-5 h-5 fill-current" /></a>
+                                            <a href={vid.video_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-full hover:scale-110 transition-transform"><Plus className="w-5 h-5 fill-current rotate-45" /></a>
+                                            <button
+                                                onClick={() => {
+                                                    const { downloadVideo } = require('@/lib/client-download');
+                                                    downloadVideo({ url: vid.video_url, filename: `${vid.title || 'video'}.mp4` });
+                                                }}
+                                                className="w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:scale-110 transition-transform"
+                                            >
+                                                <UploadCloud className="w-5 h-5 rotate-180" />
+                                            </button>
                                             <button onClick={() => handleDeleteVideo(vid.id, vid.video_url)} className="w-10 h-10 flex items-center justify-center bg-destructive text-destructive-foreground rounded-full hover:scale-110 transition-transform"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </div>
