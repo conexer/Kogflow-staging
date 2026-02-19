@@ -85,12 +85,12 @@ export async function POST(req: Request) {
 
             // Title Overlay (Top Center)
             if (title) {
-                filters.push(`drawtext=fontfile='${escapedFontPath}':text='${title}':fontcolor=white:fontsize=48:shadowcolor=black@0.6:shadowx=2:shadowy=2:x=(w-text_w)/2:y=60`);
+                filters.push(`drawtext=fontfile='${escapedFontPath}':text='${title}':fontcolor=white:fontsize=48:box=1:boxcolor=black@0.4:boxborderw=10:x=(w-text_w)/2:y=80`);
             }
 
             // Subtitle/Branding (Bottom Center)
             const bottomText = subtitle || 'Created with KogFlow.app';
-            filters.push(`drawtext=fontfile='${escapedFontPath}':text='${bottomText}':fontcolor=white:fontsize=32:box=1:boxcolor=black@0.4:boxborderw=10:x=(w-text_w)/2:y=h-text_h-60`);
+            filters.push(`drawtext=fontfile='${escapedFontPath}':text='${bottomText}':fontcolor=white:fontsize=32:box=1:boxcolor=black@0.4:boxborderw=10:x=(w-text_w)/2:y=h-text_h-80`);
         }
 
         if (filters.length > 0) {
