@@ -234,12 +234,13 @@ function DashboardContent() {
                         <button
                             onClick={() => {
                                 if (!projectId) {
-                                    toast.error("Please select a project first");
+                                    setShowCreateProjectModal(true);
+                                    toast.info("Create or select a project first to make videos");
                                     return;
                                 }
                                 setIsVideoModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium shadow-sm transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium shadow-sm transition-colors cursor-pointer"
                         >
                             <Plus className="w-4 h-4" /> Create new video
                         </button>
@@ -307,7 +308,15 @@ function DashboardContent() {
                 </div>
             )}
 
-            <DashboardStagingModal isOpen={isStagingModalOpen} onClose={() => { setIsStagingModalOpen(false); setSelectedImage(null); }} imageUrl={selectedImage} onGenerate={handleDashboardGenerate} isGenerating={isGenerating} generatedImage={generatedImage || undefined} onReset={() => { setSelectedImage(null); setGeneratedImage(null); }} />
+            <DashboardStagingModal
+                isOpen={isStagingModalOpen}
+                onClose={() => { setIsStagingModalOpen(false); setSelectedImage(null); }}
+                imageUrl={selectedImage || ''}
+                onGenerate={handleDashboardGenerate}
+                isGenerating={isGenerating}
+                generatedImageUrl={generatedImage || undefined}
+                onDiscard={() => { setSelectedImage(null); setGeneratedImage(null); }}
+            />
             <CreateProjectModal isOpen={showCreateProjectModal} onClose={() => setShowCreateProjectModal(false)} userId={user?.id || ''} onProjectCreated={(id) => { setShowCreateProjectModal(false); window.location.href = `/dashboard?project=${id}`; }} />
             <VideoCreationModal
                 isOpen={isVideoModalOpen}
