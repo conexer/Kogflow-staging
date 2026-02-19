@@ -10,6 +10,21 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 export const maxDuration = 60;
 export const runtime = 'nodejs';
 
+function getFontFile() {
+    const commonPaths = [
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+        '/usr/share/fonts/TTF/DejaVuSans.ttf',
+        'C:/Windows/Fonts/arial.ttf',
+        '/System/Library/Fonts/Helvetica.ttc'
+    ];
+
+    for (const p of commonPaths) {
+        if (fs.existsSync(p)) return p;
+    }
+    return null;
+}
+
 export async function POST(req: Request) {
     console.log('🚀 Stitch POST request received (Direct FFmpeg Version)');
 
@@ -50,11 +65,20 @@ export async function POST(req: Request) {
         const ffmpegPath = ffmpegInstaller.path;
         console.log('🎞️ Running FFmpeg from:', ffmpegPath);
 
+        const fontPath = getFontFile();
+        console.log('📝 Font Path:', fontPath || 'None found (skipping watermark)');
+
         const args = [
             '-f', 'concat',
             '-safe', '0',
             '-i', listFile,
-            '-vf', "drawtext=fontfile='C\\:/Windows/Fonts/arial.ttf':text='Created with KogFlow.app':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.4:boxborderw=10:x=(w-text_w)/2:y=h-text_h-40",
+        ];
+
+        if (fontPath) {
+            args.push('-vf', `drawtext=fontfile='${fontPath.replace(/\\/g, '/')}':text='Created with KogFlow.app':fontcolor=white:fontsize=36:box=1:boxcolor=black@0.4:boxborderw=10:x=(w-text_w)/2:y=h-text_h-40`);
+        }
+
+        args.push(
             '-r', '30',
             '-c:v', 'libx264',
             '-preset', 'fast',
@@ -63,7 +87,7 @@ export async function POST(req: Request) {
             '-c:a', 'aac',
             '-pix_fmt', 'yuv420p',
             outputPath
-        ];
+        );
 
         const result = spawnSync(ffmpegPath, args);
 
