@@ -72,7 +72,7 @@ export async function generateVideo(data: VideoGenerationRequest) {
         const results: { imageUrl: string; taskId: string | null; error: string | null }[] = [];
 
         const ratioIndex = aspectRatioToIndex(data.aspectRatio);
-        const prompt = 'very slow and smooth linear camera movement, no jolting, no quick movements, linear path, photorealistic, high quality real estate walkthrough';
+        const prompt = 'a very slow camera walk through to around half way into the room, no jolting, no quick movements, linear path, photorealistic, high quality real estate walkthrough';
 
         for (let i = 0; i < data.imageUrls.length; i++) {
             const imageUrl = data.imageUrls[i];
