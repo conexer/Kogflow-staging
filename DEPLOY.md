@@ -13,9 +13,9 @@
 3. Click **"Import Git Repository"** → Select `kogflow` folder
 4. **Environment Variables** (IMPORTANT):
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://vmuvjfflszhifuyvmjwh.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_uIYiD-g-4sITWIQCdEJOAg_RJ-YadCm
-   SUPABASE_SERVICE_ROLE_KEY=sb_secret_EOJS6K08HIiKH6niqFsbzg_beTRVR0_
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
 5. Click **Deploy**
 6. Wait ~2 minutes → Get your live URL!
