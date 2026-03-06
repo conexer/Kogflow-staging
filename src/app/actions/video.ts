@@ -2,10 +2,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// --- Constants ---
+// App ID for WAN 2.2 Image to Video (free tier)
+const WAN22_APP_ID = '1959889002553880577';
+// runninghub.ai returns 401 with Bearer token; .cn OpenAPI accepts our key
+const RUNNINGHUB_BASE = 'https://www.runninghub.cn';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const runningHubApiKey = process.env.RUNNINGHUB_API_KEY;
-const runningHubWorkflowId = process.env.RUNNINGHUB_WORKFLOW_ID;
 
 interface VideoGenerationRequest {
     imageUrls: string[];
@@ -20,12 +25,22 @@ interface VideoGenerationRequest {
     aspectRatio?: '16:9' | '9:16';
 }
 
+// Map aspect ratio string to WAN 2.2 node 260 select index
+// Values per official API docs: 1=Auto, 2=1:1, 3=4:3, 4=3:4, 5=16:9, 6=9:16
+function aspectRatioToIndex(ratio: '16:9' | '9:16' | undefined): string {
+    switch (ratio) {
+        case '16:9': return '5';
+        case '9:16': return '6';
+        default: return '1'; // Auto match
+    }
+}
+
 export async function generateVideo(data: VideoGenerationRequest) {
     console.log('🚀 generateVideo() called with:', data);
 
-    if (!runningHubApiKey || !runningHubWorkflowId) {
-        console.error('❌ Missing API credentials!');
-        return { error: 'RunningHub API credentials not configured' };
+    if (!runningHubApiKey) {
+        console.error('❌ Missing RunningHub API key!');
+        return { error: 'RunningHub API key not configured' };
     }
 
     // Set to true to use mock api, false for real api
@@ -35,18 +50,12 @@ export async function generateVideo(data: VideoGenerationRequest) {
         console.log('🎬 Mock Video Generation:', {
             images: data.imageUrls.length,
             title: data.title,
-            realtorInfo: data.realtorInfo
         });
-
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Return a mock task ID for each image
         const taskIds = data.imageUrls.map((_, i) => `mock-video-${Date.now()}-${i}`);
-
         return {
             success: true,
-            taskIds, // Legacy support
+            taskIds,
             results: data.imageUrls.map((url, i) => ({
                 imageUrl: url,
                 taskId: taskIds[i],
@@ -57,17 +66,19 @@ export async function generateVideo(data: VideoGenerationRequest) {
     }
 
     try {
-        console.log('🎬 Starting RunningHub.ai video generation batch...');
+        console.log('🎬 Starting WAN 2.2 Image-to-Video batch on RunningHub.ai...');
         const taskIds: string[] = [];
         const errors: any[] = [];
         const results: { imageUrl: string; taskId: string | null; error: string | null }[] = [];
 
-        // Loop through each image and trigger generation SEQUENTIALLY with delays
+        const ratioIndex = aspectRatioToIndex(data.aspectRatio);
+        const prompt = 'very slow and smooth linear camera movement, no jolting, no quick movements, linear path, photorealistic, high quality real estate walkthrough';
+
         for (let i = 0; i < data.imageUrls.length; i++) {
             const imageUrl = data.imageUrls[i];
             console.log(`Processing image ${i + 1}/${data.imageUrls.length}: ${imageUrl}`);
 
-            // Add 2-second delay between requests to avoid rate limiting
+            // Delay between requests to avoid rate limiting
             if (i > 0) {
                 console.log('⏳ Waiting 2 seconds before next request...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -76,38 +87,35 @@ export async function generateVideo(data: VideoGenerationRequest) {
             const payload = {
                 nodeInfoList: [
                     {
-                        nodeId: "39",
-                        fieldName: "image",
+                        nodeId: '135',
+                        fieldName: 'image',
                         fieldValue: imageUrl,
-                        description: "Image"
+                        description: 'Upload image'
                     },
                     {
-                        nodeId: "44",
-                        fieldName: "string",
-                        fieldValue: "very slow and smooth linear camera movement, no jolting, no quick movements, linear path, photorealistic, 1280p high quality",
-                        description: "Prompt words"
+                        nodeId: '260',
+                        fieldName: 'select',
+                        fieldValue: ratioIndex,
+                        description: 'Aspect ratio'
                     },
                     {
-                        nodeId: "45",
-                        fieldName: "string",
-                        fieldValue: "4", // 4s per clip
-                        description: "Video duration"
+                        nodeId: '139',
+                        fieldName: 'index',
+                        fieldValue: '1',
+                        description: 'Prompt input method'
                     },
                     {
-                        nodeId: "91",
-                        fieldName: "string",
-                        fieldValue: `constant 30 fps, 1280p, high quality, very slow and smooth linear motion, no jolts, aspect ratio: ${data.aspectRatio || '16:9'}`,
-                        description: "Special requirements"
+                        nodeId: '116',
+                        fieldName: 'text',
+                        fieldValue: prompt,
+                        description: 'Creative description'
                     }
                 ],
-                instanceType: "default",
-                usePersonalQueue: false
+                instanceType: 'default',
+                usePersonalQueue: 'false'
             };
 
-            let appId = runningHubWorkflowId || '1961996521397010434';
-            const stableId = '1961996521397010434';
-
-            let response = await fetch(`https://www.runninghub.cn/openapi/v2/run/ai-app/${appId}`, {
+            const response = await fetch(`${RUNNINGHUB_BASE}/openapi/v2/run/ai-app/${WAN22_APP_ID}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${runningHubApiKey}`,
@@ -116,42 +124,34 @@ export async function generateVideo(data: VideoGenerationRequest) {
                 body: JSON.stringify(payload)
             });
 
-            let result = await response.json();
-            console.log(`📦 RunningHub response (Attempt with ${appId}):`, result);
-
-            // ✅ Fallback logic: If primary ID fails with errorCode 1 (Unknown) and isn't the stable ID
-            if (result.errorCode === '1' && appId !== stableId) {
-                console.warn(`⚠️ Workflow ${appId} failed with Unknown Error. Falling back to stable ID ${stableId}...`);
-                appId = stableId;
-                response = await fetch(`https://www.runninghub.cn/openapi/v2/run/ai-app/${appId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${runningHubApiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
+            let result: any;
+            try {
                 result = await response.json();
-                console.log(`📦 RunningHub response (Fallback with ${appId}):`, result);
+            } catch {
+                const text = await response.text();
+                console.error(`❌ Non-JSON response for image ${imageUrl}:`, text);
+                results.push({ imageUrl, taskId: null, error: `Parse error: ${text.slice(0, 200)}` });
+                errors.push({ imageUrl, error: 'Non-JSON response' });
+                continue;
             }
 
+            console.log(`📦 WAN 2.2 response (image ${i + 1}):`, result);
+
             if (!response.ok) {
-                const text = await response.text();
-                console.error(`❌ HTTP Error for image ${imageUrl}:`, text);
-                const err = `HTTP ${response.status}: ${text}`;
+                const err = `HTTP ${response.status}: ${result?.message || result?.errorMessage || 'Unknown'}`;
+                console.error(`❌ HTTP Error for image ${imageUrl}:`, err);
                 results.push({ imageUrl, taskId: null, error: err });
                 errors.push({ imageUrl, error: err });
                 continue;
             }
 
-            // ✅ Check for errorCode in response (even if HTTP 200)
-            if (result.errorCode) {
-                const errorMsg = result.errorMessage || 'Unknown error';
-                console.error(`❌ API Error Code ${result.errorCode}:`, errorMsg);
+            // Check for API-level error codes
+            if (result.errorCode && result.errorCode !== '0') {
+                const errorMsg = result.errorMessage || 'Unknown API error';
+                console.error(`❌ API Error ${result.errorCode}:`, errorMsg);
 
-                // Check if rate limited
                 if (result.errorCode === '421' || result.errorCode === 421) {
-                    throw new Error(`RunningHub rate limit reached. Please wait a few minutes and try again.`);
+                    throw new Error('RunningHub rate limit reached. Please wait a few minutes and try again.');
                 }
 
                 results.push({ imageUrl, taskId: result.taskId || null, error: errorMsg });
@@ -170,11 +170,12 @@ export async function generateVideo(data: VideoGenerationRequest) {
 
         return {
             success: errors.length === 0,
-            taskIds, // Legacy support
+            taskIds,
             results,
             errorCount: errors.length,
             message: errors.length > 0 ? `Completed with ${errors.length} errors.` : 'Batch started successfully'
         };
+
     } catch (error: any) {
         console.error('❌ Batch Generation Exception:', error);
         return { error: error.message || 'Failed to start generation batch' };
@@ -186,7 +187,7 @@ export async function checkVideoStatus(taskId: string) {
         return { error: 'API key not configured' };
     }
 
-    // Checking Mock Status
+    // Mock status
     if (taskId.startsWith('mock-video-')) {
         await new Promise(resolve => setTimeout(resolve, 3000));
         return {
@@ -197,7 +198,8 @@ export async function checkVideoStatus(taskId: string) {
     }
 
     try {
-        const response = await fetch(`https://www.runninghub.cn/openapi/v2/query`, {
+        // WAN 2.2 polling: POST /openapi/v2/query on runninghub.cn
+        const response = await fetch(`${RUNNINGHUB_BASE}/openapi/v2/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${runningHubApiKey}`,
@@ -211,6 +213,7 @@ export async function checkVideoStatus(taskId: string) {
         }
 
         const result = await response.json();
+        console.log(`📡 Status check for ${taskId}:`, result);
         return parseStatusResult(result);
 
     } catch (error: any) {
@@ -225,8 +228,9 @@ function parseStatusResult(result: any) {
 
     if (status === 'SUCCESS' && result.results && result.results.length > 0) {
         const results = result.results;
-        const highRes = results.find((r: any) => r.url && (r.url.includes('高清') || r.url.includes('P.mp4')));
-        const videoUrl = highRes ? highRes.url : results[0].url;
+        // WAN 2.2 returns results with fieldName='video_url' and the file at fileUrl
+        const videoResult = results.find((r: any) => r.fieldName === 'video_url') || results[0];
+        const videoUrl = videoResult?.fileUrl || videoResult?.url;
 
         return {
             status: 'success',
