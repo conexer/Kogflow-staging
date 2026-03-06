@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+// Deployment Update: 2026-03-06 02:00
 import "./globals.css";
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/lib/auth-context';
