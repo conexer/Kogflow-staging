@@ -5,7 +5,8 @@ import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { spawnSync } from 'child_process';
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+// Removed static import to fix Vercel build error:
+// import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 
 export const maxDuration = 60;
 export const runtime = 'nodejs';
@@ -62,7 +63,15 @@ export async function POST(req: Request) {
         // 3. Run FFmpeg directly
         // Path verified from check-ffmpeg.js
         // Resolve FFmpeg path dynamically
-        const ffmpegPath = ffmpegInstaller.path;
+        let ffmpegPath: string;
+        try {
+            // Using dynamic require to avoid build-time resolution errors on Vercel
+            const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+            ffmpegPath = ffmpegInstaller.path;
+        } catch (e) {
+            console.log('⚠️ FFmpeg installer not found or incompatible, falling back to system ffmpeg');
+            ffmpegPath = 'ffmpeg';
+        }
         console.log('🎞️ Running FFmpeg from:', ffmpegPath);
 
         const fontPath = getFontFile();
