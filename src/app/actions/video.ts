@@ -199,7 +199,7 @@ export async function checkVideoStatus(taskId: string) {
     }
 
     try {
-        // WAN 2.2 polling: POST /openapi/v2/query on runninghub.cn
+        // WAN 2.2 polling: POST /openapi/v2/query on runninghub.ai
         const response = await fetch(`${RUNNINGHUB_BASE}/openapi/v2/query`, {
             method: 'POST',
             headers: {
