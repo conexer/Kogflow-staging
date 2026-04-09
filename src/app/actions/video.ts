@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { CREDIT_COST_VIDEO_IMAGE, deductCredit } from './credits';
 
 // --- Constants ---
 const ATLASCLOUD_BASE = 'https://api.atlascloud.ai';
@@ -62,6 +63,16 @@ export async function generateVideo(data: VideoGenerationRequest) {
 
     const imageUrls = data.imageUrls || [];
     if (imageUrls.length === 0) return { error: 'No image URLs provided' };
+
+    // Deduct credits upfront: 10 credits per image in video
+    if (data.userId) {
+        const totalCost = imageUrls.length * CREDIT_COST_VIDEO_IMAGE;
+        const deduction = await deductCredit(data.userId, totalCost);
+        if (!deduction.success) {
+            return { error: `Insufficient credits. Need ${totalCost} credits (${imageUrls.length} images × 10 credits each).` };
+        }
+        console.log(`💳 Deducted ${totalCost} credits for ${imageUrls.length} images. Remaining: ${deduction.remaining}`);
+    }
 
     try {
         console.log('🎬 Starting Seedance v1 Pro Fast batch on AtlasCloud...');

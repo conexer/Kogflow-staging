@@ -22,7 +22,11 @@ export async function getGuestCredits() {
     return 5;
 }
 
-export async function checkCredits(userId: string) {
+// Credit costs — $5 = 100 credits, 1 credit = $0.05
+export const CREDIT_COST_IMAGE = 10;       // $0.50 per image
+export const CREDIT_COST_VIDEO_IMAGE = 10; // $0.50 per image in video
+
+export async function checkCredits(userId: string, required = CREDIT_COST_IMAGE) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: user, error } = await supabase
@@ -33,31 +37,14 @@ export async function checkCredits(userId: string) {
 
     if (error) return { credits: 0, canGenerate: false };
 
-    // Check if free user needs daily reset
-    if (user.subscription_tier === 'free') {
-        const lastReset = new Date(user.last_credit_reset);
-        const now = new Date();
-        const hoursSinceReset = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
-
-        if (hoursSinceReset >= 24) {
-            // Reset credits
-            await supabase
-                .from('users')
-                .update({ credits: 5, last_credit_reset: now.toISOString() })
-                .eq('id', userId);
-
-            return { credits: 5, canGenerate: true, tier: user.subscription_tier };
-        }
-    }
-
     return {
         credits: user.credits,
-        canGenerate: user.credits > 0,
+        canGenerate: user.credits >= required,
         tier: user.subscription_tier,
     };
 }
 
-export async function deductCredit(userId: string) {
+export async function deductCredit(userId: string, amount = CREDIT_COST_IMAGE) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: user } = await supabase
@@ -66,18 +53,18 @@ export async function deductCredit(userId: string) {
         .eq('id', userId)
         .single();
 
-    if (!user || user.credits <= 0) {
+    if (!user || user.credits < amount) {
         return { success: false, error: 'Insufficient credits' };
     }
 
     const { error } = await supabase
         .from('users')
-        .update({ credits: user.credits - 1 })
+        .update({ credits: user.credits - amount })
         .eq('id', userId);
 
     if (error) return { success: false, error: error.message };
 
-    return { success: true, remaining: user.credits - 1 };
+    return { success: true, remaining: user.credits - amount };
 }
 
 export async function getUserProfile(userId: string) {

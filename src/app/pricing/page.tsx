@@ -14,7 +14,7 @@ const plans = [
         period: 'forever',
         description: 'Perfect for trying out Kogflow',
         features: [
-            '2 generations per day',
+            '100 credits on signup ($5 value)',
             'Basic staging modes',
             'All interior styles',
             'HD downloads',
@@ -29,7 +29,7 @@ const plans = [
         period: 'per month',
         description: 'For hobbyists exploring AI creativity',
         features: [
-            '10 credits per month',
+            '100 credits per month ($5 value)',
             '10 high-quality images',
             'All staging modes',
             'All interior styles',
@@ -47,7 +47,7 @@ const plans = [
         period: 'per month',
         description: 'For consistent creators who need speed',
         features: [
-            '50 credits per month',
+            '500 credits per month',
             'Priority rendering',
             'Lower cost per image',
             'All staging modes',
@@ -66,7 +66,7 @@ const plans = [
         period: 'per month',
         description: 'The ultimate powerhouse for brands',
         features: [
-            '250 credits per month',
+            '2500 credits per month',
             'Commercial usage license',
             'API access',
             'Highest priority',

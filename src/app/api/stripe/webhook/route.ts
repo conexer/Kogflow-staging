@@ -63,13 +63,13 @@ export async function POST(req: NextRequest) {
 
                 if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STARTER) {
                     tier = 'starter';
-                    creditsToAdd = 10;
+                    creditsToAdd = 100;
                 } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO) {
                     tier = 'pro';
-                    creditsToAdd = 50;
+                    creditsToAdd = 500;
                 } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUSINESS) {
                     tier = 'business';
-                    creditsToAdd = 250;
+                    creditsToAdd = 2500;
                 }
 
                 // Get current credits
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
                     .update({
                         subscription_tier: 'free',
                         subscription_status: 'canceled',
-                        credits: 2,
+                        credits: 100,
                     })
                     .eq('stripe_customer_id', customerId);
                 break;
@@ -122,9 +122,9 @@ export async function POST(req: NextRequest) {
                     .single();
 
                 let creditsToAdd = 0;
-                if (user?.subscription_tier === 'starter') creditsToAdd = 10;
-                else if (user?.subscription_tier === 'pro') creditsToAdd = 50;
-                else if (user?.subscription_tier === 'business') creditsToAdd = 250;
+                if (user?.subscription_tier === 'starter') creditsToAdd = 100;
+                else if (user?.subscription_tier === 'pro') creditsToAdd = 500;
+                else if (user?.subscription_tier === 'business') creditsToAdd = 2500;
 
                 if (creditsToAdd > 0) {
                     const currentCredits = user?.credits || 0;
