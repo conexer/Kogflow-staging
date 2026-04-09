@@ -29,7 +29,7 @@ interface VideoGenerationRequest {
     imageUrls?: string[];
 }
 
-const PROMPT = 'Create a realistic walkthrough video of this room. The camera moves at a normal walking pace with handheld, natural motion. Capture authentic, realistic camera movement with subtle micro-movements and slight variations.';
+const PROMPT = 'Create a realistic walkthrough video of this room. The camera moves at a normal walking pace with handheld, natural motion. Capture authentic, realistic camera movement with subtle micro-movements and slight variations. Show the room in full 3D with proper parallax and depth changes as the camera moves.';
 
 async function uploadImageToAtlas(sourceUrl: string): Promise<string> {
     const imgRes = await fetch(sourceUrl);
