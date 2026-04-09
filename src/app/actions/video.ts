@@ -29,7 +29,7 @@ interface VideoGenerationRequest {
     imageUrls?: string[];
 }
 
-const PROMPT = 'Slow, continuous forward tracking shot at eye-level. Smooth gimbal-stabilized handheld motion gliding linearly deep into the room, slightly passing the midpoint. Constant forward momentum, no cuts, realistic walking perspective.';
+const PROMPT = 'Create a realistic walkthrough video of this room. The camera moves at a normal walking pace with handheld, natural motion. Capture authentic, realistic camera movement with subtle micro-movements and slight variations.';
 
 async function uploadImageToAtlas(sourceUrl: string): Promise<string> {
     const imgRes = await fetch(sourceUrl);
