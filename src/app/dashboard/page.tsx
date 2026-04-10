@@ -196,19 +196,21 @@ function DashboardContent() {
                         userId: user?.id,
                         originalUrl: selectedImage,
                         mode: 'edit',
-                        style: data.style
+                        style: data.style,
+                        projectId: projectId
                     });
                     if (status.status === 'success' && status.url) {
                         clearInterval(interval);
                         setGeneratedImage(status.url);
-                        setUploadedImages(prev => [status.url!, ...prev]);
                         setIsGenerating(false);
-                        toast.success('Image edited successfully!');
-                    } else if (status.status === 'failed') {
+                        toast.success('Image staged successfully!');
+                        if (projectId) loadAssets(projectId);
+                    } else if (status.status === 'failed' || status.status === 'error') {
                         clearInterval(interval);
                         setIsGenerating(false);
+                        toast.error('Staging failed. Please try again.');
                     }
-                }, 2000);
+                }, 5000);
             }
         } catch (e: any) {
             setIsGenerating(false);
