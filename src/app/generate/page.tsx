@@ -17,7 +17,7 @@ import { downloadImage } from '@/lib/client-download';
 import { Sparkles, Download } from 'lucide-react';
 
 export default function GeneratePage() {
-    const { user, signOut } = useAuth();
+    const { user, signOut, loading: authLoading } = useAuth();
     console.log('GeneratePage v2 rendered'); // Force rebuild check
     const router = useRouter();
     const [image, setImage] = useState<File | null>(null);
@@ -31,6 +31,13 @@ export default function GeneratePage() {
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<any>(null);
     const [aspectRatio, setAspectRatio] = useState<string | null>(null);
+
+    // Redirect unauthenticated users to signup
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.replace('/signup');
+        }
+    }, [user, authLoading, router]);
 
     useEffect(() => {
         async function loadProfile() {

@@ -26,7 +26,7 @@ import { getProjects } from '@/app/actions/projects';
 import { startEditGeneration, checkGenerationStatus } from '@/app/actions/generate';
 import { uploadAsset, getProjectAssets } from '@/app/actions/assets';
 import { generateVideo, checkVideoStatus, deleteVideo, updateVideoQueueStatus, getQueuedVideos } from '@/app/actions/video';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { downloadImage } from '@/lib/client-download';
 import { getUserProfile } from '@/app/actions/credits';
@@ -36,9 +36,17 @@ import { getUserProfile } from '@/app/actions/credits';
 // -----------------------------------------------------------------------------
 
 function DashboardContent() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const projectId = searchParams.get('project');
+
+    // Redirect unauthenticated users to signup
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.replace('/signup');
+        }
+    }, [user, authLoading, router]);
 
     const [activeTab, setActiveTab] = useState<'videos' | 'images' | 'captions'>('images');
     const [uploadedImages, setUploadedImages] = useState<string[]>([]); // URLs only for display
