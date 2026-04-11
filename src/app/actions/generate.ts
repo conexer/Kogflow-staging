@@ -431,15 +431,22 @@ export async function checkGenerationStatus(taskId: string, metadata: any) {
                             project_id: projectId || null
                         });
 
-                        // Save to assets table so it appears in project image grid
+                        // Save to assets table so it appears in project image grid (check for duplicate first)
                         if (projectId) {
-                            await supabase.from('assets').insert({
-                                user_id: userId,
-                                project_id: projectId,
-                                url: resultUrl,
-                                type: 'image',
-                                filename: `ai-staged-${Date.now()}.jpg`
-                            });
+                            const { data: existingAsset } = await supabase
+                                .from('assets')
+                                .select('id')
+                                .eq('url', resultUrl)
+                                .single();
+                            if (!existingAsset) {
+                                await supabase.from('assets').insert({
+                                    user_id: userId,
+                                    project_id: projectId,
+                                    url: resultUrl,
+                                    type: 'image',
+                                    filename: `ai-staged-${Date.now()}.jpg`
+                                });
+                            }
                         }
                     }
                 }

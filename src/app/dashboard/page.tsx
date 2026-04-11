@@ -213,26 +213,32 @@ function DashboardContent() {
 
             const result = await startEditGeneration(formData);
             if (result.taskId) {
-                const interval = setInterval(async () => {
+                let done = false;
+                const poll = async () => {
+                    if (done) return;
                     const status = await checkGenerationStatus(result.taskId, {
                         userId: user?.id,
                         originalUrl: selectedImage,
                         mode: 'edit',
-                        style: data.style,
+                        style: effectiveStyle,
                         projectId: projectId
                     });
+                    if (done) return; // guard against race if poll fired twice
                     if (status.status === 'success' && status.url) {
-                        clearInterval(interval);
+                        done = true;
                         setGeneratedImage(status.url);
                         setIsGenerating(false);
                         toast.success('Image staged successfully!');
                         if (projectId) loadAssets(projectId);
                     } else if (status.status === 'failed' || status.status === 'error') {
-                        clearInterval(interval);
+                        done = true;
                         setIsGenerating(false);
                         toast.error('Staging failed. Please try again.');
+                    } else {
+                        setTimeout(poll, 5000);
                     }
-                }, 5000);
+                };
+                setTimeout(poll, 5000);
             }
         } catch (e: any) {
             setIsGenerating(false);
