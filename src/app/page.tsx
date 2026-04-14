@@ -222,14 +222,14 @@ export default function Home() {
             </div>
 
             <div className="pt-4 flex flex-col items-center gap-2">
-              <button
-                onClick={handleTryFree}
+              <Link
+                href="/signup"
                 className="px-8 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl inline-flex items-center gap-2"
               >
                 <UploadCloud className="w-5 h-5" />
-                Start Staging For Free
-              </button>
-              <p className="text-sm text-primary-foreground/80 font-medium">No sign up | No credit card</p>
+                Get 50 Free Credits
+              </Link>
+              <p className="text-sm text-primary-foreground/80 font-medium">Free account · No credit card required</p>
             </div>
           </div>
         </section>
