@@ -17,7 +17,8 @@ import {
     X,
     Settings,
     Check,
-    Trash2
+    Trash2,
+    Zap
 } from 'lucide-react';
 import { createProject, getProjects, renameProject, deleteProject } from '@/app/actions/projects';
 import { CreateProjectModal } from '@/components/create-project-modal';
@@ -258,6 +259,12 @@ function DashboardSidebarContent() {
 
             {/* Bottom Menu */}
             <div className="p-4 border-t border-border/40 space-y-1">
+                {(user?.email === 'conexer@gmail.com' || user?.email === 'rocsolid01@gmail.com') && (
+                    <Link href="/outreach" className="flex items-center gap-3 px-3 py-2 text-sm text-primary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors font-medium">
+                        <Zap className="w-4 h-4" />
+                        Outreach Pipeline
+                    </Link>
+                )}
                 <Link href="#" className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                     <Book className="w-4 h-4" />
                     Resources

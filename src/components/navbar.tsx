@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { getUserProfile } from '@/app/actions/credits';
-import { Sparkles, History, CreditCard, User, Menu, X, LogOut, ChevronDown, Video, LayoutTemplate } from 'lucide-react';
+import { Sparkles, History, CreditCard, User, Menu, X, LogOut, ChevronDown, Video, LayoutTemplate, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -75,6 +75,13 @@ export function Navbar() {
                             </div>
                         </div>
                     </div>
+
+                    {(user?.email === 'conexer@gmail.com' || user?.email === 'rocsolid01@gmail.com') && (
+                        <Link href="/outreach" className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                            <Zap className="w-4 h-4" />
+                            <span>Outreach</span>
+                        </Link>
+                    )}
 
                     <Link href="/history" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         <History className="w-4 h-4" />
@@ -168,6 +175,16 @@ export function Navbar() {
                                 </div>
                             )}
                         </div>
+                        {(user?.email === 'conexer@gmail.com' || user?.email === 'rocsolid01@gmail.com') && (
+                            <Link
+                                href="/outreach"
+                                className="flex items-center gap-2 text-sm font-medium py-2 hover:bg-primary/10 rounded-md px-2 text-primary"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                <Zap className="w-4 h-4" />
+                                <span>Outreach Pipeline</span>
+                            </Link>
+                        )}
                         <Link
                             href="/history"
                             className="flex items-center gap-2 text-sm font-medium py-2 hover:bg-muted/50 rounded-md px-2"
