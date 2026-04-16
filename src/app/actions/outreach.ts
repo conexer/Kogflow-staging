@@ -937,6 +937,31 @@ const SITE_TEST_URLS: { site: string; url: string; name: string }[] = [
         name: 'HAR.com',
         url: 'https://www.har.com/search/dosearch?type=residential&minprice=200000&maxprice=600000&status=A&city=Houston',
     },
+    {
+        site: 'homefinder.com',
+        name: 'HomeFinder.com',
+        url: 'https://homefinder.com/homes-for-sale/phoenix-az',
+    },
+    {
+        site: 'estately.com',
+        name: 'Estately.com',
+        url: 'https://www.estately.com/AZ/Phoenix',
+    },
+    {
+        site: 'remax.com',
+        name: 'RE/MAX.com',
+        url: 'https://www.remax.com/homes-for-sale/az/phoenix/city/3200705',
+    },
+    {
+        site: 'century21.com',
+        name: 'Century21.com',
+        url: 'https://www.century21.com/real-estate/phoenix-az/LCAZPHOENIX/',
+    },
+    {
+        site: 'coldwellbanker.com',
+        name: 'Coldwell Banker',
+        url: 'https://www.coldwellbanker.com/for-sale/Phoenix-AZ',
+    },
 ];
 
 export async function testSiteWithZyte(siteKey: string): Promise<SiteTestResult> {
@@ -967,10 +992,19 @@ export async function testSiteWithZyte(siteKey: string): Promise<SiteTestResult>
         const nextDataFound = html.includes('__NEXT_DATA__');
         const jsonLdFound = html.includes('application/ld+json');
 
-        // Count addresses via all patterns
-        const addressMatches = [...html.matchAll(/"streetAddress"\s*:\s*"([^"]+)"/g)];
-        const photoMatches = [...html.matchAll(/https:\/\/[^"']+\.(?:jpg|jpeg|png|webp)/g)];
-        const sampleAddresses = addressMatches.slice(0, 3).map(m => m[1]);
+        // Count addresses via multiple patterns (different sites use different schemas)
+        const streetAddrMatches = [...html.matchAll(/"streetAddress"\s*:\s*"([^"]+)"/g)].map(m => m[1]);
+        const fullStreetMatches = [...html.matchAll(/"FULLSTREETADDRESS"\s*:\s*"([^"]+)"/g)].map(m => m[1]);
+        const listingAddrMatches = [...html.matchAll(/"(?:address|listingAddress|propertyAddress)"\s*:\s*"([^"]+\d+[^"]+)"/g)].map(m => m[1]);
+        const allAddresses = [...new Set([...streetAddrMatches, ...fullStreetMatches, ...listingAddrMatches])];
+
+        const photoMatches = [...html.matchAll(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"'\s]*)?/g)];
+        const sampleAddresses = allAddresses.slice(0, 3);
+
+        // Check page title for bot-detection redirects (e.g. served wrong city or CAPTCHA page)
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
+        const pageTitle = titleMatch?.[1]?.trim() || '';
+        const isBotDetected = html.includes('robot') || html.includes('captcha') || html.includes('Cloudflare') || html.includes('Just a moment') || (html.length < 10000 && !hasBody);
 
         // Find a meaningful snippet — look for first body content
         const bodyStart = html.indexOf('<body');
@@ -981,13 +1015,13 @@ export async function testSiteWithZyte(siteKey: string): Promise<SiteTestResult>
         return {
             site: target.site,
             url: target.url,
-            status: hasBody ? 'ok' : 'blocked',
+            status: isBotDetected ? 'blocked' : hasBody ? 'ok' : 'blocked',
             htmlLength: html.length,
             hasBody,
-            snippet,
+            snippet: `[Title: ${pageTitle}]\n\n${snippet}`,
             nextDataFound,
             jsonLdFound,
-            addressesFound: addressMatches.length,
+            addressesFound: allAddresses.length,
             photosFound: photoMatches.length,
             sampleAddresses,
         };
