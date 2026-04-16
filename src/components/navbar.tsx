@@ -13,7 +13,6 @@ export function Navbar() {
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<any>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isProductsOpen, setIsProductsOpen] = useState(false);
 
     useEffect(() => {
         async function loadCredits() {
@@ -144,36 +143,25 @@ export function Navbar() {
             {isMenuOpen && (
                 <div className="md:hidden bg-background border-b border-border/40 animate-in slide-in-from-top-2">
                     <div className="container py-4 flex flex-col gap-4 px-4 overflow-y-auto max-h-[80vh]">
-                        {/* Mobile Products Menu */}
-                        <div className="space-y-2">
-                            <button
-                                onClick={() => setIsProductsOpen(!isProductsOpen)}
-                                className="flex items-center justify-between w-full text-sm font-medium py-2 px-2 hover:bg-muted/50 rounded-md"
+                        {/* Mobile Products — always visible, no collapse */}
+                        <div className="space-y-1">
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-1">Products</div>
+                            <Link
+                                href="/dashboard?tab=videos"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-3 p-2 text-sm font-medium hover:bg-muted/50 rounded-md"
                             >
-                                <span>Products</span>
-                                <ChevronDown className={cn("w-4 h-4 transition-transform", isProductsOpen && "rotate-180")} />
-                            </button>
-
-                            {isProductsOpen && (
-                                <div className="pl-4 space-y-1">
-                                    <Link
-                                        href="/dashboard?tab=videos"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-3 p-2 text-sm hover:bg-muted/50 rounded-md text-muted-foreground"
-                                    >
-                                        <Video className="w-4 h-4" />
-                                        1-Click Product Video
-                                    </Link>
-                                    <Link
-                                        href="/dashboard"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-3 p-2 text-sm hover:bg-muted/50 rounded-md text-muted-foreground"
-                                    >
-                                        <LayoutTemplate className="w-4 h-4" />
-                                        Virtual Staging
-                                    </Link>
-                                </div>
-                            )}
+                                <Video className="w-4 h-4 text-violet-500" />
+                                1-Click Product Video
+                            </Link>
+                            <Link
+                                href="/dashboard"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-3 p-2 text-sm font-medium hover:bg-muted/50 rounded-md"
+                            >
+                                <LayoutTemplate className="w-4 h-4 text-blue-500" />
+                                Virtual Staging
+                            </Link>
                         </div>
                         {(user?.email === 'conexer@gmail.com' || user?.email === 'rocsolid01@gmail.com') && (
                             <Link

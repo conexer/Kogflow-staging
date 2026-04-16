@@ -86,6 +86,8 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
 
     const slug = CITY_SLUGS[city] || city.toLowerCase().replace(/\s+/g, '-');
+    // Extract expected 2-letter state from slug (e.g. "phoenix-az" → "AZ")
+    const expectedState = slug.split('-').pop()?.toUpperCase() || '';
     const url = `https://www.homes.com/homes-for-sale/${slug}/`;
 
     try {
@@ -95,16 +97,26 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
         const rawHtmlSnippet = html.slice(0, 2000);
         const listings: ScrapedListing[] = [];
 
-        // Parse JSON-LD @graph
-        const jsonLdMatch = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
-        if (!jsonLdMatch) return { listings: [], rawHtmlSnippet, error: 'No JSON-LD found' };
-
-        const graphData = JSON.parse(jsonLdMatch[1]);
-        const items: any[] = graphData?.['@graph']?.[0]?.mainEntity?.itemListElement || [];
+        // Parse JSON-LD @graph — find the block with itemListElement
+        const allJsonLd = [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)];
+        let items: any[] = [];
+        for (const match of allJsonLd) {
+            try {
+                const parsed = JSON.parse(match[1]);
+                const candidates = parsed?.['@graph']?.[0]?.mainEntity?.itemListElement
+                    || parsed?.mainEntity?.itemListElement
+                    || [];
+                if (candidates.length > items.length) items = candidates;
+            } catch { continue; }
+        }
+        if (items.length === 0) return { listings: [], rawHtmlSnippet, error: 'No JSON-LD itemListElement found' };
 
         for (const item of items.slice(0, maxListings)) {
             const addr = item?.mainEntity?.address;
             if (!addr?.streetAddress) continue;
+
+            // Filter by state to ensure we got city-specific listings, not national featured
+            if (expectedState && addr.addressRegion && addr.addressRegion.toUpperCase() !== expectedState) continue;
 
             // Filter by price range
             const price = item?.offers?.price || 0;
@@ -148,13 +160,22 @@ export async function scrapeHarCity(city: string, maxListings: number = 40): Pro
 
         const rawHtmlSnippet = html.slice(0, 2000);
 
-        // Find the JSON array embedded in the HTML
-        const idx = html.indexOf('FULLSTREETADDRESS');
+        // Find the JSON array embedded in the HTML — use bracket counting for robustness
+        const idx = html.indexOf('"FULLSTREETADDRESS"');
         if (idx === -1) return { listings: [], rawHtmlSnippet, error: 'No listing data in HAR HTML' };
 
         const start = html.lastIndexOf('[{', idx);
-        const end = html.indexOf('}]', idx) + 2;
-        if (start === -1 || end < 2) return { listings: [], rawHtmlSnippet, error: 'Could not find JSON bounds' };
+        if (start === -1) return { listings: [], rawHtmlSnippet, error: 'Could not find JSON array start' };
+
+        // Count brackets to find matching end
+        let depth = 0;
+        let end = start;
+        for (let i = start; i < Math.min(start + 2000000, html.length); i++) {
+            const ch = html[i];
+            if (ch === '[' || ch === '{') depth++;
+            else if (ch === ']' || ch === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+        }
+        if (end <= start) return { listings: [], rawHtmlSnippet, error: 'Could not find JSON array end' };
 
         const arr: any[] = JSON.parse(html.slice(start, end));
         const listings: ScrapedListing[] = [];
@@ -740,22 +761,17 @@ export async function runPipelineSession(config: {
         const batchSize = Math.ceil(config.scrapesPerSession / config.cities.length);
         attempts++;
 
-        // Houston → HAR.com (Houston Association of Realtors), all others → homes.com
-        const isHoustonArea = ['Houston', 'San Antonio', 'Dallas', 'Austin'].includes(city);
-        const scrapeResult = isHoustonArea
-            ? await scrapeHarCity(city, batchSize)
-            : await scrapeHomesCity(city, batchSize);
+        // HAR.com is primary (works for any city name), homes.com is fallback
+        const harResult = await scrapeHarCity(city, batchSize);
+        let { listings, rawHtmlSnippet, error } = harResult;
 
-        // Fallback: if primary scraper got 0 listings, try the other one
-        let { listings, rawHtmlSnippet, error } = scrapeResult;
+        // Fallback to homes.com if HAR returned 0 listings
         if ((!listings || listings.length === 0) && !error) {
-            debug.push(`[${city}] Primary scraper got 0, trying fallback...`);
-            const fallback = isHoustonArea
-                ? await scrapeHomesCity(city, batchSize)
-                : await scrapeHarCity(city, batchSize);
-            listings = fallback.listings;
-            rawHtmlSnippet = fallback.rawHtmlSnippet;
-            if (fallback.error) error = fallback.error;
+            debug.push(`[${city}] HAR got 0 listings, trying homes.com...`);
+            const homesResult = await scrapeHomesCity(city, batchSize);
+            listings = homesResult.listings;
+            rawHtmlSnippet = homesResult.rawHtmlSnippet;
+            if (homesResult.error) error = homesResult.error;
         }
 
         if (error) {
