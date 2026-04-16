@@ -484,40 +484,124 @@ export default function OutreachPage() {
                                 <p className="text-sm text-muted-foreground">Go to Dashboard → click "Run Session" to start scraping listings</p>
                             </div>
                         ) : (
-                            <div className="space-y-2">
-                                {leads.map((lead) => (
-                                    <div key={lead.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:border-primary/30 transition-colors">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-medium truncate">{lead.address}</div>
-                                            <div className="text-xs text-muted-foreground flex items-center gap-3 mt-0.5 flex-wrap">
-                                                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{lead.city}</span>
-                                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{lead.days_on_market}d on market</span>
-                                                <span>${lead.price?.toLocaleString()}</span>
-                                                {lead.price_reduced && <span className="flex items-center gap-1 text-red-400"><TrendingDown className="w-3 h-3" />Price Reduced</span>}
-                                                {lead.empty_rooms?.length > 0 && <span className="flex items-center gap-1 text-violet-400"><Image className="w-3 h-3" />{lead.empty_rooms.length} empty rooms</span>}
-                                            </div>
-                                        </div>
-                                        <div className="text-center shrink-0">
-                                            <div className="text-lg font-bold text-amber-400">{lead.icp_score}</div>
-                                            <div className="text-xs text-muted-foreground">ICP</div>
-                                        </div>
-                                        <span className={cn("px-2 py-1 rounded-full text-xs font-medium shrink-0", STATUS_COLORS[lead.status] || STATUS_COLORS.scraped)}>
-                                            {STATUS_LABELS[lead.status] || lead.status}
-                                        </span>
-                                        {lead.agent_email && lead.status !== 'emailed' && (
-                                            <button
-                                                onClick={() => handleSendEmail(lead)}
-                                                className="p-1.5 hover:bg-green-500/10 text-muted-foreground hover:text-green-400 rounded transition-colors shrink-0"
-                                                title={`Send to ${lead.agent_email}`}
-                                            >
-                                                <Send className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                        <a href={lead.listing_url} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-muted rounded transition-colors shrink-0">
-                                            <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                                        </a>
-                                    </div>
-                                ))}
+                            <div className="overflow-x-auto rounded-xl border border-border">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border bg-muted/40 text-xs text-muted-foreground uppercase tracking-wide">
+                                            <th className="text-left px-3 py-2.5 font-medium">Score</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Status</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Empty Rooms</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Agent Email</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Agent Name</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Agent Phone</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Address</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">City</th>
+                                            <th className="text-right px-3 py-2.5 font-medium">Price</th>
+                                            <th className="text-center px-3 py-2.5 font-medium">DOM</th>
+                                            <th className="text-center px-3 py-2.5 font-medium">↓Price</th>
+                                            <th className="text-center px-3 py-2.5 font-medium">Photos</th>
+                                            <th className="text-center px-3 py-2.5 font-medium">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {leads.map((lead) => (
+                                            <tr key={lead.id} className="hover:bg-muted/20 transition-colors">
+                                                {/* ICP Score */}
+                                                <td className="px-3 py-2.5 shrink-0">
+                                                    <span className={cn("font-bold text-base tabular-nums", lead.icp_score >= 40 ? 'text-green-400' : lead.icp_score >= 20 ? 'text-amber-400' : 'text-muted-foreground')}>
+                                                        {lead.icp_score}
+                                                    </span>
+                                                </td>
+                                                {/* Status */}
+                                                <td className="px-3 py-2.5">
+                                                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap", STATUS_COLORS[lead.status] || STATUS_COLORS.scraped)}>
+                                                        {STATUS_LABELS[lead.status] || lead.status}
+                                                    </span>
+                                                </td>
+                                                {/* Empty Rooms */}
+                                                <td className="px-3 py-2.5">
+                                                    {lead.empty_rooms?.length > 0 ? (
+                                                        <div className="flex flex-col gap-0.5">
+                                                            {lead.empty_rooms.map((r: any, i: number) => (
+                                                                <span key={i} className="flex items-center gap-1 text-violet-400 text-xs whitespace-nowrap">
+                                                                    <Image className="w-3 h-3 shrink-0" />
+                                                                    {r.roomType}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground/40 text-xs">—</span>
+                                                    )}
+                                                </td>
+                                                {/* Agent Email */}
+                                                <td className="px-3 py-2.5">
+                                                    {lead.agent_email ? (
+                                                        <a href={`mailto:${lead.agent_email}`} className="text-primary hover:underline text-xs font-mono truncate block max-w-[180px]" title={lead.agent_email}>
+                                                            {lead.agent_email}
+                                                        </a>
+                                                    ) : <span className="text-muted-foreground/40 text-xs">—</span>}
+                                                </td>
+                                                {/* Agent Name */}
+                                                <td className="px-3 py-2.5">
+                                                    <span className="text-xs whitespace-nowrap">{lead.agent_name || <span className="text-muted-foreground/40">—</span>}</span>
+                                                </td>
+                                                {/* Agent Phone */}
+                                                <td className="px-3 py-2.5">
+                                                    {lead.agent_phone ? (
+                                                        <a href={`tel:${lead.agent_phone}`} className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap font-mono">
+                                                            {lead.agent_phone}
+                                                        </a>
+                                                    ) : <span className="text-muted-foreground/40 text-xs">—</span>}
+                                                </td>
+                                                {/* Address */}
+                                                <td className="px-3 py-2.5 max-w-[200px]">
+                                                    <span className="text-xs truncate block" title={lead.address}>{lead.address}</span>
+                                                </td>
+                                                {/* City */}
+                                                <td className="px-3 py-2.5">
+                                                    <span className="text-xs text-muted-foreground whitespace-nowrap">{lead.city}</span>
+                                                </td>
+                                                {/* Price */}
+                                                <td className="px-3 py-2.5 text-right">
+                                                    <span className="text-xs font-medium tabular-nums whitespace-nowrap">${lead.price?.toLocaleString()}</span>
+                                                </td>
+                                                {/* DOM */}
+                                                <td className="px-3 py-2.5 text-center">
+                                                    <span className={cn("text-xs tabular-nums", lead.days_on_market >= 60 ? 'text-red-400 font-semibold' : lead.days_on_market >= 30 ? 'text-amber-400' : 'text-muted-foreground')}>
+                                                        {lead.days_on_market}d
+                                                    </span>
+                                                </td>
+                                                {/* Price Reduced */}
+                                                <td className="px-3 py-2.5 text-center">
+                                                    {lead.price_reduced
+                                                        ? <TrendingDown className="w-3.5 h-3.5 text-red-400 mx-auto" />
+                                                        : <span className="text-muted-foreground/40 text-xs">—</span>}
+                                                </td>
+                                                {/* Photo Count */}
+                                                <td className="px-3 py-2.5 text-center">
+                                                    <span className="text-xs text-muted-foreground tabular-nums">{lead.photo_count}</span>
+                                                </td>
+                                                {/* Actions */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center gap-1 justify-center">
+                                                        {lead.agent_email && lead.status !== 'emailed' && (
+                                                            <button
+                                                                onClick={() => handleSendEmail(lead)}
+                                                                className="p-1.5 hover:bg-green-500/10 text-muted-foreground hover:text-green-400 rounded transition-colors"
+                                                                title={`Send to ${lead.agent_email}`}
+                                                            >
+                                                                <Send className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        )}
+                                                        <a href={lead.listing_url} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-muted rounded transition-colors" title="View listing">
+                                                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>
