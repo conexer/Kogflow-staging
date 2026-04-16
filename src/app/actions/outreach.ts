@@ -808,6 +808,34 @@ https://kogflow.com`;
 }
 
 // ─────────────────────────────────────────────
+// 7b. LISTING PHOTO FETCHER — Get all room photos from HAR detail page
+// ─────────────────────────────────────────────
+
+// Fetches the HAR.com listing detail page and extracts all photo URLs.
+// HAR search results only include the primary photo; the detail page
+// renders up to ~15–20 photos in the initial HTML.
+async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise<string[]> {
+    if (!propertyUrl) return [];
+    const fullUrl = propertyUrl.startsWith('http') ? propertyUrl : `https://www.har.com${propertyUrl}`;
+
+    try {
+        const { html, error } = await zyteGet(fullUrl);
+        if (error || !html) return [];
+
+        // Extract unique low-res photo URLs (lr = low-res, good enough for Moondream)
+        const urls = [
+            ...new Set(
+                [...html.matchAll(/https:\/\/mediahar\.harstatic\.com\/[^"'\s]+\/lr\/[^"'\s]+\.jpeg/g)]
+                    .map(m => m[0])
+            ),
+        ];
+        return urls.slice(0, maxPhotos);
+    } catch {
+        return [];
+    }
+}
+
+// ─────────────────────────────────────────────
 // 8. PIPELINE RUNNER — Orchestrates everything
 // ─────────────────────────────────────────────
 
@@ -869,14 +897,24 @@ export async function runPipelineSession(config: {
     for (const listing of allListings) {
         listing.score = await scoreICP(listing);
 
-        // Detect empty rooms only if we have photos
+        // Get all listing photos — fetch detail page if it's a HAR listing (1 → up to 10 photos)
+        let photoUrls = listing.photos; // primary photo from search results
+        if (listing.listingUrl?.includes('har.com/homedetail')) {
+            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 10);
+            if (detailPhotos.length > 0) {
+                photoUrls = detailPhotos;
+                debug.push(`[${listing.city}] ${listing.address} — fetched ${detailPhotos.length} photos from listing page`);
+            }
+        }
+
+        // Analyze each photo with Moondream to detect empty rooms
         const emptyRooms: { roomType: string; imageUrl: string; stagedUrl?: string }[] = [];
-        if (listing.photos.length > 0) {
-            for (const photoUrl of listing.photos.slice(0, 8)) {
-                const { isEmpty, confidence, roomType } = await detectRoom(photoUrl);
-                if (isEmpty && confidence >= 20) {
-                    emptyRooms.push({ roomType, imageUrl: photoUrl });
-                }
+        for (const photoUrl of photoUrls.slice(0, 10)) {
+            const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoUrl);
+            if (roomErr) { debug.push(`  Moondream error: ${roomErr}`); continue; }
+            debug.push(`  Photo: isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
+            if (isEmpty && confidence >= 20) {
+                emptyRooms.push({ roomType, imageUrl: photoUrl });
             }
         }
 
