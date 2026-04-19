@@ -661,6 +661,27 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
     return { submitted, failed, errors };
 }
 
+// Upload a remote image URL to Supabase storage and return the permanent public URL.
+// Kie.ai returns tempfile.aiquickdraw.com URLs that expire — this makes them permanent.
+async function uploadStagedImage(tempUrl: string, leadId: string): Promise<string> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    try {
+        const res = await fetch(tempUrl);
+        if (!res.ok) return tempUrl; // fall back to temp URL if fetch fails
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const path = `outreach/staged/${leadId}.jpg`;
+        const { error } = await supabase.storage.from('uploads').upload(path, buffer, {
+            contentType: 'image/jpeg',
+            upsert: true,
+        });
+        if (error) return tempUrl;
+        const { data } = supabase.storage.from('uploads').getPublicUrl(path);
+        return data.publicUrl;
+    } catch {
+        return tempUrl;
+    }
+}
+
 // Poll all staged leads, save the generated image URL, then send outreach email
 export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -682,9 +703,12 @@ export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stil
         const result = await checkStagingResult(lead.staging_task_id);
 
         if (result.status === 'success' && result.url) {
-            // Save staged URL into empty_rooms[0].stagedUrl
+            // Upload staged image to permanent Supabase storage (Kie.ai URLs expire)
+            const permanentUrl = await uploadStagedImage(result.url, lead.id);
+
+            // Save permanent URL into empty_rooms[0].stagedUrl
             const updatedRooms = [...(lead.empty_rooms || [])];
-            if (updatedRooms[0]) updatedRooms[0].stagedUrl = result.url;
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
             await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
 
             // Send outreach email if agent has an email
@@ -693,7 +717,7 @@ export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stil
                     agentName: lead.agent_name,
                     agentEmail: lead.agent_email,
                     address: lead.address,
-                    stagedImageUrl: result.url,
+                    stagedImageUrl: permanentUrl,
                     beforeImageUrl: lead.empty_rooms?.[0]?.imageUrl,
                 });
                 if (emailResult.success) {
@@ -857,13 +881,13 @@ export async function sendOutreachEmail(lead: {
           <tr>
             <td align="center" style="padding:0 0 12px 0;">
               <p style="margin:0 0 6px 0;font-size:13px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;">BEFORE</p>
-              ${lead.beforeImageUrl ? `<img src="${lead.beforeImageUrl}" alt="Before - empty room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:1px solid #e5e7eb;" />` : ''}
+              ${lead.beforeImageUrl ? `<a href="${lead.beforeImageUrl}" target="_blank" style="display:block;"><img src="${lead.beforeImageUrl}" alt="Before - empty room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:1px solid #e5e7eb;" /></a>` : ''}
             </td>
           </tr>
           <tr>
             <td align="center" style="padding:0;">
               <p style="margin:0 0 6px 0;font-size:13px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:1px;">VIRTUALLY STAGED BY KOGFLOW</p>
-              <img src="${lead.stagedImageUrl}" alt="Virtually staged room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:2px solid #7c3aed;" />
+              <a href="${lead.stagedImageUrl}" target="_blank" style="display:block;"><img src="${lead.stagedImageUrl}" alt="Virtually staged room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:2px solid #7c3aed;" /></a>
             </td>
           </tr>
         </table>` : '';
