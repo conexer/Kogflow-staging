@@ -108,7 +108,7 @@ export async function startGeneration(formData: FormData) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'nano-banana-pro',
+                    model: 'google/nano-banana-edit',
                     input: {
                         prompt: prompt,
                         image_input: [imageUrl],
@@ -250,7 +250,7 @@ export async function startEditGeneration(formData: FormData) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'nano-banana-pro',
+                    model: 'google/nano-banana-edit',
                     input: {
                         prompt: fullPrompt,
                         image_input: [imageUrl],

@@ -67,38 +67,6 @@ const CITY_SLUGS: Record<string, string> = {
     'Portland': 'portland-or', 'Raleigh': 'raleigh-nc',
 };
 
-// City → GPS coordinates for Zyte geolocation spoofing
-// Makes sites serve city-specific content instead of national/generic pages
-const CITY_COORDS: Record<string, { latitude: number; longitude: number }> = {
-    'Houston': { latitude: 29.7604, longitude: -95.3698 },
-    'Katy': { latitude: 29.7858, longitude: -95.8245 },
-    'Sugar Land': { latitude: 29.6197, longitude: -95.6349 },
-    'Spring': { latitude: 30.0799, longitude: -95.4172 },
-    'Pearland': { latitude: 29.5635, longitude: -95.2860 },
-    'The Woodlands': { latitude: 30.1658, longitude: -95.4613 },
-    'Cypress': { latitude: 29.9691, longitude: -95.6972 },
-    'Pasadena': { latitude: 29.6911, longitude: -95.2091 },
-    'Humble': { latitude: 29.9988, longitude: -95.2627 },
-    'Friendswood': { latitude: 29.5294, longitude: -95.2010 },
-    'League City': { latitude: 29.5075, longitude: -95.0949 },
-    'Baytown': { latitude: 29.7355, longitude: -94.9774 },
-    'Conroe': { latitude: 30.3119, longitude: -95.4561 },
-    'Tomball': { latitude: 30.0974, longitude: -95.6163 },
-    'Richmond': { latitude: 29.5819, longitude: -95.7608 },
-    'Rosenberg': { latitude: 29.5572, longitude: -95.8086 },
-    'Austin': { latitude: 30.2672, longitude: -97.7431 },
-    'San Antonio': { latitude: 29.4241, longitude: -98.4936 },
-    'Dallas': { latitude: 32.7767, longitude: -96.7970 },
-    'Fort Worth': { latitude: 32.7555, longitude: -97.3308 },
-    'Phoenix': { latitude: 33.4484, longitude: -112.0740 },
-    'Atlanta': { latitude: 33.7490, longitude: -84.3880 },
-    'Las Vegas': { latitude: 36.1699, longitude: -115.1398 },
-    'Denver': { latitude: 39.7392, longitude: -104.9903 },
-    'Nashville': { latitude: 36.1627, longitude: -86.7816 },
-    'Charlotte': { latitude: 35.2271, longitude: -80.8431 },
-    'Tampa': { latitude: 27.9506, longitude: -82.4572 },
-    'Orlando': { latitude: 28.5383, longitude: -81.3792 },
-};
 
 async function zyteGet(url: string, _city?: string): Promise<{ html?: string; error?: string }> {
     const payload: Record<string, any> = {
@@ -485,7 +453,7 @@ export async function detectRoom(imageUrl: string): Promise<{
             },
             body: JSON.stringify({
                 image: imageData,
-                question: 'Is this room empty and unfurnished with no furniture? Reply in this exact format with no brackets: YES or NO, then a number 0 to 100 for your confidence, then the room type. Example: YES, 85, bedroom',
+                question: 'What furniture and objects do you see in this room? Be specific and list every item you can see.',
                 stream: false,
             }),
         });
@@ -496,22 +464,39 @@ export async function detectRoom(imageUrl: string): Promise<{
         }
 
         const data = await res.json();
-        const answer: string = data.answer || data.result || '';
+        const answer: string = (data.answer || data.result || '').toLowerCase();
 
-        // Strip brackets, normalize — Moondream often ignores format instructions
-        const clean = answer.replace(/[\[\]]/g, '').trim();
-        // Check for YES/NO anywhere in the answer (handles "YES 0", "Yes,85,bedroom", "[Yes]" etc.)
-        const isEmpty = /\byes\b/i.test(clean);
-        // Extract first number found — handles "85", "0-10" (take upper), "YES 0"
-        const numMatch = clean.match(/(\d+)(?:\s*-\s*(\d+))?/);
-        const rawConf = numMatch
-            ? numMatch[2] ? parseInt(numMatch[2]) : parseInt(numMatch[1])
-            : 0;
-        // If Moondream says YES but gives very low/zero confidence, default to 50 (trust the YES)
-        const confidence = isEmpty && rawConf <= 15 ? 50 : rawConf;
-        // Extract room type — last word-group after removing YES/NO and numbers
-        const roomTypeMatch = clean.replace(/\byes\b|\bno\b|\d+(-\d+)?/gi, '').replace(/[,\s]+/g, ' ').trim();
-        const roomType = roomTypeMatch.toLowerCase() || 'unknown';
+        // Keywords that indicate furniture/furnishings — if any match, room is NOT empty
+        const FURNITURE_KEYWORDS = [
+            'sofa', 'couch', 'chair', 'table', 'bed', 'desk', 'dresser', 'cabinet',
+            'shelf', 'bookshelf', 'bookcase', 'wardrobe', 'television', 'tv', 'lamp',
+            'rug', 'carpet', 'curtain', 'blinds', 'artwork', 'picture', 'mirror',
+            'stove', 'refrigerator', 'fridge', 'dishwasher', 'sink', 'toilet', 'bathtub',
+            'shower', 'vanity', 'counter', 'island', 'appliance', 'fireplace', 'ceiling fan',
+        ];
+
+        // Phrases that confirm the room is empty
+        const EMPTY_KEYWORDS = [
+            'empty room', 'no furniture', 'bare', 'unfurnished', 'vacant',
+            'nothing in', 'no objects', 'no items', 'does not contain any',
+            'there is nothing', 'i don\'t see any furniture', 'i do not see any furniture',
+            'no visible furniture', 'appears to be empty', 'room is empty',
+        ];
+
+        const hasFurniture = FURNITURE_KEYWORDS.some(kw => answer.includes(kw));
+        const confirmsEmpty = EMPTY_KEYWORDS.some(kw => answer.includes(kw));
+
+        // Room must have NO furniture keywords AND at least one empty-confirming phrase
+        const isEmpty = !hasFurniture && confirmsEmpty;
+        const confidence = isEmpty ? 90 : hasFurniture ? 0 : 0;
+
+        // Guess room type from description
+        const roomType = answer.includes('bedroom') || answer.includes('bed') ? 'bedroom'
+            : answer.includes('living') ? 'living room'
+            : answer.includes('kitchen') ? 'kitchen'
+            : answer.includes('dining') ? 'dining room'
+            : answer.includes('bathroom') || answer.includes('bath') ? 'bathroom'
+            : 'room';
 
         return { isEmpty, confidence, roomType };
 
@@ -639,12 +624,109 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
     return { success: true };
 }
 
+// Submit a small batch of leads to Kie.ai (2-3 at a time to avoid timeouts)
+export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, empty_rooms')
+        .eq('status', 'scraped')
+        .not('empty_rooms', 'eq', '[]')
+        .limit(limit);
+
+    if (error) return { submitted: 0, failed: 0, errors: [error.message] };
+
+    const pending = (data || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
+    let submitted = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of pending) {
+        const room = lead.empty_rooms[0];
+        const { taskId, error: stageErr } = await stageEmptyRoom(room.imageUrl, room.roomType || 'room');
+        if (taskId) {
+            await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
+            submitted++;
+        } else {
+            failed++;
+            errors.push(`${lead.address}: ${stageErr}`);
+        }
+        // Small delay between submissions to avoid Kie.ai rate limiting
+        if (pending.indexOf(lead) < pending.length - 1) {
+            await new Promise(r => setTimeout(r, 5000));
+        }
+    }
+
+    return { submitted, failed, errors };
+}
+
+// Poll all staged leads, save the generated image URL, then send outreach email
+export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
+        .eq('status', 'staged')
+        .not('staging_task_id', 'is', null);
+
+    if (error) return { emailed: 0, stillProcessing: 0, failed: 0, errors: [error.message] };
+
+    let emailed = 0;
+    let stillProcessing = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of (data || [])) {
+        const result = await checkStagingResult(lead.staging_task_id);
+
+        if (result.status === 'success' && result.url) {
+            // Save staged URL into empty_rooms[0].stagedUrl
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = result.url;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+
+            // Send outreach email if agent has an email
+            if (lead.agent_email) {
+                const emailResult = await sendOutreachEmail({
+                    agentName: lead.agent_name,
+                    agentEmail: lead.agent_email,
+                    address: lead.address,
+                    stagedImageUrl: result.url,
+                    beforeImageUrl: lead.empty_rooms?.[0]?.imageUrl,
+                });
+                if (emailResult.success) {
+                    await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                    emailed++;
+                } else {
+                    errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+                    failed++;
+                }
+            } else {
+                // No email — still mark progress
+                await updateLeadStatus(lead.id, 'form_filled');
+                errors.push(`No email for ${lead.address} — staged image saved`);
+            }
+        } else if (result.status === 'processing') {
+            stillProcessing++;
+        } else {
+            // failed or error — reset to scraped so it can be retried
+            await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
+            failed++;
+            errors.push(`Generation failed ${lead.address}: ${result.error}`);
+        }
+    }
+
+    return { emailed, stillProcessing, failed, errors };
+}
+
 export async function getLeadStats() {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data, error } = await supabase
         .from('outreach_leads')
-        .select('status, icp_score');
+        .select('status, icp_score, photo_count, empty_rooms');
 
     if (error) return { error: error.message };
 
@@ -656,6 +738,9 @@ export async function getLeadStats() {
         form_filled: data?.filter(l => l.status === 'form_filled').length || 0,
         emailed: data?.filter(l => l.status === 'emailed').length || 0,
         avgScore: data?.length ? Math.round(data.reduce((s, l) => s + (l.icp_score || 0), 0) / data.length) : 0,
+        totalPhotos: data?.reduce((s, l) => s + (l.photo_count || 0), 0) || 0,
+        leadsWithPhotos: data?.filter(l => (l.photo_count || 0) > 0).length || 0,
+        emptyRoomsFound: data?.filter(l => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0).length || 0,
     };
 
     return { stats };
@@ -678,7 +763,7 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string): Promis
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'nano-banana-pro',
+                model: 'google/nano-banana-edit',
                 input: {
                     prompt,
                     image_input: [imageUrl],
@@ -687,10 +772,12 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string): Promis
             }),
         });
 
-        if (!res.ok) return { error: `Kie.ai error: ${res.status}` };
         const data = await res.json();
+        if (!res.ok || (data.code && data.code !== 200)) {
+            return { error: data.msg || `Kie.ai error: ${res.status}` };
+        }
         const taskId = data.data?.taskId;
-        if (!taskId) return { error: 'No taskId returned' };
+        if (!taskId) return { error: `No taskId returned (response: ${JSON.stringify(data).slice(0, 100)})` };
         return { taskId };
 
     } catch (error: any) {
@@ -752,6 +839,7 @@ export async function sendOutreachEmail(lead: {
     agentEmail: string;
     address: string;
     stagedImageUrl?: string;
+    beforeImageUrl?: string;
 }): Promise<{ success?: boolean; error?: string }> {
     if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
         return { error: 'Gmail OAuth credentials not configured' };
@@ -761,27 +849,84 @@ export async function sendOutreachEmail(lead: {
     try {
         const accessToken = await getGmailAccessToken();
 
-        const subject = `Your listing at ${lead.address} — free virtual staging sample inside`;
-        const body = `Hi ${lead.agentName || 'there'},
+        // ASCII-only subject — avoid non-ASCII chars (em dashes etc.) that cause garbled encoding in some clients
+        const subject = `Free virtual staging sample for your listing at ${lead.address}`;
 
-I noticed your listing at ${lead.address} and wanted to reach out.
+        const imagesHtml = lead.stagedImageUrl ? `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+          <tr>
+            <td align="center" style="padding:0 0 12px 0;">
+              <p style="margin:0 0 6px 0;font-size:13px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;">BEFORE</p>
+              ${lead.beforeImageUrl ? `<img src="${lead.beforeImageUrl}" alt="Before - empty room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:1px solid #e5e7eb;" />` : ''}
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0;">
+              <p style="margin:0 0 6px 0;font-size:13px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:1px;">VIRTUALLY STAGED BY KOGFLOW</p>
+              <img src="${lead.stagedImageUrl}" alt="Virtually staged room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:2px solid #7c3aed;" />
+            </td>
+          </tr>
+        </table>` : '';
 
-${lead.stagedImageUrl ? `I took the liberty of virtually staging one of your empty rooms — you can see it here:\n${lead.stagedImageUrl}\n\n` : ''}Virtual staging typically helps homes sell faster and for more. We do it in about 15 seconds at Kogflow.com — no design skills needed.
+        const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr>
+          <td style="background:#7c3aed;padding:20px 32px;">
+            <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p>
+            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${lead.agentName || 'there'},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+              I noticed your listing at <strong>${lead.address}</strong> and took the liberty of virtually staging one of the empty rooms as a free preview.
+            </p>
+            ${imagesHtml}
+            <p style="margin:16px 0;font-size:15px;color:#374151;line-height:1.6;">
+              Virtual staging helps buyers visualize the space and typically leads to faster sales and stronger offers. We generate results like this in seconds at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>.
+            </p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+              We can also turn these virtually staged rooms into <strong>virtual video walkthroughs</strong> -- giving buyers an immersive tour experience without ever stepping foot in the property.
+            </p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+              Happy to send a few more free samples for this listing if you're interested.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td style="background:#7c3aed;border-radius:8px;padding:12px 24px;">
+                  <a href="https://kogflow.com" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0;font-size:15px;color:#374151;">Best,<br><strong>Minh</strong><br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f3f4f6;padding:16px 32px;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because your listing at ${lead.address} is publicly listed. To unsubscribe reply with "unsubscribe".</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
-Would love to show you what it could do for this listing. Happy to send a few free samples if you're curious.
-
-Best,
-Kogflow
-https://kogflow.com`;
-
-        // Encode as RFC 2822 message
+        // RFC 2822 with HTML content type
         const message = [
             `From: Kogflow <kogflow.media@gmail.com>`,
             `To: ${lead.agentEmail}`,
             `Subject: ${subject}`,
-            `Content-Type: text/plain; charset=utf-8`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset=utf-8`,
             ``,
-            body,
+            html,
         ].join('\r\n');
 
         const encoded = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -819,10 +964,17 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     const fullUrl = propertyUrl.startsWith('http') ? propertyUrl : `https://www.har.com${propertyUrl}`;
 
     try {
-        const { html, error } = await zyteGet(fullUrl);
-        if (error || !html) return [];
+        // Direct fetch — HAR.com allows it and returns in ~700ms vs Zyte's 10-15s
+        const res = await fetch(fullUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml',
+                'Accept-Language': 'en-US,en;q=0.9',
+            },
+        });
+        if (!res.ok) return [];
+        const html = await res.text();
 
-        // Extract unique low-res photo URLs (lr = low-res, good enough for Moondream)
         const urls = [
             ...new Set(
                 [...html.matchAll(/https:\/\/mediahar\.harstatic\.com\/[^"'\s]+\/lr\/[^"'\s]+\.jpeg/g)]
@@ -835,52 +987,143 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     }
 }
 
+// Scan top leads for empty rooms by fetching HAR detail pages (separate from main pipeline)
+// Checks up to `limit` leads at a time; each requires 1 Zyte call + Moondream on interior photos
+// Scan top leads for empty rooms — 3 leads at a time, 3 interior photos each
+// Each lead: ~15s Zyte + 3×6s Moondream = ~33s → 3 leads ≈ 100s total
+export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; found: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, listing_url, icp_score')
+        .eq('status', 'scraped')
+        .eq('empty_rooms', '[]')
+        .not('listing_url', 'is', null)
+        .like('listing_url', '%har.com%')
+        .order('icp_score', { ascending: false })
+        .limit(limit);
+
+    if (error) return { scanned: 0, found: 0, errors: [error.message] };
+
+    let scanned = 0;
+    let found = 0;
+    const errors: string[] = [];
+
+    for (const lead of (data || [])) {
+        scanned++;
+        // Fetch up to 4 photos total, skip first (exterior), check photos[1..3] (interior)
+        const photos = await getHarListingPhotos(lead.listing_url, 4);
+        const interiorPhotos = photos.slice(1, 4);
+        const emptyRooms: { roomType: string; imageUrl: string }[] = [];
+
+        for (const photoUrl of interiorPhotos) {
+            const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoUrl);
+            if (roomErr) { errors.push(`${lead.address}: ${roomErr}`); continue; }
+            if (isEmpty && confidence >= 80) {
+                emptyRooms.push({ roomType, imageUrl: photoUrl });
+                break;
+            }
+        }
+
+        if (emptyRooms.length > 0) {
+            await supabase.from('outreach_leads').update({ empty_rooms: emptyRooms }).eq('id', lead.id);
+            found++;
+        }
+    }
+
+    return { scanned, found, errors };
+}
+
 // ─────────────────────────────────────────────
 // 8. PIPELINE RUNNER — Orchestrates everything
 // ─────────────────────────────────────────────
 
+export async function getSessionLog(sessionId: string): Promise<{ logs?: string[]; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('pipeline_session_log')
+        .select('message')
+        .eq('session_id', sessionId)
+        .order('logged_at', { ascending: true });
+    if (error) return { error: error.message };
+    return { logs: data?.map(r => r.message) || [] };
+}
+
 export async function runPipelineSession(config: {
     cities: string[];
     scrapesPerSession: number;
+    sessionId?: string;
     minLeads?: number;
-}): Promise<{ processed: number; errors: string[]; debug: string[] }> {
+    minEmptyRooms?: number;
+}): Promise<{ processed: number; errors: string[]; debug: string[]; sessionId: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const sessionId = config.sessionId || crypto.randomUUID();
     const errors: string[] = [];
     const debug: string[] = [];
     let processed = 0;
-    const minLeads = config.minLeads ?? 1;
-    const batchSize = Math.max(20, Math.ceil(config.scrapesPerSession / Math.max(config.cities.length, 1)));
+    const minEmptyRooms = config.minEmptyRooms ?? 5;
+    // Each city gets at least 50 listings so we don't re-fetch the same ~20 every run
+    const batchSize = Math.max(50, Math.ceil(config.scrapesPerSession / Math.max(config.cities.length, 1)));
 
-    // ── Step 1: Scrape all cities in PARALLEL (huge speed boost) ──────────────
-    debug.push(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, 2 HAR pages)...`);
+    // Buffer log writes — flush to DB every 5 lines to keep Supabase calls low
+    let logBuffer: string[] = [];
+    async function log(msg: string) {
+        debug.push(msg);
+        logBuffer.push(msg);
+        if (logBuffer.length >= 5) {
+            const batch = logBuffer.splice(0);
+            await supabase.from('pipeline_session_log').insert(
+                batch.map(message => ({ session_id: sessionId, message }))
+            ).then(() => {});
+        }
+    }
+    async function flushLog() {
+        if (logBuffer.length > 0) {
+            const batch = logBuffer.splice(0);
+            await supabase.from('pipeline_session_log').insert(
+                batch.map(message => ({ session_id: sessionId, message }))
+            );
+        }
+    }
 
+    await log(`Session ${sessionId} started`);
+    await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, 2 HAR pages)...`);
+
+    // ── Step 1: Scrape all cities via HAR (+ homes.com fallback) in parallel ──
+    // City lambdas push into local arrays then we log after all resolve
     const cityResults = await Promise.all(
         config.cities.map(async (city) => {
-            // HAR.com primary (2 pages = up to 240 listings per city), homes.com fallback
+            const lines: string[] = [];
             const harResult = await scrapeHarCity(city, batchSize, 2);
             if (harResult.listings && harResult.listings.length > 0) {
-                debug.push(`[${city}] HAR: ${harResult.listings.length} listings`);
-                return { city, listings: harResult.listings };
+                lines.push(`[${city}] HAR: ${harResult.listings.length} listings`);
+                return { city, listings: harResult.listings, lines };
             }
-            if (harResult.error) debug.push(`[${city}] HAR error: ${harResult.error}`);
-            else debug.push(`[${city}] HAR: 0 listings — trying homes.com...`);
+            if (harResult.error) lines.push(`[${city}] HAR error: ${harResult.error}`);
+            else lines.push(`[${city}] HAR: 0 listings — trying homes.com...`);
 
-            // Fallback: homes.com with geolocation
             const homesResult = await scrapeHomesCity(city, batchSize);
             if (homesResult.listings && homesResult.listings.length > 0) {
-                debug.push(`[${city}] homes.com: ${homesResult.listings.length} listings`);
-                return { city, listings: homesResult.listings };
+                lines.push(`[${city}] homes.com: ${homesResult.listings.length} listings`);
+                return { city, listings: homesResult.listings, lines };
             }
             if (homesResult.error) {
                 errors.push(`${city}: ${homesResult.error}`);
-                debug.push(`[${city}] homes.com error: ${homesResult.error}`);
+                lines.push(`[${city}] homes.com error: ${homesResult.error}`);
             } else {
-                debug.push(`[${city}] homes.com: 0 listings`);
+                lines.push(`[${city}] homes.com: 0 listings`);
             }
-            return { city, listings: [] as ScrapedListing[] };
+            return { city, listings: [] as ScrapedListing[], lines };
         })
     );
 
-    // Flatten all listings, deduplicate by address
+    // Flush city logs to DB in one batch
+    for (const { lines } of cityResults) {
+        for (const line of lines) await log(line);
+    }
+
+    // Deduplicate by address
     const seenAddresses = new Set<string>();
     const allListings: ScrapedListing[] = [];
     for (const { listings } of cityResults) {
@@ -891,41 +1134,91 @@ export async function runPipelineSession(config: {
             }
         }
     }
-    debug.push(`Total unique listings across all cities: ${allListings.length}`);
+    await log(`Total unique scraped: ${allListings.length}`);
 
-    // ── Step 2: Process & save each listing ───────────────────────────────────
-    for (const listing of allListings) {
+    // ── Step 2: Pre-filter already-in-DB (one batch query, not N individual checks) ──
+    const { data: existingData } = await supabase
+        .from('outreach_leads')
+        .select('address');
+    const existingAddresses = new Set((existingData || []).map((r: any) => r.address));
+    const newListings = allListings.filter(l => !existingAddresses.has(l.address));
+    await log(`Already in DB: ${allListings.length - newListings.length} | New: ${newListings.length}`);
+
+    if (newListings.length === 0) {
+        await log('All scraped listings already in DB — no new leads this session');
+        await flushLog();
+        return { processed: 0, errors, debug, sessionId };
+    }
+
+    // ── Step 3: Sort new listings by priority (ICP score → DOM → photo count) ──
+    newListings.sort(
+        (a, b) =>
+            (b.score ?? 0) - (a.score ?? 0) ||
+            (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0) ||
+            (b.photoCount ?? 0) - (a.photoCount ?? 0)
+    );
+
+    // Cap per session to stay within timeout budget (~50s for 10 cities scraping)
+    // Each new lead takes ~50ms (Supabase insert) + Moondream on first few
+    const maxPerSession = Math.min(newListings.length, Math.max(config.scrapesPerSession, 50));
+    const toProcess = newListings.slice(0, maxPerSession);
+    await log(`Processing ${toProcess.length} new leads (capped at ${maxPerSession})...`);
+
+    // ── Step 4: Moondream — check listings that have keywords suggesting vacancy ──
+    // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
+    // "vacant", "unfurnished", "empty", "needs staging" → high likelihood of empty rooms
+    // Fallback: check any listing with DOM >= 60 (motivated seller, may be vacant)
+    // Limit: 15 Moondream calls max to stay within time budget (~2 min)
+    let emptyRoomsFound = 0;
+    let moondreamChecked = 0;
+    const MAX_MOONDREAM = 15;
+
+    // Sort toProcess so vacant/unfurnished keyword listings come first
+    const vacancyKeywords = ['vacant', 'unfurnished', 'empty', 'needs staging', 'unoccupied', 'immediate occupancy', 'no furnit'];
+    toProcess.sort((a, b) => {
+        const aKw = a.keywords.join(' ').toLowerCase();
+        const bKw = b.keywords.join(' ').toLowerCase();
+        const aVacant = vacancyKeywords.some(k => aKw.includes(k)) ? 1 : 0;
+        const bVacant = vacancyKeywords.some(k => bKw.includes(k)) ? 1 : 0;
+        return bVacant - aVacant || (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0);
+    });
+
+    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} vacant/long-DOM leads)`);
+
+    for (const listing of toProcess) {
         listing.score = await scoreICP(listing);
+        const emptyRooms: { roomType: string; imageUrl: string }[] = [];
 
-        // Get all listing photos — fetch detail page if it's a HAR listing (1 → up to 10 photos)
-        let photoUrls = listing.photos; // primary photo from search results
-        if (listing.listingUrl?.includes('har.com/homedetail')) {
-            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 10);
-            if (detailPhotos.length > 0) {
-                photoUrls = detailPhotos;
-                debug.push(`[${listing.city}] ${listing.address} — fetched ${detailPhotos.length} photos from listing page`);
+        const kw = listing.keywords.join(' ').toLowerCase();
+        const looksVacant = vacancyKeywords.some(k => kw.includes(k)) || (listing.daysOnMarket ?? 0) >= 60;
+
+        if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM && looksVacant) {
+            const primaryPhoto = listing.photos[0];
+            if (primaryPhoto) {
+                moondreamChecked++;
+                const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(primaryPhoto);
+                if (roomErr) {
+                    await log(`  [${listing.address}] Moondream error: ${roomErr}`);
+                } else {
+                    await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
+                    if (isEmpty && confidence >= 80) {
+                        emptyRooms.push({ roomType, imageUrl: primaryPhoto });
+                        emptyRoomsFound++;
+                        await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
+                    }
+                }
             }
+        } else if (!looksVacant) {
+            // skip silently — furnished listing
+        } else if (moondreamChecked >= MAX_MOONDREAM) {
+            await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
+        } else {
+            await log(`  [${listing.address}] Skipping Moondream (target reached)`);
         }
 
-        // Analyze each photo with Moondream to detect empty rooms
-        const emptyRooms: { roomType: string; imageUrl: string; stagedUrl?: string }[] = [];
-        for (const photoUrl of photoUrls.slice(0, 10)) {
-            const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoUrl);
-            if (roomErr) { debug.push(`  Moondream error: ${roomErr}`); continue; }
-            debug.push(`  Photo: isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
-            if (isEmpty && confidence >= 20) {
-                emptyRooms.push({ roomType, imageUrl: photoUrl });
-            }
-        }
-
-        // Save lead
         const saveResult = await saveLead({ ...listing, emptyRooms });
-        if (saveResult.skipped) {
-            debug.push(`[${listing.city}] ${listing.address} — already in DB`);
-            continue;
-        }
         if (saveResult.error) {
-            debug.push(`[${listing.city}] ${listing.address} — save error: ${saveResult.error}`);
+            await log(`[${listing.city}] ${listing.address} — save error: ${saveResult.error}`);
             errors.push(`Save error: ${saveResult.error}`);
             continue;
         }
@@ -933,26 +1226,26 @@ export async function runPipelineSession(config: {
         const leadId = saveResult.lead?.id;
         if (!leadId) continue;
 
-        // Stage the first empty room if available
         if (emptyRooms.length > 0) {
-            const firstRoom = emptyRooms[0];
-            const { taskId } = await stageEmptyRoom(firstRoom.imageUrl, firstRoom.roomType);
+            const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType);
             if (taskId) {
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
+                await log(`  → Staged! taskId=${taskId}`);
+            } else {
+                await log(`  → Stage FAILED: ${stageErr} (imageUrl=${emptyRooms[0].imageUrl.slice(0, 80)})`);
             }
         }
 
         processed++;
-        debug.push(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score})`);
+        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length})`);
     }
 
     if (allListings.length === 0) {
-        debug.push('No listings found across any city — check city list and Zyte API key');
-    } else if (processed === 0) {
-        debug.push('Listings were found but all skipped (already in DB or save errors)');
+        await log('No listings found — check city list and Zyte API key');
     }
-
-    return { processed, errors, debug };
+    await log(`Session complete: ${processed} saved, ${emptyRoomsFound}/${minEmptyRooms} empty rooms found`);
+    await flushLog();
+    return { processed, errors, debug, sessionId };
 }
 
 // ─────────────────────────────────────────────
@@ -1039,6 +1332,30 @@ export interface SiteTestResult {
     sampleAddresses: string[];
     error?: string;
 }
+
+// City-aware URL builders for each site (TX cities)
+const SITE_URL_BUILDERS: Record<string, (city: string) => string | null> = {
+    'har.com': (city) =>
+        `https://www.har.com/search/dosearch?type=residential&minprice=150000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`,
+    'homes.com': (city) => {
+        const slug = CITY_SLUGS[city] || `${city.toLowerCase().replace(/\s+/g, '-')}-tx`;
+        return `https://www.homes.com/homes-for-sale/${slug}/`;
+    },
+    'homefinder.com': (city) =>
+        `https://homefinder.com/homes-for-sale/${city.toLowerCase().replace(/\s+/g, '-')}-tx`,
+    'estately.com': (city) =>
+        `https://www.estately.com/TX/${city.replace(/\s+/g, '_')}`,
+    'century21.com': (city) => {
+        const slug = city.toLowerCase().replace(/\s+/g, '-');
+        const code = city.toUpperCase().replace(/\s+/g, '');
+        return `https://www.century21.com/real-estate/${slug}-tx/LCTX${code}/`;
+    },
+    'coldwellbanker.com': (city) =>
+        `https://www.coldwellbanker.com/for-sale/${city.replace(/\s+/g, '-')}-TX`,
+    'homepath.fanniemae.com': (city) =>
+        `https://homepath.fanniemae.com/listings?location=${encodeURIComponent(`${city}, TX`)}`,
+    'remax.com': (_city) => null, // needs numeric city ID — use fixed test URL
+};
 
 const SITE_TEST_URLS: { site: string; url: string; name: string }[] = [
     {
@@ -1150,6 +1467,191 @@ export async function testSiteWithZyte(siteKey: string): Promise<SiteTestResult>
     }
 }
 
-export async function testAllSites(): Promise<SiteTestResult[]> {
-    return Promise.all(SITE_TEST_URLS.map(s => testSiteWithZyte(s.site)));
+// Run all 8 site tests, log results to DB for reliability tracking.
+// Accepts an optional city to use city-specific URLs (TX) instead of fixed test URLs.
+export async function testAllSites(city?: string): Promise<SiteTestResult[]> {
+    const results = await Promise.all(
+        SITE_TEST_URLS.map(async ({ site }) => {
+            // Use city-specific URL when provided, fall back to fixed test URL
+            const cityUrl = city ? (SITE_URL_BUILDERS[site]?.(city) ?? null) : null;
+
+            let result: SiteTestResult;
+            if (cityUrl) {
+                // Run generic scrape for richer listing count data
+                const generic = await scrapeGenericSite(cityUrl, city!);
+                const base = await testSiteWithZyte(site);
+                result = {
+                    ...base,
+                    // Prefer generic listing count when we have a city-specific URL
+                    addressesFound: Math.max(base.addressesFound, generic.addressesFound),
+                };
+            } else {
+                result = await testSiteWithZyte(site);
+            }
+            return result;
+        })
+    );
+
+    // Log to DB (fire-and-forget — don't fail the test if table missing)
+    logSiteScrapeResult(results.map((r) => ({
+        site: r.site,
+        status: r.status,
+        listingsFound: 0,
+        addressesFound: r.addressesFound,
+    }))).catch(() => {});
+
+    return results;
+}
+
+// Generic listing extractor — tries JSON-LD → __NEXT_DATA__ → address count
+async function scrapeGenericSite(url: string, city: string): Promise<{
+    listings: ScrapedListing[];
+    addressesFound: number;
+    status: 'ok' | 'blocked' | 'error';
+    error?: string;
+}> {
+    const { html, error } = await zyteGet(url, city);
+    if (error || !html) return { listings: [], addressesFound: 0, status: 'error', error: error || 'No HTML' };
+
+    const isBotDetected = html.includes('robot') || html.includes('captcha') ||
+        html.includes('Cloudflare') || html.includes('Just a moment') || html.length < 5000;
+    if (isBotDetected) return { listings: [], addressesFound: 0, status: 'blocked' };
+
+    const listings: ScrapedListing[] = [];
+
+    // Strategy 1: JSON-LD itemListElement
+    const allJsonLd = [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)];
+    for (const match of allJsonLd) {
+        try {
+            const parsed = JSON.parse(match[1]);
+            const candidates =
+                parsed?.['@graph']?.[0]?.mainEntity?.itemListElement ||
+                parsed?.mainEntity?.itemListElement ||
+                (Array.isArray(parsed) ? parsed : []);
+            for (const item of candidates) {
+                const addr = item?.mainEntity?.address || item?.address;
+                if (!addr?.streetAddress) continue;
+                const price = parseInt(item?.offers?.price || item?.price || 0);
+                if (price < 150000 || price > 700000) continue;
+                const photo = item?.image || item?.mainEntity?.image || '';
+                const listing: ScrapedListing = {
+                    address: addr.streetAddress,
+                    city: addr.addressLocality || city,
+                    price,
+                    daysOnMarket: 0,
+                    priceReduced: false,
+                    photoCount: photo ? 1 : 0,
+                    photos: photo ? [photo] : [],
+                    agentName: item?.offers?.offeredBy?.name || '',
+                    agentPhone: item?.offers?.offeredBy?.telephone || '',
+                    listingUrl: item?.url || item?.mainEntity?.url || url,
+                    keywords: [],
+                };
+                listing.score = await scoreICP(listing);
+                listings.push(listing);
+            }
+        } catch { continue; }
+    }
+
+    // Strategy 2: __NEXT_DATA__
+    if (listings.length === 0) {
+        const nextMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (nextMatch) {
+            try {
+                const next = JSON.parse(nextMatch[1]);
+                const candidates = [
+                    next?.props?.pageProps?.listings,
+                    next?.props?.pageProps?.searchResults,
+                    next?.props?.pageProps?.properties,
+                    next?.props?.pageProps?.data?.listings,
+                    next?.props?.pageProps?.initialData?.listings,
+                ].find((v) => Array.isArray(v) && v.length > 0);
+                if (candidates) {
+                    const origin = new URL(url).origin;
+                    for (const item of candidates.slice(0, 40)) {
+                        const address = item?.address || item?.streetAddress || item?.location?.address || '';
+                        const price = parseInt(item?.price || item?.listPrice || 0);
+                        if (!address || price < 150000 || price > 700000) continue;
+                        const photos: string[] = (item?.photos || item?.images || [])
+                            .map((p: any) => (typeof p === 'string' ? p : p?.url))
+                            .filter((p: any) => typeof p === 'string' && p.startsWith('http'));
+                        const listing: ScrapedListing = {
+                            address,
+                            city: item?.city || city,
+                            price,
+                            daysOnMarket: item?.daysOnMarket || item?.dom || 0,
+                            priceReduced: !!(item?.priceReduced || item?.priceChange),
+                            photoCount: photos.length,
+                            photos,
+                            agentName: item?.agent?.name || item?.listingAgent?.name || '',
+                            agentPhone: item?.agent?.phone || item?.listingAgent?.phone || '',
+                            agentEmail: item?.agent?.email || item?.listingAgent?.email || '',
+                            listingUrl: item?.url
+                                ? (item.url.startsWith('http') ? item.url : `${origin}${item.url}`)
+                                : url,
+                            keywords: [],
+                        };
+                        listing.score = await scoreICP(listing);
+                        listings.push(listing);
+                    }
+                }
+            } catch { }
+        }
+    }
+
+    const addressesFound = Math.max(
+        listings.length,
+        [...html.matchAll(/"streetAddress"\s*:\s*"([^"]+)"/g)].length +
+        [...html.matchAll(/"FULLSTREETADDRESS"\s*:\s*"([^"]+)"/g)].length,
+    );
+
+    return { listings, addressesFound, status: 'ok' };
+}
+
+export async function logSiteScrapeResult(
+    results: { site: string; status: string; listingsFound: number; addressesFound: number }[]
+): Promise<void> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    await supabase.from('site_scrape_log').insert(
+        results.map((r) => ({
+            site: r.site,
+            ran_at: new Date().toISOString(),
+            status: r.status,
+            listings_found: r.listingsFound,
+            addresses_found: r.addressesFound,
+        }))
+    );
+}
+
+export async function getSiteStats(): Promise<{ stats?: any[]; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('site_scrape_log')
+        .select('site, status, listings_found, addresses_found, ran_at')
+        .order('ran_at', { ascending: false })
+        .limit(500);
+    if (error) return { error: error.message };
+
+    const siteMap: Record<string, { runs: number; successes: number; totalListings: number; totalAddresses: number; lastRun: string }> = {};
+    for (const row of (data || [])) {
+        if (!siteMap[row.site]) siteMap[row.site] = { runs: 0, successes: 0, totalListings: 0, totalAddresses: 0, lastRun: row.ran_at };
+        siteMap[row.site].runs++;
+        if (row.status === 'ok') siteMap[row.site].successes++;
+        siteMap[row.site].totalListings += row.listings_found || 0;
+        siteMap[row.site].totalAddresses += row.addresses_found || 0;
+        if (row.ran_at > siteMap[row.site].lastRun) siteMap[row.site].lastRun = row.ran_at;
+    }
+
+    const stats = Object.entries(siteMap)
+        .map(([site, s]) => ({
+            site,
+            runs: s.runs,
+            successRate: s.runs > 0 ? Math.round((s.successes / s.runs) * 100) : 0,
+            avgListings: s.runs > 0 ? Math.round(s.totalListings / s.runs) : 0,
+            avgAddresses: s.runs > 0 ? Math.round(s.totalAddresses / s.runs) : 0,
+            lastRun: s.lastRun,
+        }))
+        .sort((a, b) => b.successRate - a.successRate || b.avgAddresses - a.avgAddresses);
+
+    return { stats };
 }
