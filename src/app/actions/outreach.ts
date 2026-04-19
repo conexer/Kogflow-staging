@@ -1075,6 +1075,17 @@ export async function getSessionLog(sessionId: string): Promise<{ logs?: string[
     return { logs: data?.map(r => r.message) || [] };
 }
 
+export async function getRecentActivityLog(limit = 300): Promise<{ entries?: { logged_at: string; session_id: string; message: string }[]; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('pipeline_session_log')
+        .select('logged_at, session_id, message')
+        .order('logged_at', { ascending: false })
+        .limit(limit);
+    if (error) return { error: error.message };
+    return { entries: (data || []).reverse() };
+}
+
 export async function runPipelineSession(config: {
     cities: string[];
     scrapesPerSession: number;

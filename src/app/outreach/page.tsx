@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -159,6 +159,10 @@ export default function OutreachPage() {
     const [recentRuns, setRecentRuns] = useState<any[]>([]);
     const [lastDebug, setLastDebug] = useState<string[]>([]);
 
+    // Activity log (persistent, all sessions)
+    const [activityLog, setActivityLog] = useState<{ logged_at: string; session_id: string; message: string }[]>([]);
+    const activityLogRef = useRef<HTMLDivElement>(null);
+
     // Live session log
     const [liveLog, setLiveLog] = useState<string[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -187,8 +191,8 @@ export default function OutreachPage() {
         setLoadingData(true);
         try {
             const resetAt = typeof window !== 'undefined' ? (localStorage.getItem('stats_reset_at') ?? undefined) : undefined;
-            const [statsRes, leadsRes, configRes, runsRes, siteStatsRes] = await Promise.all([
-                getLeadStats(resetAt), getLeads(), loadPipelineConfig(), getRecentRuns(), getSiteStats(),
+            const [statsRes, leadsRes, configRes, runsRes, siteStatsRes, activityRes] = await Promise.all([
+                getLeadStats(resetAt), getLeads(), loadPipelineConfig(), getRecentRuns(), getSiteStats(), getRecentActivityLog(),
             ]);
             if ('error' in statsRes && statsRes.error?.includes('outreach_leads')) {
                 setDbReady(false);
@@ -204,6 +208,12 @@ export default function OutreachPage() {
                 }
                 if (runsRes.runs) setRecentRuns(runsRes.runs);
                 if (siteStatsRes.stats) setSiteStats(siteStatsRes.stats);
+                if (activityRes.entries) {
+                    setActivityLog(activityRes.entries);
+                    setTimeout(() => {
+                        if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
+                    }, 50);
+                }
             }
 
         } catch {
@@ -225,15 +235,19 @@ export default function OutreachPage() {
         setRunningSession(true);
         toast.loading('Running pipeline session...', { id: 'pipeline' });
 
-        // Poll live log every 2s while session is running
+        // Poll live log + activity log every 2s while session is running
         pollRef.current = setInterval(async () => {
-            const { logs } = await getSessionLog(sessionId);
+            const [{ logs }, { entries }] = await Promise.all([
+                getSessionLog(sessionId),
+                getRecentActivityLog(),
+            ]);
             if (logs) {
                 setLiveLog([...logs]);
-                // Auto-scroll to bottom
-                if (liveLogRef.current) {
-                    liveLogRef.current.scrollTop = liveLogRef.current.scrollHeight;
-                }
+                if (liveLogRef.current) liveLogRef.current.scrollTop = liveLogRef.current.scrollHeight;
+            }
+            if (entries) {
+                setActivityLog(entries);
+                if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
             }
         }, 2000);
 
@@ -578,51 +592,47 @@ export default function OutreachPage() {
                             </div>
                         </div>
 
-                        {/* Live Session Log */}
-                        {(runningSession || liveLog.length > 0) && (
-                            <div className="bg-card border border-border rounded-xl p-6 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="font-bold text-lg flex items-center gap-2">
-                                        <Terminal className="w-5 h-5 text-primary" />
-                                        {runningSession ? 'Live Session Log' : 'Last Session Log'}
-                                        {runningSession && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />}
-                                    </h2>
-                                    <span className="text-xs text-muted-foreground">{liveLog.length} lines</span>
-                                </div>
-                                <div ref={liveLogRef} className="bg-black/60 rounded-lg p-4 font-mono text-xs space-y-0.5 h-72 overflow-y-auto">
-                                    {liveLog.length === 0 && runningSession && (
-                                        <div className="text-muted-foreground animate-pulse">Waiting for pipeline to start...</div>
-                                    )}
-                                    {liveLog.map((line, i) => (
-                                        <div key={i} className={
-                                            line.includes('✓') ? 'text-green-400' :
-                                            line.includes('→ Empty room') ? 'text-violet-400 font-bold' :
-                                            line.includes('error') || line.includes('Error') ? 'text-red-400' :
-                                            line.includes('already in DB') ? 'text-yellow-600' :
-                                            line.includes('Session') || line.includes('Total') || line.includes('Target') ? 'text-blue-400' :
-                                            'text-muted-foreground'
-                                        }>
-                                            {line}
-                                        </div>
-                                    ))}
-                                    {runningSession && <div className="text-green-400 animate-pulse">▌</div>}
-                                </div>
+                        {/* Activity Log — always visible, shows all pipeline activity */}
+                        <div className="bg-card border border-border rounded-xl p-6 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h2 className="font-bold text-lg flex items-center gap-2">
+                                    <Terminal className="w-5 h-5 text-primary" />
+                                    Activity Log
+                                    {runningSession && <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />}
+                                </h2>
+                                <span className="text-xs text-muted-foreground">
+                                    {runningSession ? 'Live' : activityLog.length > 0 ? `${activityLog.length} entries` : 'No activity yet'}
+                                </span>
                             </div>
-                        )}
-
-                        {/* Last Session Raw Debug — hidden if live log is shown */}
-                        {!runningSession && lastDebug.length > 0 && liveLog.length === 0 && (
-                            <div className="bg-card border border-border rounded-xl p-6 space-y-3">
-                                <h2 className="font-bold text-lg flex items-center gap-2"><Terminal className="w-5 h-5 text-primary" /> Last Session Log</h2>
-                                <div className="bg-muted/50 rounded-lg p-4 font-mono text-xs space-y-1 max-h-64 overflow-y-auto">
-                                    {lastDebug.map((line, i) => (
-                                        <div key={i} className={line.includes('✓') ? 'text-green-400' : line.includes('error') || line.includes('0 listings') ? 'text-destructive' : 'text-muted-foreground'}>
-                                            {line}
+                            <div ref={activityLogRef} className="bg-black/60 rounded-lg p-4 font-mono text-xs space-y-0.5 h-80 overflow-y-auto">
+                                {activityLog.length === 0 && !runningSession && (
+                                    <div className="text-muted-foreground/50 text-center py-8">
+                                        No pipeline activity yet. Run a session or wait for the scheduled cron.
+                                    </div>
+                                )}
+                                {activityLog.length === 0 && runningSession && (
+                                    <div className="text-muted-foreground animate-pulse">Starting pipeline session...</div>
+                                )}
+                                {activityLog.map((entry, i) => {
+                                    const time = new Date(entry.logged_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                    const msg = entry.message;
+                                    const color = msg.includes('✓') ? 'text-green-400' :
+                                        msg.includes('→ Empty room') ? 'text-violet-400 font-bold' :
+                                        msg.includes('error') || msg.includes('Error') ? 'text-red-400' :
+                                        msg.includes('already in DB') ? 'text-yellow-600' :
+                                        msg.includes('Session') || msg.includes('Total') || msg.includes('Target') || msg.includes('Complete') ? 'text-blue-400' :
+                                        msg.includes('Staged') || msg.includes('Email') ? 'text-violet-300' :
+                                        'text-muted-foreground';
+                                    return (
+                                        <div key={i} className={`flex gap-2 ${color}`}>
+                                            <span className="text-muted-foreground/40 shrink-0 tabular-nums">{time}</span>
+                                            <span>{msg}</span>
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })}
+                                {runningSession && <div className="text-green-400 animate-pulse">▌</div>}
                             </div>
-                        )}
+                        </div>
 
                         {/* Site Reliability Stats */}
                         {siteStats.length > 0 && (
