@@ -624,7 +624,7 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
     return { success: true };
 }
 
-// Submit a batch to Kie.ai — empty rooms first, then high-score (≥35) furnished leads
+// Submit a batch to Kie.ai — empty rooms first, then high-score (≥25) furnished leads
 export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -642,7 +642,7 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
         .select('id, address, empty_rooms, listing_url, icp_score')
         .eq('status', 'scraped')
         .eq('empty_rooms', '[]')
-        .gte('icp_score', 35)
+        .gte('icp_score', 25)
         .not('listing_url', 'is', null)
         .order('icp_score', { ascending: false })
         .limit(limit);
@@ -1096,7 +1096,7 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
         if (emptyRooms.length > 0) {
             await supabase.from('outreach_leads').update({ empty_rooms: emptyRooms }).eq('id', lead.id);
             found++;
-        } else if ((lead.icp_score ?? 0) >= 35 && interiorPhotos[0]) {
+        } else if ((lead.icp_score ?? 0) >= 25 && interiorPhotos[0]) {
             // No empty room detected — but high ICP score, so queue any interior room for redesign staging
             const roomEntry = { roomType: 'room', imageUrl: interiorPhotos[0], redesign: true };
             await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', lead.id);
@@ -1171,8 +1171,10 @@ export async function runPipelineSession(config: {
     const debug: string[] = [];
     let processed = 0;
     const minEmptyRooms = config.minEmptyRooms ?? 5;
-    // Each city gets at least 50 listings so we don't re-fetch the same ~20 every run
-    const batchSize = Math.max(50, Math.ceil(config.scrapesPerSession / Math.max(config.cities.length, 1)));
+    // Scrape 4x the target per city across 4 pages so we find enough new listings
+    // even when many are already in DB (e.g. 700+ existing leads)
+    const batchSize = config.scrapesPerSession * 4;
+    const harPages = 4;
 
     // Buffer log writes — flush to DB every 5 lines to keep Supabase calls low
     let logBuffer: string[] = [];
@@ -1199,14 +1201,14 @@ export async function runPipelineSession(config: {
     await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' });
 
     await log(`Session ${sessionId} started`);
-    await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, 2 HAR pages)...`);
+    await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
 
     // ── Step 1: Scrape all cities via HAR (+ homes.com fallback) in parallel ──
     // City lambdas push into local arrays then we log after all resolve
     const cityResults = await Promise.all(
         config.cities.map(async (city) => {
             const lines: string[] = [];
-            const harResult = await scrapeHarCity(city, batchSize, 2);
+            const harResult = await scrapeHarCity(city, batchSize, harPages);
             if (harResult.listings && harResult.listings.length > 0) {
                 lines.push(`[${city}] HAR: ${harResult.listings.length} listings`);
                 return { city, listings: harResult.listings, lines };
@@ -1269,11 +1271,10 @@ export async function runPipelineSession(config: {
             (b.photoCount ?? 0) - (a.photoCount ?? 0)
     );
 
-    // Cap per session to stay within timeout budget (~50s for 10 cities scraping)
-    // Each new lead takes ~50ms (Supabase insert) + Moondream on first few
-    const maxPerSession = Math.min(newListings.length, Math.max(config.scrapesPerSession, 50));
+    // Respect exactly what the user configured
+    const maxPerSession = Math.min(newListings.length, config.scrapesPerSession);
     const toProcess = newListings.slice(0, maxPerSession);
-    await log(`Processing ${toProcess.length} new leads (capped at ${maxPerSession})...`);
+    await log(`Processing ${toProcess.length} new leads (target: ${config.scrapesPerSession})...`);
 
     // ── Step 4: Moondream — check listings that have keywords suggesting vacancy ──
     // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
@@ -1363,7 +1364,7 @@ export async function runPipelineSession(config: {
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if ((listing.score ?? 0) >= 35 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+        } else if ((listing.score ?? 0) >= 25 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
             // High-score furnished lead — redesign any available room photo
             highScoreStaged++;
             const photoUrl = listing.photos[0];

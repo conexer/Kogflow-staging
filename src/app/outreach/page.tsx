@@ -613,7 +613,7 @@ export default function OutreachPage() {
                         {/* ICP Scoring */}
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                             <h2 className="font-bold text-lg flex items-center gap-2"><Star className="w-5 h-5 text-amber-400" /> ICP Scoring System</h2>
-                            <p className="text-sm text-muted-foreground">Leads scoring <span className="text-violet-400 font-semibold">35+</span> are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.</p>
+                            <p className="text-sm text-muted-foreground">Leads scoring <span className="text-violet-400 font-semibold">25+</span> are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {[
                                     { factor: 'Vacant / Unfurnished', points: '+40', reason: 'High visual need — adds furniture to empty rooms' },
