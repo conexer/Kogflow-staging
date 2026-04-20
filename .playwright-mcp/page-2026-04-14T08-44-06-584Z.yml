@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - link "Supabase" [ref=e9] [cursor=pointer]:
+          - /url: /dashboard/org/pykzcesgyzcdjjgcwzdf
+          - img "Supabase" [ref=e10]
+        - generic [ref=e11]:
+          - generic [ref=e13] [cursor=pointer]: Feedback
+          - generic [ref=e14]:
+            - button "Search..." [ref=e15] [cursor=pointer]:
+              - generic [ref=e16]:
+                - img [ref=e17]
+                - paragraph [ref=e20]: Search...
+              - generic [ref=e22]: Ctrl K
+            - button [ref=e23] [cursor=pointer]:
+              - img [ref=e25]
+            - button [ref=e29] [cursor=pointer]:
+              - img [ref=e31]
+          - button [ref=e33] [cursor=pointer]:
+            - img [ref=e36]
+    - generic [ref=e38]:
+      - button [ref=e46] [cursor=pointer]:
+        - img [ref=e48]
+      - generic [ref=e55]:
+        - separator [ref=e59]:
+          - img [ref=e61]
+        - main [ref=e70]:
+          - img [ref=e73]
+  - alert [ref=e75]

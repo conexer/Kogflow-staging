@@ -1,0 +1,134 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "No project selected. Hit enter to select a project, folder, or organization." [ref=e40]
+        - search "Google Cloud Platform" [ref=e46]:
+          - combobox [ref=e47]:
+            - searchbox "Enter query to search for resources, docs, products, and more" [ref=e48]
+          - button "See all search results" [disabled]:
+            - generic:
+              - img
+            - generic: Search
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e53]:
+              - button "Activate Cloud Shell (G then S)" [disabled]:
+                - generic:
+                  - img
+            - button "Open notifications" [ref=e57] [cursor=pointer]:
+              - img [ref=e59]
+            - button "Settings and utilities" [ref=e65] [cursor=pointer]:
+              - img [ref=e67]
+          - img [ref=e71]
+    - generic [ref=e91]:
+      - navigation "Google Auth Platform" [ref=e98]:
+        - generic [ref=e99]:
+          - heading "Google Auth Platform" [level=2] [ref=e101]:
+            - link "Google Auth Platform" [ref=e102] [cursor=pointer]:
+              - /url: /auth
+              - img [ref=e105]
+              - generic [ref=e109]: Google Auth Platform
+          - list "Overview, 1 of 7 More options Branding, 2 of 7 More options Audience, 3 of 7 More options Clients, 4 of 7 More options Data Access, 5 of 7 More options Verification Center, 6 of 7 More options Settings, 7 of 7 More options" [ref=e113]:
+            - listitem [ref=e114]:
+              - generic [ref=e117]:
+                - link "Overview, 1 of 7" [ref=e118] [cursor=pointer]:
+                  - /url: /auth/overview
+                  - generic [ref=e119]:
+                    - img [ref=e122]
+                    - generic [ref=e124]: Overview
+                - button "More options" [ref=e126] [cursor=pointer]:
+                  - img [ref=e128]
+            - listitem [ref=e130]:
+              - generic [ref=e133]:
+                - link "Branding, 2 of 7" [ref=e134] [cursor=pointer]:
+                  - /url: /auth/branding
+                  - generic [ref=e135]:
+                    - img [ref=e138]
+                    - generic [ref=e144]: Branding
+                - button "More options" [ref=e146] [cursor=pointer]:
+                  - img [ref=e148]
+            - listitem [ref=e150]:
+              - generic [ref=e153]:
+                - link "Audience, 3 of 7" [ref=e154] [cursor=pointer]:
+                  - /url: /auth/audience
+                  - generic [ref=e155]:
+                    - img [ref=e158]
+                    - generic [ref=e160]: Audience
+                - button "More options" [ref=e162] [cursor=pointer]:
+                  - img [ref=e164]
+            - listitem [ref=e166]:
+              - generic [ref=e169]:
+                - link "Clients, 4 of 7" [ref=e170] [cursor=pointer]:
+                  - /url: /auth/clients
+                  - generic [ref=e171]:
+                    - img [ref=e174]
+                    - generic [ref=e176]: Clients
+                - button "More options" [ref=e178] [cursor=pointer]:
+                  - img [ref=e180]
+            - listitem [ref=e182]:
+              - generic [ref=e185]:
+                - link "Data Access, 5 of 7" [ref=e186] [cursor=pointer]:
+                  - /url: /auth/scopes
+                  - generic [ref=e187]:
+                    - img [ref=e190]
+                    - generic [ref=e193]: Data Access
+                - button "More options" [ref=e195] [cursor=pointer]:
+                  - img [ref=e197]
+            - listitem [ref=e199]:
+              - generic [ref=e202]:
+                - link "Verification Center, 6 of 7" [ref=e203] [cursor=pointer]:
+                  - /url: /auth/verification
+                  - generic [ref=e204]:
+                    - img [ref=e207]
+                    - generic [ref=e210]: Verification Center
+                - button "More options" [ref=e212] [cursor=pointer]:
+                  - img [ref=e214]
+            - listitem [ref=e216]:
+              - generic [ref=e219]:
+                - link "Settings, 7 of 7" [ref=e220] [cursor=pointer]:
+                  - /url: /auth/settings
+                  - generic [ref=e221]:
+                    - img [ref=e224]
+                    - generic [ref=e226]: Settings
+                - button "More options" [ref=e228] [cursor=pointer]:
+                  - img [ref=e230]
+          - button "Toggle Google Auth Platform navigation menu" [pressed] [ref=e234] [cursor=pointer]:
+            - img [ref=e237]
+      - main [ref=e240]:
+        - progressbar [ref=e248]:
+          - img [ref=e250]
+          - generic [ref=e253]:
+            - img [ref=e255]
+            - img [ref=e258]
+            - img [ref=e261]
+  - iframe [ref=e264]:
+    

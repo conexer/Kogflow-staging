@@ -1,0 +1,147 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e6]:
+            - img [ref=e7]
+            - text: Outreach Pipeline
+            - generic [ref=e9]: Internal Only
+          - paragraph [ref=e10]: Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail
+        - generic [ref=e11]:
+          - button "Run Session" [ref=e497]:
+            - img [ref=e498]
+            - text: Run Session
+          - button [ref=e12]:
+            - img [ref=e13]
+      - generic [ref=e18]:
+        - button "dashboard" [ref=e19]
+        - button "leads" [ref=e20]
+        - button "config" [ref=e21]
+        - button "email" [ref=e22]
+        - button "⚙ Setup" [ref=e23]
+    - generic [ref=e325]:
+      - generic [ref=e326]:
+        - heading "All-time stats" [level=2] [ref=e327]
+        - button "Reset Stats" [ref=e328]:
+          - img [ref=e329]
+          - text: Reset Stats
+      - generic [ref=e334]:
+        - generic [ref=e335]:
+          - generic [ref=e336]:
+            - generic [ref=e337]: Total Leads
+            - img [ref=e338]
+          - generic [ref=e342]: "1000"
+        - generic [ref=e343]:
+          - generic [ref=e344]:
+            - generic [ref=e345]: Staged
+            - img [ref=e346]
+          - generic [ref=e350]: "0"
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]: Emailed
+            - img [ref=e354]
+          - generic [ref=e357]: "11"
+        - generic [ref=e358]:
+          - generic [ref=e359]:
+            - generic [ref=e360]: Avg ICP Score
+            - img [ref=e361]
+          - generic [ref=e363]: "3"
+      - generic [ref=e364]:
+        - generic [ref=e365]:
+          - generic [ref=e366]:
+            - generic [ref=e367]: Total Photos Scraped
+            - img [ref=e368]
+          - generic [ref=e372]: 29,161
+          - generic [ref=e373]: across 1000 listings
+        - generic [ref=e374]:
+          - generic [ref=e375]:
+            - generic [ref=e376]: Listings with Photos
+            - img [ref=e377]
+          - generic [ref=e380]: "983"
+          - generic [ref=e381]: 98% success rate
+        - generic [ref=e382]:
+          - generic [ref=e383]:
+            - generic [ref=e384]: Staged Queue
+            - img [ref=e385]
+          - generic [ref=e387]: "19"
+          - generic [ref=e388]: rooms ready (empty + score ≥35)
+          - generic [ref=e389]:
+            - button "Scan & Prep (3)" [ref=e390]
+            - button "Stage Batch (3)" [ref=e391]
+            - button "Poll & Email" [ref=e392]
+      - generic [ref=e393]:
+        - heading "Pipeline Stages" [level=2] [ref=e394]:
+          - img [ref=e395]
+          - text: Pipeline Stages
+        - generic [ref=e396]:
+          - generic [ref=e397]:
+            - generic [ref=e398]: 989 Scraped
+            - img [ref=e399]
+          - generic [ref=e401]:
+            - generic [ref=e402]: 0 Scored
+            - img [ref=e403]
+          - generic [ref=e405]:
+            - generic [ref=e406]: 0 Staged
+            - img [ref=e407]
+          - generic [ref=e409]:
+            - generic [ref=e410]: 0 Form Filled
+            - img [ref=e411]
+          - generic [ref=e414]: 11 Emailed
+      - generic [ref=e415]:
+        - heading "ICP Scoring System" [level=2] [ref=e416]:
+          - img [ref=e417]
+          - text: ICP Scoring System
+        - paragraph [ref=e419]: Leads scoring 25+ are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.
+        - generic [ref=e420]:
+          - generic [ref=e421]:
+            - generic [ref=e422]: "+40"
+            - generic [ref=e423]:
+              - generic [ref=e424]: Vacant / Unfurnished
+              - generic [ref=e425]: High visual need — adds furniture to empty rooms
+          - generic [ref=e426]:
+            - generic [ref=e427]: "+25"
+            - generic [ref=e428]:
+              - generic [ref=e429]: Price Reduced
+              - generic [ref=e430]: Signals marketing failure
+          - generic [ref=e431]:
+            - generic [ref=e432]: "+20"
+            - generic [ref=e433]:
+              - generic [ref=e434]: Days on Market 60+
+              - generic [ref=e435]: High owner pressure
+          - generic [ref=e436]:
+            - generic [ref=e437]: "+10"
+            - generic [ref=e438]:
+              - generic [ref=e439]: Low Photo Count (<15)
+              - generic [ref=e440]: Tech-lagging indicator
+          - generic [ref=e441]:
+            - generic [ref=e442]: "+5"
+            - generic [ref=e443]:
+              - generic [ref=e444]: Days on Market 30–59
+              - generic [ref=e445]: Moderate frustration
+      - generic [ref=e446]:
+        - generic [ref=e447]:
+          - heading "Activity Log" [level=2] [ref=e448]:
+            - img [ref=e449]
+            - text: Activity Log
+          - generic [ref=e451]: No activity yet
+        - generic [ref=e500]: No pipeline activity yet. Run a session or wait for the scheduled cron.
+      - generic [ref=e454]:
+        - generic [ref=e455]:
+          - heading "Site Scrape Tester" [level=2] [ref=e456]:
+            - img [ref=e457]
+            - text: Site Scrape Tester
+          - button "Test All 8 Sites" [ref=e459]:
+            - img [ref=e460]
+            - text: Test All 8 Sites
+        - paragraph [ref=e462]: Tests all 8 sites (homes.com, HomePath, HAR.com, HomeFinder, Estately, RE/MAX, Century21, Coldwell Banker) via Zyte. Compare address counts to find the most scrapable.
+      - generic [ref=e463]:
+        - heading "Test Moondream Vision" [level=2] [ref=e464]:
+          - img [ref=e465]
+          - text: Test Moondream Vision
+        - paragraph [ref=e468]: Paste any real estate photo URL to test room detection
+        - generic [ref=e469]:
+          - textbox "https://photos.harstatic.com/..." [ref=e470]
+          - button "Test" [ref=e471]
+  - region "Notifications alt+T"
+  - alert [ref=e172]

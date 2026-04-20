@@ -1,0 +1,229 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Supabase" [ref=e9] [cursor=pointer]:
+            - /url: /dashboard/org/pykzcesgyzcdjjgcwzdf
+            - img "Supabase" [ref=e10]
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - generic [ref=e16]:
+              - link "Kogflow Realtor Staging" [ref=e17] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh
+                - img [ref=e18]
+                - generic "Kogflow Realtor Staging" [ref=e21]
+              - button [ref=e22] [cursor=pointer]:
+                - img [ref=e24]
+            - img [ref=e28]
+          - button "Connect" [ref=e32] [cursor=pointer]:
+            - img [ref=e34]
+            - generic [ref=e36]: Connect
+        - generic [ref=e37]:
+          - generic [ref=e39] [cursor=pointer]: Feedback
+          - generic [ref=e40]:
+            - button "Search..." [ref=e41] [cursor=pointer]:
+              - generic [ref=e42]:
+                - img [ref=e43]
+                - paragraph [ref=e46]: Search...
+              - generic [ref=e48]: Ctrl K
+            - button [ref=e49] [cursor=pointer]:
+              - img [ref=e51]
+            - button [ref=e55] [cursor=pointer]:
+              - img [ref=e57]
+            - button [ref=e59] [cursor=pointer]:
+              - img [ref=e61]
+            - button [ref=e63] [cursor=pointer]:
+              - img [ref=e67]
+          - button "conexer" [ref=e70] [cursor=pointer]:
+            - img "conexer" [ref=e72]
+    - generic [ref=e73]:
+      - generic [ref=e77]:
+        - list [ref=e80]:
+          - generic [ref=e81]:
+            - listitem [ref=e82]:
+              - link "Project Overview" [ref=e83] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh
+                - img [ref=e84]
+                - generic: Project Overview
+            - listitem [ref=e86]:
+              - link "Table Editor" [ref=e87] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/editor
+                - img [ref=e88]
+                - generic: Table Editor
+            - listitem [ref=e90]:
+              - link "SQL Editor" [ref=e91] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/sql
+                - img [ref=e92]
+                - generic: SQL Editor
+          - generic [ref=e94]:
+            - listitem [ref=e95]:
+              - link "Database" [ref=e96] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/database/schemas
+                - img [ref=e97]
+                - generic: Database
+            - listitem [ref=e101]:
+              - link "Authentication" [ref=e102] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/users
+                - img [ref=e103]
+                - generic: Authentication
+            - listitem [ref=e105]:
+              - link "Storage" [ref=e106] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/storage/files
+                - img [ref=e107]
+                - generic: Storage
+            - listitem [ref=e109]:
+              - link "Edge Functions" [ref=e110] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/functions
+                - img [ref=e111]
+                - generic: Edge Functions
+            - listitem [ref=e116]:
+              - link "Realtime" [ref=e117] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/realtime/inspector
+                - img [ref=e118]
+                - generic: Realtime
+          - generic [ref=e120]:
+            - listitem [ref=e122]:
+              - link "Advisors" [ref=e123] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/advisors/security
+                - img [ref=e124]
+                - generic: Advisors
+            - listitem [ref=e126]:
+              - link "Observability" [ref=e127] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/observability
+                - img [ref=e128]
+                - generic: Observability
+            - listitem [ref=e136]:
+              - link "Logs" [ref=e137] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/logs/explorer
+                - img [ref=e138]
+                - generic: Logs
+            - listitem [ref=e139]:
+              - link "Integrations" [ref=e140] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/integrations
+                - img [ref=e141]
+                - generic: Integrations
+          - listitem [ref=e145]:
+            - link "Project Settings" [ref=e146] [cursor=pointer]:
+              - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/settings/general
+              - img [ref=e147]
+              - generic: Project Settings
+        - button [ref=e152] [cursor=pointer]:
+          - img [ref=e154]
+      - generic [ref=e161]:
+        - generic [ref=e165]:
+          - heading "Authentication" [level=4] [ref=e167]
+          - menu "Sidebar" [disabled] [ref=e170]:
+            - list [ref=e171]:
+              - generic [ref=e174]:
+                - generic [ref=e178]: Manage
+                - generic [ref=e179]:
+                  - link "Users" [disabled] [ref=e180] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/users
+                    - menuitem "Users" [disabled] [ref=e181]:
+                      - generic "Users" [ref=e184]:
+                        - generic [ref=e185]: Users
+                  - link "OAuth Apps" [disabled] [ref=e186] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/oauth-apps
+                    - menuitem "OAuth Apps" [disabled] [ref=e187]:
+                      - generic "OAuth Apps" [ref=e190]:
+                        - generic [ref=e191]: OAuth Apps
+              - generic [ref=e195]:
+                - generic [ref=e199]: Notifications
+                - link "Email" [disabled] [ref=e201] [cursor=pointer]:
+                  - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/templates
+                  - menuitem "Email" [disabled] [ref=e202]:
+                    - generic "Email" [ref=e205]:
+                      - generic [ref=e206]: Email
+              - generic [ref=e210]:
+                - generic [ref=e214]: Configuration
+                - generic [ref=e215]:
+                  - link "Policies" [disabled] [ref=e216] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/policies
+                    - menuitem "Policies" [disabled] [ref=e217]:
+                      - generic "Policies" [ref=e220]:
+                        - generic [ref=e221]: Policies
+                  - link "Sign In / Providers" [disabled] [ref=e222] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/providers
+                    - menuitem "Sign In / Providers" [disabled] [ref=e223]:
+                      - generic "Sign In / Providers" [ref=e226]:
+                        - generic [ref=e227]: Sign In / Providers
+                  - link "OAuth Server Beta" [disabled] [ref=e228] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/oauth-server
+                    - menuitem "OAuth Server Beta" [disabled] [ref=e229]:
+                      - generic "OAuth Server" [ref=e232]:
+                        - generic [ref=e233]: OAuth Server
+                        - generic [ref=e234]: Beta
+                  - link "Sessions" [disabled] [ref=e235] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/sessions
+                    - menuitem "Sessions" [disabled] [ref=e236]:
+                      - generic "Sessions" [ref=e239]:
+                        - generic [ref=e240]: Sessions
+                  - link "Rate Limits" [disabled] [ref=e241] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/rate-limits
+                    - menuitem "Rate Limits" [disabled] [ref=e242]:
+                      - generic "Rate Limits" [ref=e245]:
+                        - generic [ref=e246]: Rate Limits
+                  - link "Multi-Factor" [disabled] [ref=e247] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/mfa
+                    - menuitem "Multi-Factor" [disabled] [ref=e248]:
+                      - generic "Multi-Factor" [ref=e251]:
+                        - generic [ref=e252]: Multi-Factor
+                  - link "URL Configuration" [disabled] [ref=e253] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/url-configuration
+                    - menuitem "URL Configuration" [disabled] [ref=e254]:
+                      - generic "URL Configuration" [ref=e257]:
+                        - generic [ref=e258]: URL Configuration
+                  - link "Attack Protection" [disabled] [ref=e259] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/protection
+                    - menuitem "Attack Protection" [disabled] [ref=e260]:
+                      - generic "Attack Protection" [ref=e263]:
+                        - generic [ref=e264]: Attack Protection
+                  - link "Auth Hooks Beta" [disabled] [ref=e265] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/hooks
+                    - menuitem "Auth Hooks Beta" [disabled] [ref=e266]:
+                      - generic "Auth Hooks" [ref=e269]:
+                        - generic [ref=e270]: Auth Hooks
+                        - generic [ref=e271]: Beta
+                  - link "Audit Logs" [disabled] [ref=e272] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/audit-logs
+                    - menuitem "Audit Logs" [disabled] [ref=e273]:
+                      - generic "Audit Logs" [ref=e276]:
+                        - generic [ref=e277]: Audit Logs
+                  - link "Performance" [disabled] [ref=e278] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/performance
+                    - menuitem "Performance" [disabled] [ref=e279]:
+                      - generic "Performance" [ref=e282]:
+                        - generic [ref=e283]: Performance
+        - separator [disabled] [ref=e284]:
+          - img [ref=e286]
+        - main [ref=e295]:
+          - generic [ref=e296]:
+            - generic [ref=e297]:
+              - generic [ref=e302]:
+                - heading "Sign In / Providers" [level=1] [ref=e303]
+                - paragraph [ref=e304]: Configure authentication providers and login methods for your users
+              - navigation [ref=e305]:
+                - menu [ref=e306]:
+                  - listitem [ref=e307]:
+                    - link "Supabase Auth" [ref=e308] [cursor=pointer]:
+                      - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/providers
+                  - listitem [ref=e309]:
+                    - link "Third-Party Auth" [ref=e310] [cursor=pointer]:
+                      - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/third-party
+            - generic [ref=e311]:
+              - heading "User Signups" [level=2] [ref=e316]
+              - generic [ref=e331]:
+                - heading "Auth Providers" [level=2] [ref=e332]
+                - generic [ref=e333]: Authenticate your users through a suite of providers and login methods
+              - generic [ref=e490]:
+                - generic [ref=e491]:
+                  - generic [ref=e492]:
+                    - heading "Custom Providers" [level=2] [ref=e493]
+                    - generic [ref=e494]: New
+                  - generic [ref=e495]: Configure OAuth/OIDC providers for this project using your own issuer or endpoints.
+                - link "Docs" [ref=e497] [cursor=pointer]:
+                  - /url: https://supabase.com/docs/guides/auth/custom-oauth-providers
+                  - img [ref=e499]
+                  - generic [ref=e502]: Docs
+  - alert [ref=e508]: Sign In / Providers | Authentication | Supabase

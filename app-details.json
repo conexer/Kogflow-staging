@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-04-02T01:19:03.497+00:00",
+  "status": 405,
+  "error": "Method Not Allowed",
+  "path": "/openapi/v2/app/detail"
+}

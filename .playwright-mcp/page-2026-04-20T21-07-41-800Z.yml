@@ -1,0 +1,164 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e6]:
+            - img [ref=e7]
+            - text: Outreach Pipeline
+            - generic [ref=e9]: Internal Only
+          - paragraph [ref=e10]: Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail
+        - generic [ref=e11]:
+          - generic [ref=e176]:
+            - generic [ref=e177]: Running...
+            - button "Stop" [ref=e179]
+          - button [ref=e15]:
+            - img [ref=e16]
+      - generic [ref=e21]:
+        - button "dashboard" [ref=e22]
+        - button "leads" [ref=e23]
+        - button "config" [active] [ref=e24]
+        - button "email" [ref=e25]
+        - button "⚙ Setup" [ref=e26]
+    - generic [ref=e201]:
+      - generic [ref=e202]:
+        - heading "Pipeline Configuration" [level=2] [ref=e203]:
+          - img [ref=e204]
+          - text: Pipeline Configuration
+        - button "Save Config" [ref=e207]:
+          - img [ref=e208]
+          - text: Save Config
+      - generic [ref=e211]:
+        - generic [ref=e212]:
+          - heading "Schedule & Throttling" [level=3] [ref=e213]:
+            - img [ref=e214]
+            - text: Schedule & Throttling
+          - generic [ref=e217]: Cron fires daily at 9 AM · runs all sessions in sequence
+        - generic [ref=e218]:
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - text: Sessions per day
+              - generic [ref=e221]:
+                - text: "10"
+                - generic [ref=e222]: ≈ every 2h
+            - slider [ref=e223]: "10"
+            - generic [ref=e224]:
+              - generic [ref=e225]: 1/day
+              - generic [ref=e226]: 10/day (max)
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - text: Scrapes per session
+              - generic [ref=e229]: 30 listings
+            - slider [ref=e230]: "30"
+            - paragraph [ref=e231]: Zyte handles proxy/anti-bot — spacing between scrapes doesn't affect ban risk. This controls cost per session.
+      - generic [ref=e232]:
+        - heading "Target Cities (10 selected)" [level=3] [ref=e233]:
+          - img [ref=e234]
+          - text: Target Cities (10 selected)
+        - generic [ref=e237]:
+          - generic [ref=e238]: Houston Metro
+          - generic [ref=e239]:
+            - button "Houston" [ref=e240]
+            - button "Katy" [ref=e241]
+            - button "Sugar Land" [ref=e242]
+            - button "Spring" [ref=e243]
+            - button "Pearland" [ref=e244]
+            - button "The Woodlands" [ref=e245]
+            - button "Cypress" [ref=e246]
+            - button "Pasadena" [ref=e247]
+        - generic [ref=e248]:
+          - generic [ref=e249]: Houston Suburbs
+          - generic [ref=e250]:
+            - button "Humble" [ref=e251]
+            - button "Friendswood" [ref=e252]
+            - button "League City" [ref=e253]
+            - button "Baytown" [ref=e254]
+            - button "Conroe" [ref=e255]
+            - button "Tomball" [ref=e256]
+            - button "Richmond" [ref=e257]
+            - button "Rosenberg" [ref=e258]
+        - generic [ref=e259]:
+          - generic [ref=e260]: Texas Other
+          - generic [ref=e261]:
+            - button "Austin" [ref=e262]
+            - button "San Antonio" [ref=e263]
+            - button "Dallas" [ref=e264]
+            - button "Fort Worth" [ref=e265]
+            - button "El Paso" [ref=e266]
+            - button "Arlington" [ref=e267]
+            - button "Plano" [ref=e268]
+            - button "Lubbock" [ref=e269]
+      - generic [ref=e270]:
+        - heading "ICP Filters (Active)" [level=3] [ref=e271]
+        - generic [ref=e272]:
+          - generic [ref=e273]: "Price range: $150k – $700k"
+          - generic [ref=e274]: "Min DOM: 30 days"
+          - generic [ref=e275]: "Min empty rooms: scored regardless"
+          - generic [ref=e276]: "Sort: Oldest first"
+        - generic [ref=e277]:
+          - generic [ref=e278]: Vacant
+          - generic [ref=e279]: Unfurnished
+          - generic [ref=e280]: Immediate Occupancy
+          - generic [ref=e281]: Single Family
+          - generic [ref=e282]: Condo
+      - generic [ref=e283]:
+        - heading "Recent Cron Runs" [level=3] [ref=e284]:
+          - img [ref=e285]
+          - text: Recent Cron Runs
+        - generic [ref=e286]:
+          - generic [ref=e287]:
+            - generic [ref=e288]: 4/20/2026, 1:52:56 PM
+            - generic [ref=e290]: 28 processed
+          - generic [ref=e291]:
+            - generic [ref=e292]: 4/20/2026, 11:27:20 AM
+            - generic [ref=e294]: 30 processed
+          - generic [ref=e295]:
+            - generic [ref=e296]: 4/20/2026, 10:02:49 AM
+            - generic [ref=e298]: 30 processed
+          - generic [ref=e299]:
+            - generic [ref=e300]: 4/20/2026, 9:24:47 AM
+            - generic [ref=e302]: 30 processed
+          - generic [ref=e303]:
+            - generic [ref=e304]: 4/20/2026, 8:16:29 AM
+            - generic [ref=e306]: 30 processed
+          - generic [ref=e307]:
+            - generic [ref=e308]: 4/20/2026, 7:33:45 AM
+            - generic [ref=e310]: 30 processed
+          - generic [ref=e311]:
+            - generic [ref=e312]: 4/20/2026, 6:37:42 AM
+            - generic [ref=e314]: 30 processed
+          - generic [ref=e315]:
+            - generic [ref=e316]: 4/19/2026, 3:38:33 PM
+            - generic [ref=e318]: 10 processed
+          - generic [ref=e319]:
+            - generic [ref=e320]: 4/19/2026, 2:17:20 PM
+            - generic [ref=e322]: 2 processed
+          - generic [ref=e323]:
+            - generic [ref=e324]: 4/19/2026, 10:34:00 AM
+            - generic [ref=e326]: 22 processed
+          - generic [ref=e327]:
+            - generic [ref=e328]: 4/19/2026, 6:13:09 AM
+            - generic [ref=e330]: 9 processed
+          - generic [ref=e331]:
+            - generic [ref=e332]: 4/19/2026, 2:33:57 AM
+            - generic [ref=e334]: 16 processed
+          - generic [ref=e335]:
+            - generic [ref=e336]: 4/15/2026, 2:39:59 AM
+            - generic [ref=e337]:
+              - generic [ref=e338]: 0 processed
+              - generic [ref=e339]: 3 errors
+          - generic [ref=e340]:
+            - generic [ref=e341]: 4/15/2026, 2:37:58 AM
+            - generic [ref=e342]:
+              - generic [ref=e343]: 0 processed
+              - generic [ref=e344]: 3 errors
+          - generic [ref=e345]:
+            - generic [ref=e346]: 4/15/2026, 2:35:58 AM
+            - generic [ref=e347]:
+              - generic [ref=e348]: 0 processed
+              - generic [ref=e349]: 3 errors
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e183]:
+        - generic [ref=e200]: Running pipeline session...
+  - alert [ref=e175]

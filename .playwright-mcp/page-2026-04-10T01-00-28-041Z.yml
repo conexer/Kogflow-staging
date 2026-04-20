@@ -1,0 +1,415 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /home/dashboard?project=kogflow
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "You're currently working in Kogflow. Hit enter to switch projects, folders, or organizations" [ref=e40]:
+            - generic [ref=e41]:
+              - img [ref=e43]
+              - generic [ref=e46]: Kogflow
+        - search "Google Cloud Platform" [ref=e52]:
+          - combobox [ref=e53]:
+            - searchbox "Enter query to search for resources, docs, products, and more" [ref=e54]
+          - button "See all search results" [disabled]:
+            - generic:
+              - img
+            - generic: Search
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - button "Open or close Gemini Cloud Assist chat (Alt G)" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+            - button "Activate Cloud Shell (G then S)" [ref=e67] [cursor=pointer]:
+              - img [ref=e69]
+            - button "Open notifications" [ref=e74] [cursor=pointer]:
+              - img [ref=e76]
+            - button "Settings and utilities" [ref=e82] [cursor=pointer]:
+              - img [ref=e84]
+          - 'button "Account: Minh Do (conexer@gmail.com)" [ref=e90]':
+            - img [ref=e91]
+    - main [ref=e112]:
+      - generic [ref=e125]:
+        - tablist "Tab bar for home navigation" [ref=e127]:
+          - generic [ref=e130]:
+            - 'tab "Selected tab: Dashboard" [selected] [ref=e131] [cursor=pointer]':
+              - generic [ref=e133]: Dashboard
+            - tab "Activity" [ref=e134] [cursor=pointer]:
+              - generic [ref=e136]: Activity
+            - tab "Recommendations" [ref=e137] [cursor=pointer]:
+              - generic [ref=e139]: Recommendations
+        - 'tabpanel "Selected tab: Dashboard" [ref=e140]':
+          - generic [ref=e147]:
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - generic:
+                  - heading [level=1]
+              - button "Customize" [ref=e157]:
+                - generic [ref=e159]:
+                  - img [ref=e161]:
+                    - img [ref=e162]
+                  - text: Customize
+            - generic [ref=e165]:
+              - generic [ref=e169]:
+                - img [ref=e170]
+                - generic [ref=e173]:
+                  - generic "Go to Cloud Hub for better visibility" [ref=e174]:
+                    - heading "Go to Cloud Hub for better visibility" [level=2] [ref=e175]:
+                      - generic [ref=e176]: Go to Cloud Hub for better visibility
+                  - button "Dismiss promotion" [ref=e178] [cursor=pointer]:
+                    - img [ref=e180]:
+                      - img [ref=e181]
+                  - generic [ref=e184]: This dashboard is no longer updated and will shut down in 2027. Cloud Hub offers a more comprehensive view across health, security, cost, optimization, and other data about your projects and applications.
+                  - generic [ref=e186]:
+                    - link "Go to Cloud Hub" [ref=e187] [cursor=pointer]:
+                      - /url: /cloud-hub/home?project=kogflow
+                      - generic [ref=e188]: Go to Cloud Hub
+                    - link "Learn more about Cloud Hub external, opens new window" [ref=e189] [cursor=pointer]:
+                      - /url: https://cloud.google.com/hub/docs/overview
+                      - generic [ref=e190]:
+                        - text: Learn more
+                        - img "external, opens new window" [ref=e191]:
+                          - img "external, opens new window" [ref=e192]:
+                            - img [ref=e193]
+              - generic [ref=e197]:
+                - generic [ref=e199]:
+                  - generic [ref=e203]:
+                    - generic [ref=e205]:
+                      - img [ref=e209]:
+                        - img [ref=e210]
+                      - heading "Project info" [level=2] [ref=e213]
+                    - button "More options for Project info" [ref=e216] [cursor=pointer]:
+                      - img [ref=e218]:
+                        - img [ref=e219]
+                    - generic [ref=e223]:
+                      - list [ref=e224]:
+                        - listitem [ref=e225]:
+                          - generic [ref=e229]:
+                            - generic [ref=e231]: Project name
+                            - generic [ref=e233]: Kogflow
+                        - listitem [ref=e234]:
+                          - generic [ref=e238]:
+                            - generic [ref=e240]: Project number
+                            - generic [ref=e242]: "242587333559"
+                        - listitem [ref=e243]:
+                          - generic [ref=e247]:
+                            - generic [ref=e249]: Project ID
+                            - generic [ref=e251]: kogflow
+                      - button "Add people to this project" [ref=e254]:
+                        - generic [ref=e255]: Add people to this project
+                      - link "Go to project settings" [ref=e257] [cursor=pointer]:
+                        - /url: /iam-admin/settings?project=kogflow
+                        - img [ref=e260]:
+                          - img [ref=e261]
+                        - paragraph [ref=e263]: Go to project settings
+                  - generic [ref=e267]:
+                    - generic [ref=e269]:
+                      - img [ref=e273]:
+                        - img [ref=e274]
+                      - heading "Resources" [level=2] [ref=e281]
+                    - button "More options for Resources" [ref=e284] [cursor=pointer]:
+                      - img [ref=e286]:
+                        - img [ref=e287]
+                    - generic [ref=e292]:
+                      - link "BigQuery Data warehouse/analytics" [ref=e295] [cursor=pointer]:
+                        - /url: /bigquery?project=kogflow
+                        - img [ref=e298]:
+                          - img [ref=e299]
+                        - generic [ref=e305]:
+                          - generic [ref=e307]: BigQuery
+                          - generic [ref=e309]: Data warehouse/analytics
+                      - link "SQL Managed MySQL, PostgreSQL, SQL Server" [ref=e312] [cursor=pointer]:
+                        - /url: /sql?project=kogflow
+                        - img [ref=e315]:
+                          - img [ref=e316]
+                        - generic [ref=e322]:
+                          - generic [ref=e324]: SQL
+                          - generic [ref=e328]: Managed MySQL, PostgreSQL, SQL Server
+                      - link "Compute Engine VMs, GPUs, TPUs, Disks" [ref=e331] [cursor=pointer]:
+                        - /url: /compute?project=kogflow
+                        - img [ref=e334]:
+                          - img [ref=e335]
+                        - generic [ref=e351]:
+                          - generic [ref=e353]: Compute Engine
+                          - generic [ref=e355]: VMs, GPUs, TPUs, Disks
+                      - link "Storage Multi-class multi-region object storage" [ref=e358] [cursor=pointer]:
+                        - /url: /storage?project=kogflow
+                        - img [ref=e361]:
+                          - img [ref=e362]
+                        - generic [ref=e366]:
+                          - generic [ref=e368]: Storage
+                          - generic [ref=e370]: Multi-class multi-region object storage
+                      - link "Cloud Run functions Event-driven serverless functions" [ref=e373] [cursor=pointer]:
+                        - /url: /functions?project=kogflow
+                        - img [ref=e376]:
+                          - img [ref=e377]
+                        - generic [ref=e389]:
+                          - generic [ref=e391]: Cloud Run functions
+                          - generic [ref=e393]: Event-driven serverless functions
+                      - link "Cloud Run Fully managed application platform" [ref=e396] [cursor=pointer]:
+                        - /url: /run?project=kogflow
+                        - img [ref=e399]:
+                          - img [ref=e400]
+                        - generic [ref=e405]:
+                          - generic [ref=e407]: Cloud Run
+                          - generic [ref=e409]: Fully managed application platform
+                  - generic [ref=e413]:
+                    - generic [ref=e415]:
+                      - img [ref=e419]:
+                        - img [ref=e420]
+                      - heading "Getting Started" [level=2] [ref=e423]
+                    - button "More options for Getting Started" [ref=e426] [cursor=pointer]:
+                      - img [ref=e428]:
+                        - img [ref=e429]
+                    - generic [ref=e431]:
+                      - generic [ref=e433]:
+                        - link "Explore and enable APIs" [ref=e437] [cursor=pointer]:
+                          - /url: /apis?project=kogflow
+                          - img [ref=e442]:
+                            - img [ref=e443]
+                          - generic [ref=e449]: Explore and enable APIs
+                        - link "Deploy a prebuilt solution" [ref=e453] [cursor=pointer]:
+                          - /url: /marketplace?project=kogflow
+                          - img [ref=e458]:
+                            - img [ref=e459]
+                          - generic [ref=e469]: Deploy a prebuilt solution
+                        - generic [ref=e473]:
+                          - img [ref=e478]:
+                            - img [ref=e479]
+                          - generic [ref=e488]: Add dynamic logging to a running application
+                        - link "Monitor errors with Error Reporting" [ref=e492] [cursor=pointer]:
+                          - /url: /errors?project=kogflow
+                          - img [ref=e497]:
+                            - img [ref=e498]
+                          - generic [ref=e505]: Monitor errors with Error Reporting
+                        - link "Deploy a Hello World app" [ref=e509] [cursor=pointer]:
+                          - /url: https://cloud.google.com/run/docs/quickstarts/build-and-deploy
+                          - img [ref=e514]:
+                            - img [ref=e515]
+                          - generic [ref=e522]: Deploy a Hello World app
+                        - link "Take a VM quickstart" [ref=e526] [cursor=pointer]:
+                          - /url: /home/dashboard?project=kogflow
+                          - img [ref=e531]:
+                            - img [ref=e532]
+                          - generic [ref=e550]: Take a VM quickstart
+                        - link "Create a Cloud Storage bucket" [ref=e554] [cursor=pointer]:
+                          - /url: /home/dashboard?project=kogflow
+                          - img [ref=e559]:
+                            - img [ref=e560]
+                          - generic [ref=e566]: Create a Cloud Storage bucket
+                        - link "Create a Cloud Run function" [ref=e570] [cursor=pointer]:
+                          - /url: /functions/run_redirect?project=kogflow
+                          - img [ref=e575]:
+                            - img [ref=e576]
+                          - generic [ref=e590]: Create a Cloud Run function
+                        - link "Install the Cloud SDK" [ref=e594] [cursor=pointer]:
+                          - /url: https://cloud.google.com/sdk/#download
+                          - img [ref=e599]:
+                            - img [ref=e600]
+                          - generic [ref=e609]: Install the Cloud SDK
+                      - link "Explore all tutorials" [ref=e611] [cursor=pointer]:
+                        - /url: /getting-started?project=kogflow
+                        - img [ref=e614]:
+                          - img [ref=e615]
+                        - paragraph [ref=e617]: Explore all tutorials
+                - generic [ref=e619]:
+                  - generic [ref=e623]:
+                    - generic [ref=e625]:
+                      - img [ref=e629]:
+                        - img [ref=e630]
+                      - heading "App Engine" [level=2] [ref=e636]
+                    - button "More options for App Engine" [ref=e639] [cursor=pointer]:
+                      - img [ref=e641]:
+                        - img [ref=e642]
+                    - generic [ref=e644]:
+                      - generic [ref=e648]:
+                        - generic "A chart." [ref=e649]:
+                          - generic [ref=e655]: Summary (count/sec)
+                        - group "Line chart" [ref=e659]:
+                          - img [ref=e671]
+                          - paragraph [ref=e673]: Line chart
+                          - generic [ref=e674]:
+                            - paragraph
+                            - paragraph
+                        - img [ref=e678]
+                      - link "Go to the App Engine dashboard" [ref=e683] [cursor=pointer]:
+                        - /url: /appengine?project=kogflow
+                        - img [ref=e686]:
+                          - img [ref=e687]
+                        - paragraph [ref=e689]: Go to the App Engine dashboard
+                  - generic [ref=e693]:
+                    - generic [ref=e695]:
+                      - img [ref=e699]:
+                        - img [ref=e700]
+                      - heading "APIs" [level=2] [ref=e704]
+                    - button "More options for APIs" [ref=e707] [cursor=pointer]:
+                      - img [ref=e709]:
+                        - img [ref=e710]
+                    - generic [ref=e712]:
+                      - generic [ref=e715]:
+                        - generic "A chart showing the number of API requests per second" [ref=e716]:
+                          - generic [ref=e722]: Requests (requests/sec)
+                        - group "Line chart" [ref=e726]:
+                          - generic [ref=e727]:
+                            - generic [ref=e731]:
+                              - img [ref=e732]:
+                                - img [ref=e733]
+                              - text: No data is available for the selected time frame.
+                            - img [ref=e743]
+                          - paragraph [ref=e745]: Line chart
+                          - generic [ref=e746]:
+                            - paragraph
+                            - paragraph
+                            - paragraph
+                        - img [ref=e750]
+                      - link "Go to APIs overview" [ref=e754] [cursor=pointer]:
+                        - /url: /apis/enabled?project=kogflow&show=all
+                        - img [ref=e757]:
+                          - img [ref=e758]
+                        - paragraph [ref=e760]: Go to APIs overview
+                - generic [ref=e762]:
+                  - generic [ref=e766]:
+                    - generic [ref=e769]:
+                      - img [ref=e773]:
+                        - img [ref=e774]
+                      - heading "Google Cloud Platform status" [level=2] [ref=e781]
+                    - button "More options for Google Cloud Platform status" [ref=e784] [cursor=pointer]:
+                      - img [ref=e786]:
+                        - img [ref=e787]
+                    - generic [ref=e789]:
+                      - link "All services normal" [ref=e795] [cursor=pointer]:
+                        - /url: /home/dashboard?project=kogflow
+                        - generic [ref=e799]: All services normal
+                      - link "Go to Cloud status dashboard" [ref=e801] [cursor=pointer]:
+                        - /url: https://status.cloud.google.com/
+                        - img [ref=e804]:
+                          - img [ref=e805]
+                        - paragraph [ref=e807]: Go to Cloud status dashboard
+                  - generic [ref=e811]:
+                    - generic [ref=e813]:
+                      - img [ref=e817]:
+                        - img [ref=e818]
+                      - heading "Monitoring" [level=2] [ref=e822]
+                    - button "More options for Monitoring" [ref=e825] [cursor=pointer]:
+                      - img [ref=e827]:
+                        - img [ref=e828]
+                    - generic [ref=e832]:
+                      - generic [ref=e833]:
+                        - link "Create my dashboard" [ref=e836] [cursor=pointer]:
+                          - /url: /monitoring/dashboards?project=kogflow
+                          - generic [ref=e838]: Create my dashboard
+                        - link "Set up alerting policies" [ref=e841] [cursor=pointer]:
+                          - /url: /monitoring/alerting?project=kogflow
+                          - generic [ref=e843]: Set up alerting policies
+                        - link "Create uptime checks" [ref=e846] [cursor=pointer]:
+                          - /url: /monitoring/uptime?project=kogflow
+                          - generic [ref=e848]: Create uptime checks
+                      - link "View all dashboards" [ref=e852] [cursor=pointer]:
+                        - /url: /monitoring/dashboards?project=kogflow
+                        - generic [ref=e854]: View all dashboards
+                      - link "Go to Monitoring" [ref=e856] [cursor=pointer]:
+                        - /url: /monitoring?project=kogflow
+                        - img [ref=e859]:
+                          - img [ref=e860]
+                        - paragraph [ref=e862]: Go to Monitoring
+                  - generic [ref=e866]:
+                    - generic [ref=e868]:
+                      - img [ref=e872]:
+                        - img [ref=e873]
+                      - heading "Error Reporting" [level=2] [ref=e877]
+                    - button "More options for Error Reporting" [ref=e880] [cursor=pointer]:
+                      - img [ref=e882]:
+                        - img [ref=e883]
+                    - generic [ref=e885]:
+                      - link "No sign of any errors. Have you set up Error Reporting?" [ref=e891] [cursor=pointer]:
+                        - /url: /home/dashboard?project=kogflow
+                        - generic [ref=e897]: No sign of any errors. Have you set up Error Reporting?
+                      - link "Learn how to set up Error Reporting" [ref=e899] [cursor=pointer]:
+                        - /url: https://cloud.google.com/error-reporting/docs/setup/
+                        - img [ref=e902]:
+                          - img [ref=e903]
+                        - paragraph [ref=e905]: Learn how to set up Error Reporting
+                  - generic [ref=e909]:
+                    - generic [ref=e911]:
+                      - img [ref=e915]:
+                        - img [ref=e916]
+                      - heading "News" [level=2] [ref=e919]
+                    - button "More options for News" [ref=e922] [cursor=pointer]:
+                      - img [ref=e924]:
+                        - img [ref=e925]
+                    - generic [ref=e927]:
+                      - generic [ref=e929]:
+                        - link "A developer’s guide to architecting reliable GPU infrastructure at scale 3 hours ago" [ref=e933] [cursor=pointer]:
+                          - /url: https://cloud.google.com/blog/products/compute/a-guide-to-architecting-reliable-gpu-infrastructure/
+                          - generic [ref=e935]:
+                            - generic [ref=e939]: A developer’s guide to architecting reliable GPU infrastructure at scale
+                            - generic [ref=e941]: 3 hours ago
+                        - 'link "Guardrails at the gateway: Securing AI inference on GKE with Model Armor 7 hours ago" [ref=e945] [cursor=pointer]':
+                          - /url: https://cloud.google.com/blog/products/identity-security/securing-ai-inference-on-gke-with-model-armor/
+                          - generic [ref=e947]:
+                            - generic [ref=e951]: "Guardrails at the gateway: Securing AI inference on GKE with Model Armor"
+                            - generic [ref=e953]: 7 hours ago
+                        - link "How Estée Lauder Companies uses Cloud Run worker pools for its pull-based agentic workloads 9 hours ago" [ref=e957] [cursor=pointer]:
+                          - /url: https://cloud.google.com/blog/products/serverless/cloud-run-worker-pools-at-estee-lauder-companies/
+                          - generic [ref=e959]:
+                            - generic [ref=e963]: How Estée Lauder Companies uses Cloud Run worker pools for its pull-based agentic workloads
+                            - generic [ref=e965]: 9 hours ago
+                      - link "Read all news" [ref=e967] [cursor=pointer]:
+                        - /url: https://cloud.google.com/blog
+                        - img [ref=e970]:
+                          - img [ref=e971]
+                        - paragraph [ref=e973]: Read all news
+                      - link "Read all release notes" [ref=e975] [cursor=pointer]:
+                        - /url: /release-notes?project=kogflow
+                        - img [ref=e979]:
+                          - img [ref=e980]
+                        - paragraph [ref=e982]: Read all release notes
+                  - generic [ref=e986]:
+                    - generic [ref=e988]:
+                      - img [ref=e992]:
+                        - img [ref=e993]
+                      - heading "Documentation" [level=2] [ref=e996]
+                    - button "More options for Documentation" [ref=e999] [cursor=pointer]:
+                      - img [ref=e1001]:
+                        - img [ref=e1002]
+                    - generic [ref=e1006]:
+                      - link "Learn about Compute Engine" [ref=e1010] [cursor=pointer]:
+                        - /url: https://cloud.google.com/compute/docs/
+                        - generic [ref=e1014]: Learn about Compute Engine
+                      - link "Learn about Cloud Storage" [ref=e1018] [cursor=pointer]:
+                        - /url: https://cloud.google.com/storage/docs/
+                        - generic [ref=e1022]: Learn about Cloud Storage
+                      - link "Learn about Cloud Run" [ref=e1026] [cursor=pointer]:
+                        - /url: https://cloud.google.com/run/docs/
+                        - generic [ref=e1030]: Learn about Cloud Run
+  - iframe [ref=e1033]:
+    
+  - iframe [ref=e1034]:
+    
+  - iframe [ref=e1035]:
+    

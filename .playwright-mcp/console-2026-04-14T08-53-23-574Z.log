@@ -1,0 +1,63 @@
+[     213ms] [WARNING] iso_swr: SSR fetch failed for "/v1/dashboard/projects/kogflow-staging?teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:622
+[     213ms] [WARNING] iso_swr: SSR fetch failed for "/api/v2/teams/conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:622
+[     214ms] [WARNING] iso_swr: SSR fetch failed for "/api/v8/projects?includePermissions=false&latestDeployments=0&limit=10&search=&slug=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:622
+[     276ms] [WARNING] iso_swr: SSR fetch failed for "/api/v6/deployments?limit=10&projectId=kogflow-staging&rollbackCandidate=true&teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:701
+[     328ms] [LOG] %c
+▲
+
+  ________            ___    ____   ________                __
+ /_  __/ /_  ___     /   |  /  _/  / ____/ /___  __  ______/ /
+  / / / __ \/ _ \   / /| |  / /   / /   / / __ \/ / / / __  /
+ / / / / / /  __/  / ___ |_/ /   / /___/ / /_/ / /_/ / /_/ /
+/_/ /_/ /_/\___/  /_/  |_/___/   \____/_/\____/\__,_/\__,_/
+  
+
+Hello!
+
+- Open Source https://vercel.com/oss
+- Careers https://vercel.com/careers
+- Status https://vercel-status.com
+
+ font-family: "Geist Mono", monospace; white-space: pre; line-height: 1; @ https://vercel.com/_next/static/chunks/2qnwye86tw9bd.js?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt:72
+[     453ms] [WARNING] iso_swr: SSR fetch failed for "/api/v9/projects/kogflow-staging?activeBranches=1&latestDeployments=1&rollbackInfo=true&teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:780
+[     453ms] [WARNING] iso_swr: SSR fetch failed for "/dashboard/projects/kogflow-staging/production-checklist?teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:780
+[     520ms] [WARNING] iso_swr: SSR fetch failed for "/api/v6/deployments?limit=10&projectId=kogflow-staging&state=INITIALIZING%2CREADY%2CERROR%2CBUILDING%2CQUEUED&target=preview&teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/conexer/kogflow-staging:949
+[     894ms] [WARNING] iso_swr[warn] [client] fallback error for key: "/api/v2/teams/conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/_next/static/chunks/29rqlhwewro_0.js?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt:6
+[    1092ms] [WARNING] iso_swr[warn] [client] fallback error for key: "/v1/dashboard/projects/kogflow-staging?teamId=conexer" {error: iso_swr_fetch_error, message: The request is missing an authentication token} @ https://vercel.com/_next/static/chunks/29rqlhwewro_0.js?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt:6
+[    1442ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/v1/dashboard/projects/kogflow-staging?teamId=conexer:0
+[    1442ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/v1/notifications/push:0
+[    1443ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/jwt:0
+[    1445ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/dashboard/projects/kogflow-staging/activity?teamId=conexer:0
+[    1534ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/v2/dashboard/projects?favorites=1&limit=25&teamId=conexer:0
+[    1534ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/recents?hydrateLimit=30&limit=7&teamId=conexer&type=preview:0
+[    1619ms] [ERROR] The script resource is behind a redirect, which is disallowed. @ :0
+[    1684ms] [LOG] %c
+▲
+
+    ________   _ __ _          ____           __
+   /  _/ __/  (_) /( )_____   / __/___ ______/ /_
+   / // /_   / / __/// ___/  / /_/ __ `/ ___/ __/
+ _/ // __/  / / /_  (__  )  / __/ /_/ (__  ) /_
+/___/_/    /_/\__/ /____/  /_/  \__,_/____/\__/
+    _ __ _                         _    __                    __
+   (_) /( )_____   ____  ____     | |  / /__  _____________  / /
+  / / __/// ___/  / __ \/ __ \    | | / / _ \/ ___/ ___/ _ \/ /
+ / / /_  (__  )  / /_/ / / / /    | |/ /  __/ /  / /__/  __/ /
+/_/\__/ /____/   \____/_/ /_/     |___/\___/_/   \___/\___/_/
+  
+
+Hello!
+
+- Open Source https://vercel.com/oss
+- Careers https://vercel.com/careers
+- Status https://vercel-status.com
+
+ font-family: "Geist Mono", monospace; white-space: pre; line-height: 1; @ https://vercel.com/_next/static/chunks/2qnwye86tw9bd.js?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt:72
+[    1891ms] [WARNING] [GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your code accordingly and opt-in to FedCM to test your changes. Learn more: https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#display_moment and https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#skipped_moment @ https://accounts.google.com/gsi/client:84
+[    1957ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://vercel.com/api/jwt:0
+[    1977ms] [WARNING] Deprecated API for given entry type. @ https://vercel.com/_next/static/chunks/06kl74ekbv4gc.js?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt:18
+[    5256ms] [WARNING] The resource https://vercel.com/_next/static/media/stripe-light.2l_1jctpe6k_4.svg?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fconexer%2Fkogflow-staging:0
+[    5256ms] [WARNING] The resource https://vercel.com/_next/static/media/ebay-dark.34mho2a18qqlt.svg?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fconexer%2Fkogflow-staging:0
+[    5256ms] [WARNING] The resource https://vercel.com/_next/static/media/stripe-dark.16ozjth2vgb_3.svg?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fconexer%2Fkogflow-staging:0
+[    5256ms] [WARNING] The resource https://vercel.com/_next/static/media/adobe-light.406_7oryl71va.svg?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fconexer%2Fkogflow-staging:0
+[    5256ms] [WARNING] The resource https://vercel.com/_next/static/media/ebay-light.3ft_ki8203ov0.svg?dpl=dpl_5rqq5rFaSPy2NtZ231DER3qpJTkt was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://vercel.com/login?next=%2Fconexer%2Fkogflow-staging:0

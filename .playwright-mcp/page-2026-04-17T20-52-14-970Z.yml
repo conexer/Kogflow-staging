@@ -1,0 +1,1447 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e7]:
+            - img [ref=e8]
+            - text: Outreach Pipeline
+            - generic [ref=e10]: Internal Only
+          - paragraph [ref=e11]: Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail
+        - generic [ref=e12]:
+          - button "Run Session" [ref=e195]:
+            - img [ref=e196]
+            - text: Run Session
+          - button [ref=e16]:
+            - img [ref=e17]
+      - generic [ref=e22]:
+        - button "dashboard" [ref=e23]
+        - button "leads" [ref=e24]
+        - button "config" [ref=e25]
+        - button "email" [ref=e26]
+        - button "⚙ Setup" [ref=e27]
+    - generic [ref=e198]:
+      - generic [ref=e199]:
+        - heading "Lead Queue (50 total, ordered by ICP score)" [level=2] [ref=e200]:
+          - text: Lead Queue
+          - generic [ref=e201]: (50 total, ordered by ICP score)
+        - button "Refresh" [ref=e202]:
+          - img [ref=e203]
+          - text: Refresh
+      - table [ref=e209]:
+        - rowgroup [ref=e210]:
+          - row "Score Status Empty Rooms Agent Email Agent Name Agent Phone Address City Price DOM ↓Price Photos Actions" [ref=e211]:
+            - columnheader "Score" [ref=e212]
+            - columnheader "Status" [ref=e213]
+            - columnheader "Empty Rooms" [ref=e214]
+            - columnheader "Agent Email" [ref=e215]
+            - columnheader "Agent Name" [ref=e216]
+            - columnheader "Agent Phone" [ref=e217]
+            - columnheader "Address" [ref=e218]
+            - columnheader "City" [ref=e219]
+            - columnheader "Price" [ref=e220]
+            - columnheader "DOM" [ref=e221]
+            - columnheader "↓Price" [ref=e222]
+            - columnheader "Photos" [ref=e223]
+            - columnheader "Actions" [ref=e224]
+        - rowgroup [ref=e225]:
+          - row "25 Scraped — harhouston@lennar.com Jared Turner 888-845-3451 8206 Coral Horizon Dr, Katy, TX 77493 Katy $364,840 1d 20" [ref=e226]:
+            - cell "25" [ref=e227]
+            - cell "Scraped" [ref=e228]
+            - cell "—" [ref=e229]
+            - cell "harhouston@lennar.com" [ref=e230]:
+              - link "harhouston@lennar.com" [ref=e231] [cursor=pointer]:
+                - /url: mailto:harhouston@lennar.com
+            - cell "Jared Turner" [ref=e232]
+            - cell "888-845-3451" [ref=e233]:
+              - link "888-845-3451" [ref=e234] [cursor=pointer]:
+                - /url: tel:888-845-3451
+            - cell "8206 Coral Horizon Dr, Katy, TX 77493" [ref=e235]:
+              - generic "8206 Coral Horizon Dr, Katy, TX 77493" [ref=e236]
+            - cell "Katy" [ref=e237]
+            - cell "$364,840" [ref=e238]:
+              - generic [ref=e239]: $364,840
+            - cell "1d" [ref=e240]:
+              - generic [ref=e241]: 1d
+            - cell [ref=e242]:
+              - img [ref=e243]
+            - cell "20" [ref=e246]
+            - cell [ref=e247]:
+              - generic [ref=e248]:
+                - button "Send to harhouston@lennar.com" [ref=e249]:
+                  - img [ref=e250]
+                - link "View listing" [ref=e253] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/8206-coral-horizon-dr-katy-tx-77493/17570326
+                  - img [ref=e254]
+          - row "25 Scraped — fec2100@sbcglobal.net Norma Campos 281-661-4227 2713 Hearne Dr, Pasadena, TX 77502 Pasadena $214,000 1d 17" [ref=e258]:
+            - cell "25" [ref=e259]
+            - cell "Scraped" [ref=e260]
+            - cell "—" [ref=e261]
+            - cell "fec2100@sbcglobal.net" [ref=e262]:
+              - link "fec2100@sbcglobal.net" [ref=e263] [cursor=pointer]:
+                - /url: mailto:fec2100@sbcglobal.net
+            - cell "Norma Campos" [ref=e264]
+            - cell "281-661-4227" [ref=e265]:
+              - link "281-661-4227" [ref=e266] [cursor=pointer]:
+                - /url: tel:281-661-4227
+            - cell "2713 Hearne Dr, Pasadena, TX 77502" [ref=e267]:
+              - generic "2713 Hearne Dr, Pasadena, TX 77502" [ref=e268]
+            - cell "Pasadena" [ref=e269]
+            - cell "$214,000" [ref=e270]:
+              - generic [ref=e271]: $214,000
+            - cell "1d" [ref=e272]:
+              - generic [ref=e273]: 1d
+            - cell [ref=e274]:
+              - img [ref=e275]
+            - cell "17" [ref=e278]
+            - cell [ref=e279]:
+              - generic [ref=e280]:
+                - button "Send to fec2100@sbcglobal.net" [ref=e281]:
+                  - img [ref=e282]
+                - link "View listing" [ref=e285] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/2713-hearne-dr-pasadena-tx-77502/3285394
+                  - img [ref=e286]
+          - row "25 Scraped — info@BeOurPriority1.com Liza Salazar-Elliott 281-724-1264 902 Essex Dr, Friendswood, TX 77546 Friendswood $279,500 1d 24" [ref=e290]:
+            - cell "25" [ref=e291]
+            - cell "Scraped" [ref=e292]
+            - cell "—" [ref=e293]
+            - cell "info@BeOurPriority1.com" [ref=e294]:
+              - link "info@BeOurPriority1.com" [ref=e295] [cursor=pointer]:
+                - /url: mailto:info@BeOurPriority1.com
+            - cell "Liza Salazar-Elliott" [ref=e296]
+            - cell "281-724-1264" [ref=e297]:
+              - link "281-724-1264" [ref=e298] [cursor=pointer]:
+                - /url: tel:281-724-1264
+            - cell "902 Essex Dr, Friendswood, TX 77546" [ref=e299]:
+              - generic "902 Essex Dr, Friendswood, TX 77546" [ref=e300]
+            - cell "Friendswood" [ref=e301]
+            - cell "$279,500" [ref=e302]:
+              - generic [ref=e303]: $279,500
+            - cell "1d" [ref=e304]:
+              - generic [ref=e305]: 1d
+            - cell [ref=e306]:
+              - img [ref=e307]
+            - cell "24" [ref=e310]
+            - cell [ref=e311]:
+              - generic [ref=e312]:
+                - button "Send to info@BeOurPriority1.com" [ref=e313]:
+                  - img [ref=e314]
+                - link "View listing" [ref=e317] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/902-essex-dr-friendswood-tx-77546/2653678
+                  - img [ref=e318]
+          - row "25 Scraped unknown hhbroker@highlandhomes.com Dina Verteramo 888-524-3182 19726 Riverbed Ln, Cypress, TX 77433 Cypress $439,990 1d 20" [ref=e322]:
+            - cell "25" [ref=e323]
+            - cell "Scraped" [ref=e324]
+            - cell "unknown" [ref=e325]:
+              - generic [ref=e327]:
+                - img [ref=e328]
+                - text: unknown
+            - cell "hhbroker@highlandhomes.com" [ref=e332]:
+              - link "hhbroker@highlandhomes.com" [ref=e333] [cursor=pointer]:
+                - /url: mailto:hhbroker@highlandhomes.com
+            - cell "Dina Verteramo" [ref=e334]
+            - cell "888-524-3182" [ref=e335]:
+              - link "888-524-3182" [ref=e336] [cursor=pointer]:
+                - /url: tel:888-524-3182
+            - cell "19726 Riverbed Ln, Cypress, TX 77433" [ref=e337]:
+              - generic "19726 Riverbed Ln, Cypress, TX 77433" [ref=e338]
+            - cell "Cypress" [ref=e339]
+            - cell "$439,990" [ref=e340]:
+              - generic [ref=e341]: $439,990
+            - cell "1d" [ref=e342]:
+              - generic [ref=e343]: 1d
+            - cell [ref=e344]:
+              - img [ref=e345]
+            - cell "20" [ref=e348]
+            - cell [ref=e349]:
+              - generic [ref=e350]:
+                - button "Send to hhbroker@highlandhomes.com" [ref=e351]:
+                  - img [ref=e352]
+                - link "View listing" [ref=e355] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/19726-riverbed-ln-cypress-tx-77433/17227677
+                  - img [ref=e356]
+          - row "25 Scraped unknown yeira@texasneonrealty.com Yeira Baldazo 832-863-1215 3209 Chestershire Dr, Pasadena, TX 77503 Pasadena $240,000 8d 41" [ref=e360]:
+            - cell "25" [ref=e361]
+            - cell "Scraped" [ref=e362]
+            - cell "unknown" [ref=e363]:
+              - generic [ref=e365]:
+                - img [ref=e366]
+                - text: unknown
+            - cell "yeira@texasneonrealty.com" [ref=e370]:
+              - link "yeira@texasneonrealty.com" [ref=e371] [cursor=pointer]:
+                - /url: mailto:yeira@texasneonrealty.com
+            - cell "Yeira Baldazo" [ref=e372]
+            - cell "832-863-1215" [ref=e373]:
+              - link "832-863-1215" [ref=e374] [cursor=pointer]:
+                - /url: tel:832-863-1215
+            - cell "3209 Chestershire Dr, Pasadena, TX 77503" [ref=e375]:
+              - generic "3209 Chestershire Dr, Pasadena, TX 77503" [ref=e376]
+            - cell "Pasadena" [ref=e377]
+            - cell "$240,000" [ref=e378]:
+              - generic [ref=e379]: $240,000
+            - cell "8d" [ref=e380]:
+              - generic [ref=e381]: 8d
+            - cell [ref=e382]:
+              - img [ref=e383]
+            - cell "41" [ref=e386]
+            - cell [ref=e387]:
+              - generic [ref=e388]:
+                - button "Send to yeira@texasneonrealty.com" [ref=e389]:
+                  - img [ref=e390]
+                - link "View listing" [ref=e393] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3209-chestershire-dr-pasadena-tx-77503/11966163
+                  - img [ref=e394]
+          - row "25 Scraped unknown har@realmpro.com Steven Matzen 281-598-5800 14615 Rochelle Ct, Cypress, TX 77429 Cypress $294,000 1d 31" [ref=e398]:
+            - cell "25" [ref=e399]
+            - cell "Scraped" [ref=e400]
+            - cell "unknown" [ref=e401]:
+              - generic [ref=e403]:
+                - img [ref=e404]
+                - text: unknown
+            - cell "har@realmpro.com" [ref=e408]:
+              - link "har@realmpro.com" [ref=e409] [cursor=pointer]:
+                - /url: mailto:har@realmpro.com
+            - cell "Steven Matzen" [ref=e410]
+            - cell "281-598-5800" [ref=e411]:
+              - link "281-598-5800" [ref=e412] [cursor=pointer]:
+                - /url: tel:281-598-5800
+            - cell "14615 Rochelle Ct, Cypress, TX 77429" [ref=e413]:
+              - generic "14615 Rochelle Ct, Cypress, TX 77429" [ref=e414]
+            - cell "Cypress" [ref=e415]
+            - cell "$294,000" [ref=e416]:
+              - generic [ref=e417]: $294,000
+            - cell "1d" [ref=e418]:
+              - generic [ref=e419]: 1d
+            - cell [ref=e420]:
+              - img [ref=e421]
+            - cell "31" [ref=e424]
+            - cell [ref=e425]:
+              - generic [ref=e426]:
+                - button "Send to har@realmpro.com" [ref=e427]:
+                  - img [ref=e428]
+                - link "View listing" [ref=e431] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/14615-rochelle-ct-cypress-tx-77429/3657691
+                  - img [ref=e432]
+          - row "10 Scraped — legacyhomesboles@gmail.com Deidra Ewing 832-230-1617 119 E 32nd St A, Houston, TX 77018 Houston $270,000 1d — 10" [ref=e436]:
+            - cell "10" [ref=e437]
+            - cell "Scraped" [ref=e438]
+            - cell "—" [ref=e439]
+            - cell "legacyhomesboles@gmail.com" [ref=e440]:
+              - link "legacyhomesboles@gmail.com" [ref=e441] [cursor=pointer]:
+                - /url: mailto:legacyhomesboles@gmail.com
+            - cell "Deidra Ewing" [ref=e442]
+            - cell "832-230-1617" [ref=e443]:
+              - link "832-230-1617" [ref=e444] [cursor=pointer]:
+                - /url: tel:832-230-1617
+            - cell "119 E 32nd St A, Houston, TX 77018" [ref=e445]:
+              - generic "119 E 32nd St A, Houston, TX 77018" [ref=e446]
+            - cell "Houston" [ref=e447]
+            - cell "$270,000" [ref=e448]:
+              - generic [ref=e449]: $270,000
+            - cell "1d" [ref=e450]:
+              - generic [ref=e451]: 1d
+            - cell "—" [ref=e452]
+            - cell "10" [ref=e453]
+            - cell [ref=e454]:
+              - generic [ref=e455]:
+                - button "Send to legacyhomesboles@gmail.com" [ref=e456]:
+                  - img [ref=e457]
+                - link "View listing" [ref=e460] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/119-e-32nd-st-a-houston-tx-77018/13733873
+                  - img [ref=e461]
+          - 'row "10 Scraped — andreacooksey@exitrealty360.com Regina Ram 713-987-7000 7700 Creekbend Dr #57, Houston, TX 77071 Houston $158,000 1d — 13" [ref=e465]':
+            - cell "10" [ref=e466]
+            - cell "Scraped" [ref=e467]
+            - cell "—" [ref=e468]
+            - cell "andreacooksey@exitrealty360.com" [ref=e469]:
+              - link "andreacooksey@exitrealty360.com" [ref=e470] [cursor=pointer]:
+                - /url: mailto:andreacooksey@exitrealty360.com
+            - cell "Regina Ram" [ref=e471]
+            - cell "713-987-7000" [ref=e472]:
+              - link "713-987-7000" [ref=e473] [cursor=pointer]:
+                - /url: tel:713-987-7000
+            - 'cell "7700 Creekbend Dr #57, Houston, TX 77071" [ref=e474]':
+              - 'generic "7700 Creekbend Dr #57, Houston, TX 77071" [ref=e475]'
+            - cell "Houston" [ref=e476]
+            - cell "$158,000" [ref=e477]:
+              - generic [ref=e478]: $158,000
+            - cell "1d" [ref=e479]:
+              - generic [ref=e480]: 1d
+            - cell "—" [ref=e481]
+            - cell "13" [ref=e482]
+            - cell [ref=e483]:
+              - generic [ref=e484]:
+                - button "Send to andreacooksey@exitrealty360.com" [ref=e485]:
+                  - img [ref=e486]
+                - link "View listing" [ref=e489] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/7700-creekbend-dr-57-houston-tx-77071/3402863
+                  - img [ref=e490]
+          - row "10 Scraped — kingfaytx@gmail.com Michelle Lee 832-539-6468 3327 Timber View Dr, Sugar Land, TX 77479 Sugar Land $319,000 1d — 2" [ref=e494]:
+            - cell "10" [ref=e495]
+            - cell "Scraped" [ref=e496]
+            - cell "—" [ref=e497]
+            - cell "kingfaytx@gmail.com" [ref=e498]:
+              - link "kingfaytx@gmail.com" [ref=e499] [cursor=pointer]:
+                - /url: mailto:kingfaytx@gmail.com
+            - cell "Michelle Lee" [ref=e500]
+            - cell "832-539-6468" [ref=e501]:
+              - link "832-539-6468" [ref=e502] [cursor=pointer]:
+                - /url: tel:832-539-6468
+            - cell "3327 Timber View Dr, Sugar Land, TX 77479" [ref=e503]:
+              - generic "3327 Timber View Dr, Sugar Land, TX 77479" [ref=e504]
+            - cell "Sugar Land" [ref=e505]
+            - cell "$319,000" [ref=e506]:
+              - generic [ref=e507]: $319,000
+            - cell "1d" [ref=e508]:
+              - generic [ref=e509]: 1d
+            - cell "—" [ref=e510]
+            - cell "2" [ref=e511]
+            - cell [ref=e512]:
+              - generic [ref=e513]:
+                - button "Send to kingfaytx@gmail.com" [ref=e514]:
+                  - img [ref=e515]
+                - link "View listing" [ref=e518] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3327-timber-view-dr-sugar-land-tx-77479/2492192
+                  - img [ref=e519]
+          - row "10 Scraped — glenda@glendahall.com Glynn Hunter JR 254-362-5370 4106 Calvert Cove Ct, Spring, TX 77386 Spring $400,000 2d — 5" [ref=e523]:
+            - cell "10" [ref=e524]
+            - cell "Scraped" [ref=e525]
+            - cell "—" [ref=e526]
+            - cell "glenda@glendahall.com" [ref=e527]:
+              - link "glenda@glendahall.com" [ref=e528] [cursor=pointer]:
+                - /url: mailto:glenda@glendahall.com
+            - cell "Glynn Hunter JR" [ref=e529]
+            - cell "254-362-5370" [ref=e530]:
+              - link "254-362-5370" [ref=e531] [cursor=pointer]:
+                - /url: tel:254-362-5370
+            - cell "4106 Calvert Cove Ct, Spring, TX 77386" [ref=e532]:
+              - generic "4106 Calvert Cove Ct, Spring, TX 77386" [ref=e533]
+            - cell "Spring" [ref=e534]
+            - cell "$400,000" [ref=e535]:
+              - generic [ref=e536]: $400,000
+            - cell "2d" [ref=e537]:
+              - generic [ref=e538]: 2d
+            - cell "—" [ref=e539]
+            - cell "5" [ref=e540]
+            - cell [ref=e541]:
+              - generic [ref=e542]:
+                - button "Send to glenda@glendahall.com" [ref=e543]:
+                  - img [ref=e544]
+                - link "View listing" [ref=e547] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/4106-calvert-cove-ct-spring-tx-77386/11118932
+                  - img [ref=e548]
+          - row "10 Scraped — info@dhrgrouptx.com Iris Chacon 713-239-2082 1108 Mobile Dr, Pasadena, TX 77506 Pasadena $185,000 1d — 9" [ref=e552]:
+            - cell "10" [ref=e553]
+            - cell "Scraped" [ref=e554]
+            - cell "—" [ref=e555]
+            - cell "info@dhrgrouptx.com" [ref=e556]:
+              - link "info@dhrgrouptx.com" [ref=e557] [cursor=pointer]:
+                - /url: mailto:info@dhrgrouptx.com
+            - cell "Iris Chacon" [ref=e558]
+            - cell "713-239-2082" [ref=e559]:
+              - link "713-239-2082" [ref=e560] [cursor=pointer]:
+                - /url: tel:713-239-2082
+            - cell "1108 Mobile Dr, Pasadena, TX 77506" [ref=e561]:
+              - generic "1108 Mobile Dr, Pasadena, TX 77506" [ref=e562]
+            - cell "Pasadena" [ref=e563]
+            - cell "$185,000" [ref=e564]:
+              - generic [ref=e565]: $185,000
+            - cell "1d" [ref=e566]:
+              - generic [ref=e567]: 1d
+            - cell "—" [ref=e568]
+            - cell "9" [ref=e569]
+            - cell [ref=e570]:
+              - generic [ref=e571]:
+                - button "Send to info@dhrgrouptx.com" [ref=e572]:
+                  - img [ref=e573]
+                - link "View listing" [ref=e576] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/1108-mobile-dr-pasadena-tx-77506/3175607
+                  - img [ref=e577]
+          - row "10 Scraped — john@thekaldorgroup.com John Kaldor 713-254-9292 0 Shaver Rd, Pasadena, TX 77502 Pasadena $250,000 1d — 9" [ref=e581]:
+            - cell "10" [ref=e582]
+            - cell "Scraped" [ref=e583]
+            - cell "—" [ref=e584]
+            - cell "john@thekaldorgroup.com" [ref=e585]:
+              - link "john@thekaldorgroup.com" [ref=e586] [cursor=pointer]:
+                - /url: mailto:john@thekaldorgroup.com
+            - cell "John Kaldor" [ref=e587]
+            - cell "713-254-9292" [ref=e588]:
+              - link "713-254-9292" [ref=e589] [cursor=pointer]:
+                - /url: tel:713-254-9292
+            - cell "0 Shaver Rd, Pasadena, TX 77502" [ref=e590]:
+              - generic "0 Shaver Rd, Pasadena, TX 77502" [ref=e591]
+            - cell "Pasadena" [ref=e592]
+            - cell "$250,000" [ref=e593]:
+              - generic [ref=e594]: $250,000
+            - cell "1d" [ref=e595]:
+              - generic [ref=e596]: 1d
+            - cell "—" [ref=e597]
+            - cell "9" [ref=e598]
+            - cell [ref=e599]:
+              - generic [ref=e600]:
+                - button "Send to john@thekaldorgroup.com" [ref=e601]:
+                  - img [ref=e602]
+                - link "View listing" [ref=e605] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/0-shaver-rd-pasadena-tx-77502/17569606
+                  - img [ref=e606]
+          - row "10 Scraped — brokerhou@hsmove.com Taha Elhajj 713-785-6666 3735 Red Bluff Rd, Pasadena, TX 77503 Pasadena $210,000 1d — 8" [ref=e610]:
+            - cell "10" [ref=e611]
+            - cell "Scraped" [ref=e612]
+            - cell "—" [ref=e613]
+            - cell "brokerhou@hsmove.com" [ref=e614]:
+              - link "brokerhou@hsmove.com" [ref=e615] [cursor=pointer]:
+                - /url: mailto:brokerhou@hsmove.com
+            - cell "Taha Elhajj" [ref=e616]
+            - cell "713-785-6666" [ref=e617]:
+              - link "713-785-6666" [ref=e618] [cursor=pointer]:
+                - /url: tel:713-785-6666
+            - cell "3735 Red Bluff Rd, Pasadena, TX 77503" [ref=e619]:
+              - generic "3735 Red Bluff Rd, Pasadena, TX 77503" [ref=e620]
+            - cell "Pasadena" [ref=e621]
+            - cell "$210,000" [ref=e622]:
+              - generic [ref=e623]: $210,000
+            - cell "1d" [ref=e624]:
+              - generic [ref=e625]: 1d
+            - cell "—" [ref=e626]
+            - cell "8" [ref=e627]
+            - cell [ref=e628]:
+              - generic [ref=e629]:
+                - button "Send to brokerhou@hsmove.com" [ref=e630]:
+                  - img [ref=e631]
+                - link "View listing" [ref=e634] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3735-red-bluff-rd-pasadena-tx-77503/3058069
+                  - img [ref=e635]
+          - row "10 Scraped — info@tcphouses.com Sophia Valdez 979-297-6000 6219 Stoney Creek Dr, Pasadena, TX 77503 Pasadena $247,000 3d — 13" [ref=e639]:
+            - cell "10" [ref=e640]
+            - cell "Scraped" [ref=e641]
+            - cell "—" [ref=e642]
+            - cell "info@tcphouses.com" [ref=e643]:
+              - link "info@tcphouses.com" [ref=e644] [cursor=pointer]:
+                - /url: mailto:info@tcphouses.com
+            - cell "Sophia Valdez" [ref=e645]
+            - cell "979-297-6000" [ref=e646]:
+              - link "979-297-6000" [ref=e647] [cursor=pointer]:
+                - /url: tel:979-297-6000
+            - cell "6219 Stoney Creek Dr, Pasadena, TX 77503" [ref=e648]:
+              - generic "6219 Stoney Creek Dr, Pasadena, TX 77503" [ref=e649]
+            - cell "Pasadena" [ref=e650]
+            - cell "$247,000" [ref=e651]:
+              - generic [ref=e652]: $247,000
+            - cell "3d" [ref=e653]:
+              - generic [ref=e654]: 3d
+            - cell "—" [ref=e655]
+            - cell "13" [ref=e656]
+            - cell [ref=e657]:
+              - generic [ref=e658]:
+                - button "Send to info@tcphouses.com" [ref=e659]:
+                  - img [ref=e660]
+                - link "View listing" [ref=e663] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/6219-stoney-creek-dr-pasadena-tx-77503/3732438
+                  - img [ref=e664]
+          - row "10 Scraped — emmyrhoades21@gmail.com Emmy Rhoades 713-291-3787 711 Staitti St, Humble, TX 77338 Humble $250,000 1d — 9" [ref=e668]:
+            - cell "10" [ref=e669]
+            - cell "Scraped" [ref=e670]
+            - cell "—" [ref=e671]
+            - cell "emmyrhoades21@gmail.com" [ref=e672]:
+              - link "emmyrhoades21@gmail.com" [ref=e673] [cursor=pointer]:
+                - /url: mailto:emmyrhoades21@gmail.com
+            - cell "Emmy Rhoades" [ref=e674]
+            - cell "713-291-3787" [ref=e675]:
+              - link "713-291-3787" [ref=e676] [cursor=pointer]:
+                - /url: tel:713-291-3787
+            - cell "711 Staitti St, Humble, TX 77338" [ref=e677]:
+              - generic "711 Staitti St, Humble, TX 77338" [ref=e678]
+            - cell "Humble" [ref=e679]
+            - cell "$250,000" [ref=e680]:
+              - generic [ref=e681]: $250,000
+            - cell "1d" [ref=e682]:
+              - generic [ref=e683]: 1d
+            - cell "—" [ref=e684]
+            - cell "9" [ref=e685]
+            - cell [ref=e686]:
+              - generic [ref=e687]:
+                - button "Send to emmyrhoades21@gmail.com" [ref=e688]:
+                  - img [ref=e689]
+                - link "View listing" [ref=e692] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/711-staitti-st-humble-tx-77338/2967831?lid=10785520
+                  - img [ref=e693]
+          - row "10 Scraped — — Rita Holloway 281-670-1800 16202 Mountain Timber Ct, Friendswood, TX 77546 Friendswood $499,000 1d — 1" [ref=e697]:
+            - cell "10" [ref=e698]
+            - cell "Scraped" [ref=e699]
+            - cell "—" [ref=e700]
+            - cell "—" [ref=e701]
+            - cell "Rita Holloway" [ref=e702]
+            - cell "281-670-1800" [ref=e703]:
+              - link "281-670-1800" [ref=e704] [cursor=pointer]:
+                - /url: tel:281-670-1800
+            - cell "16202 Mountain Timber Ct, Friendswood, TX 77546" [ref=e705]:
+              - generic "16202 Mountain Timber Ct, Friendswood, TX 77546" [ref=e706]
+            - cell "Friendswood" [ref=e707]
+            - cell "$499,000" [ref=e708]:
+              - generic [ref=e709]: $499,000
+            - cell "1d" [ref=e710]:
+              - generic [ref=e711]: 1d
+            - cell "—" [ref=e712]
+            - cell "1" [ref=e713]
+            - cell [ref=e714]:
+              - link "View listing" [ref=e716] [cursor=pointer]:
+                - /url: https://www.har.com/homedetail/16202-mountain-timber-ct-friendswood-tx-77546/9252270
+                - img [ref=e717]
+          - row "10 Scraped unknown houston-aem@compass.com Mark Miller 832-899-4788 10906 Chevy Chase Dr, Houston, TX 77042 Houston $425,000 1d — 11" [ref=e721]:
+            - cell "10" [ref=e722]
+            - cell "Scraped" [ref=e723]
+            - cell "unknown" [ref=e724]:
+              - generic [ref=e726]:
+                - img [ref=e727]
+                - text: unknown
+            - cell "houston-aem@compass.com" [ref=e731]:
+              - link "houston-aem@compass.com" [ref=e732] [cursor=pointer]:
+                - /url: mailto:houston-aem@compass.com
+            - cell "Mark Miller" [ref=e733]
+            - cell "832-899-4788" [ref=e734]:
+              - link "832-899-4788" [ref=e735] [cursor=pointer]:
+                - /url: tel:832-899-4788
+            - cell "10906 Chevy Chase Dr, Houston, TX 77042" [ref=e736]:
+              - generic "10906 Chevy Chase Dr, Houston, TX 77042" [ref=e737]
+            - cell "Houston" [ref=e738]
+            - cell "$425,000" [ref=e739]:
+              - generic [ref=e740]: $425,000
+            - cell "1d" [ref=e741]:
+              - generic [ref=e742]: 1d
+            - cell "—" [ref=e743]
+            - cell "11" [ref=e744]
+            - cell [ref=e745]:
+              - generic [ref=e746]:
+                - button "Send to houston-aem@compass.com" [ref=e747]:
+                  - img [ref=e748]
+                - link "View listing" [ref=e751] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/10906-chevy-chase-dr-houston-tx-77042/11589069
+                  - img [ref=e752]
+          - row "10 Scraped unknown rlongoria6@aol.com Sean Heany 713-644-2086 7110 San Angelo St, Houston, TX 77020 Houston $320,000 1d — 12" [ref=e756]:
+            - cell "10" [ref=e757]
+            - cell "Scraped" [ref=e758]
+            - cell "unknown" [ref=e759]:
+              - generic [ref=e761]:
+                - img [ref=e762]
+                - text: unknown
+            - cell "rlongoria6@aol.com" [ref=e766]:
+              - link "rlongoria6@aol.com" [ref=e767] [cursor=pointer]:
+                - /url: mailto:rlongoria6@aol.com
+            - cell "Sean Heany" [ref=e768]
+            - cell "713-644-2086" [ref=e769]:
+              - link "713-644-2086" [ref=e770] [cursor=pointer]:
+                - /url: tel:713-644-2086
+            - cell "7110 San Angelo St, Houston, TX 77020" [ref=e771]:
+              - generic "7110 San Angelo St, Houston, TX 77020" [ref=e772]
+            - cell "Houston" [ref=e773]
+            - cell "$320,000" [ref=e774]:
+              - generic [ref=e775]: $320,000
+            - cell "1d" [ref=e776]:
+              - generic [ref=e777]: 1d
+            - cell "—" [ref=e778]
+            - cell "12" [ref=e779]
+            - cell [ref=e780]:
+              - generic [ref=e781]:
+                - button "Send to rlongoria6@aol.com" [ref=e782]:
+                  - img [ref=e783]
+                - link "View listing" [ref=e786] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/7110-san-angelo-st-houston-tx-77020/8731725
+                  - img [ref=e787]
+          - row "10 Scraped — tiffanymarkovsky@att.net Tiffany Markovsky-Martinez 281-376-0009 15715 Forest Creek Farms, Cypress, TX 77429 Cypress $335,000 1d — 5" [ref=e791]:
+            - cell "10" [ref=e792]
+            - cell "Scraped" [ref=e793]
+            - cell "—" [ref=e794]
+            - cell "tiffanymarkovsky@att.net" [ref=e795]:
+              - link "tiffanymarkovsky@att.net" [ref=e796] [cursor=pointer]:
+                - /url: mailto:tiffanymarkovsky@att.net
+            - cell "Tiffany Markovsky-Martinez" [ref=e797]
+            - cell "281-376-0009" [ref=e798]:
+              - link "281-376-0009" [ref=e799] [cursor=pointer]:
+                - /url: tel:281-376-0009
+            - cell "15715 Forest Creek Farms, Cypress, TX 77429" [ref=e800]:
+              - generic "15715 Forest Creek Farms, Cypress, TX 77429" [ref=e801]
+            - cell "Cypress" [ref=e802]
+            - cell "$335,000" [ref=e803]:
+              - generic [ref=e804]: $335,000
+            - cell "1d" [ref=e805]:
+              - generic [ref=e806]: 1d
+            - cell "—" [ref=e807]
+            - cell "5" [ref=e808]
+            - cell [ref=e809]:
+              - generic [ref=e810]:
+                - button "Send to tiffanymarkovsky@att.net" [ref=e811]:
+                  - img [ref=e812]
+                - link "View listing" [ref=e815] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/15715-forest-creek-farms-dr-cypress-tx-77429/3726938
+                  - img [ref=e816]
+          - row "10 Scraped unknown lynn@blairrg.com Jamie Diodato 281-698-0240 21935 Whispering Daisy Ct, Cypress, TX 77433 Cypress $318,000 1d — 14" [ref=e820]:
+            - cell "10" [ref=e821]
+            - cell "Scraped" [ref=e822]
+            - cell "unknown" [ref=e823]:
+              - generic [ref=e825]:
+                - img [ref=e826]
+                - text: unknown
+            - cell "lynn@blairrg.com" [ref=e830]:
+              - link "lynn@blairrg.com" [ref=e831] [cursor=pointer]:
+                - /url: mailto:lynn@blairrg.com
+            - cell "Jamie Diodato" [ref=e832]
+            - cell "281-698-0240" [ref=e833]:
+              - link "281-698-0240" [ref=e834] [cursor=pointer]:
+                - /url: tel:281-698-0240
+            - cell "21935 Whispering Daisy Ct, Cypress, TX 77433" [ref=e835]:
+              - generic "21935 Whispering Daisy Ct, Cypress, TX 77433" [ref=e836]
+            - cell "Cypress" [ref=e837]
+            - cell "$318,000" [ref=e838]:
+              - generic [ref=e839]: $318,000
+            - cell "1d" [ref=e840]:
+              - generic [ref=e841]: 1d
+            - cell "—" [ref=e842]
+            - cell "14" [ref=e843]
+            - cell [ref=e844]:
+              - generic [ref=e845]:
+                - button "Send to lynn@blairrg.com" [ref=e846]:
+                  - img [ref=e847]
+                - link "View listing" [ref=e850] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/21935-whispering-daisy-ct-cypress-tx-77433/11296139
+                  - img [ref=e851]
+          - row "10 Scraped — harleads@yahoo.com Sebastian Ordonez 832-237-9200 23114 Berry Pine Dr, Spring, TX 77373 Spring $220,000 1d — 11" [ref=e855]:
+            - cell "10" [ref=e856]
+            - cell "Scraped" [ref=e857]
+            - cell "—" [ref=e858]
+            - cell "harleads@yahoo.com" [ref=e859]:
+              - link "harleads@yahoo.com" [ref=e860] [cursor=pointer]:
+                - /url: mailto:harleads@yahoo.com
+            - cell "Sebastian Ordonez" [ref=e861]
+            - cell "832-237-9200" [ref=e862]:
+              - link "832-237-9200" [ref=e863] [cursor=pointer]:
+                - /url: tel:832-237-9200
+            - cell "23114 Berry Pine Dr, Spring, TX 77373" [ref=e864]:
+              - generic "23114 Berry Pine Dr, Spring, TX 77373" [ref=e865]
+            - cell "Spring" [ref=e866]
+            - cell "$220,000" [ref=e867]:
+              - generic [ref=e868]: $220,000
+            - cell "1d" [ref=e869]:
+              - generic [ref=e870]: 1d
+            - cell "—" [ref=e871]
+            - cell "11" [ref=e872]
+            - cell [ref=e873]:
+              - generic [ref=e874]:
+                - button "Send to harleads@yahoo.com" [ref=e875]:
+                  - img [ref=e876]
+                - link "View listing" [ref=e879] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/23114-berry-pine-dr-spring-tx-77373/7924799
+                  - img [ref=e880]
+          - row "10 Scraped — broker@fathomrealty.com Kishant Chatarpal 888-455-6040 610 Acapulco Village Dr, Humble, TX 77338 Humble $275,000 1d — 11" [ref=e884]:
+            - cell "10" [ref=e885]
+            - cell "Scraped" [ref=e886]
+            - cell "—" [ref=e887]
+            - cell "broker@fathomrealty.com" [ref=e888]:
+              - link "broker@fathomrealty.com" [ref=e889] [cursor=pointer]:
+                - /url: mailto:broker@fathomrealty.com
+            - cell "Kishant Chatarpal" [ref=e890]
+            - cell "888-455-6040" [ref=e891]:
+              - link "888-455-6040" [ref=e892] [cursor=pointer]:
+                - /url: tel:888-455-6040
+            - cell "610 Acapulco Village Dr, Humble, TX 77338" [ref=e893]:
+              - generic "610 Acapulco Village Dr, Humble, TX 77338" [ref=e894]
+            - cell "Humble" [ref=e895]
+            - cell "$275,000" [ref=e896]:
+              - generic [ref=e897]: $275,000
+            - cell "1d" [ref=e898]:
+              - generic [ref=e899]: 1d
+            - cell "—" [ref=e900]
+            - cell "11" [ref=e901]
+            - cell [ref=e902]:
+              - generic [ref=e903]:
+                - button "Send to broker@fathomrealty.com" [ref=e904]:
+                  - img [ref=e905]
+                - link "View listing" [ref=e908] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/610-acapulco-village-dr-humble-tx-77338/3340379?lid=10790573
+                  - img [ref=e909]
+          - row "10 Scraped — phbroker@perryhomes.com Lee Jones 713-948-6666 12327 Osprey Outlook Dr, Cypress, TX 77433 Cypress $537,900 1d — 10" [ref=e913]:
+            - cell "10" [ref=e914]
+            - cell "Scraped" [ref=e915]
+            - cell "—" [ref=e916]
+            - cell "phbroker@perryhomes.com" [ref=e917]:
+              - link "phbroker@perryhomes.com" [ref=e918] [cursor=pointer]:
+                - /url: mailto:phbroker@perryhomes.com
+            - cell "Lee Jones" [ref=e919]
+            - cell "713-948-6666" [ref=e920]:
+              - link "713-948-6666" [ref=e921] [cursor=pointer]:
+                - /url: tel:713-948-6666
+            - cell "12327 Osprey Outlook Dr, Cypress, TX 77433" [ref=e922]:
+              - generic "12327 Osprey Outlook Dr, Cypress, TX 77433" [ref=e923]
+            - cell "Cypress" [ref=e924]
+            - cell "$537,900" [ref=e925]:
+              - generic [ref=e926]: $537,900
+            - cell "1d" [ref=e927]:
+              - generic [ref=e928]: 1d
+            - cell "—" [ref=e929]
+            - cell "10" [ref=e930]
+            - cell [ref=e931]:
+              - generic [ref=e932]:
+                - button "Send to phbroker@perryhomes.com" [ref=e933]:
+                  - img [ref=e934]
+                - link "View listing" [ref=e937] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/12327-osprey-outlook-dr-cypress-tx-77433/17570729
+                  - img [ref=e938]
+          - row "10 Scraped — elevaterecorporate@gmail.com Holly Grisham 800-348-2698 3614 Kentwood Dr, Spring, TX 77380 Spring $250,000 1d — 9" [ref=e942]:
+            - cell "10" [ref=e943]
+            - cell "Scraped" [ref=e944]
+            - cell "—" [ref=e945]
+            - cell "elevaterecorporate@gmail.com" [ref=e946]:
+              - link "elevaterecorporate@gmail.com" [ref=e947] [cursor=pointer]:
+                - /url: mailto:elevaterecorporate@gmail.com
+            - cell "Holly Grisham" [ref=e948]
+            - cell "800-348-2698" [ref=e949]:
+              - link "800-348-2698" [ref=e950] [cursor=pointer]:
+                - /url: tel:800-348-2698
+            - cell "3614 Kentwood Dr, Spring, TX 77380" [ref=e951]:
+              - generic "3614 Kentwood Dr, Spring, TX 77380" [ref=e952]
+            - cell "Spring" [ref=e953]
+            - cell "$250,000" [ref=e954]:
+              - generic [ref=e955]: $250,000
+            - cell "1d" [ref=e956]:
+              - generic [ref=e957]: 1d
+            - cell "—" [ref=e958]
+            - cell "9" [ref=e959]
+            - cell [ref=e960]:
+              - generic [ref=e961]:
+                - button "Send to elevaterecorporate@gmail.com" [ref=e962]:
+                  - img [ref=e963]
+                - link "View listing" [ref=e966] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3614-kentwood-dr-spring-tx-77380/5305004
+                  - img [ref=e967]
+          - row "10 Scraped — houston@tripointehomes.com Jared Turner 346-266-0958 4752 Cascade Ridge Dr, Spring, TX 77386 Spring $628,282 1d — 8" [ref=e971]:
+            - cell "10" [ref=e972]
+            - cell "Scraped" [ref=e973]
+            - cell "—" [ref=e974]
+            - cell "houston@tripointehomes.com" [ref=e975]:
+              - link "houston@tripointehomes.com" [ref=e976] [cursor=pointer]:
+                - /url: mailto:houston@tripointehomes.com
+            - cell "Jared Turner" [ref=e977]
+            - cell "346-266-0958" [ref=e978]:
+              - link "346-266-0958" [ref=e979] [cursor=pointer]:
+                - /url: tel:346-266-0958
+            - cell "4752 Cascade Ridge Dr, Spring, TX 77386" [ref=e980]:
+              - generic "4752 Cascade Ridge Dr, Spring, TX 77386" [ref=e981]
+            - cell "Spring" [ref=e982]
+            - cell "$628,282" [ref=e983]:
+              - generic [ref=e984]: $628,282
+            - cell "1d" [ref=e985]:
+              - generic [ref=e986]: 1d
+            - cell "—" [ref=e987]
+            - cell "8" [ref=e988]
+            - cell [ref=e989]:
+              - generic [ref=e990]:
+                - button "Send to houston@tripointehomes.com" [ref=e991]:
+                  - img [ref=e992]
+                - link "View listing" [ref=e995] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/4752-cascade-ridge-dr-spring-tx-77386/17570939
+                  - img [ref=e996]
+          - row "10 Scraped — Loritillman@kw.com Saul Gonzalez 713-621-8001 512 Wafer St, Pasadena, TX 77506 Pasadena $150,000 1d — 8" [ref=e1000]:
+            - cell "10" [ref=e1001]
+            - cell "Scraped" [ref=e1002]
+            - cell "—" [ref=e1003]
+            - cell "Loritillman@kw.com" [ref=e1004]:
+              - link "Loritillman@kw.com" [ref=e1005] [cursor=pointer]:
+                - /url: mailto:Loritillman@kw.com
+            - cell "Saul Gonzalez" [ref=e1006]
+            - cell "713-621-8001" [ref=e1007]:
+              - link "713-621-8001" [ref=e1008] [cursor=pointer]:
+                - /url: tel:713-621-8001
+            - cell "512 Wafer St, Pasadena, TX 77506" [ref=e1009]:
+              - generic "512 Wafer St, Pasadena, TX 77506" [ref=e1010]
+            - cell "Pasadena" [ref=e1011]
+            - cell "$150,000" [ref=e1012]:
+              - generic [ref=e1013]: $150,000
+            - cell "1d" [ref=e1014]:
+              - generic [ref=e1015]: 1d
+            - cell "—" [ref=e1016]
+            - cell "8" [ref=e1017]
+            - cell [ref=e1018]:
+              - generic [ref=e1019]:
+                - button "Send to Loritillman@kw.com" [ref=e1020]:
+                  - img [ref=e1021]
+                - link "View listing" [ref=e1024] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/512-wafer-st-pasadena-tx-77506/3110954
+                  - img [ref=e1025]
+          - row "10 Scraped — jill.jarvis@cbunited.com Sharon York 281-363-2500 21507 Aldercy, Humble, TX 77338 Humble $232,000 1d — 8" [ref=e1029]:
+            - cell "10" [ref=e1030]
+            - cell "Scraped" [ref=e1031]
+            - cell "—" [ref=e1032]
+            - cell "jill.jarvis@cbunited.com" [ref=e1033]:
+              - link "jill.jarvis@cbunited.com" [ref=e1034] [cursor=pointer]:
+                - /url: mailto:jill.jarvis@cbunited.com
+            - cell "Sharon York" [ref=e1035]
+            - cell "281-363-2500" [ref=e1036]:
+              - link "281-363-2500" [ref=e1037] [cursor=pointer]:
+                - /url: tel:281-363-2500
+            - cell "21507 Aldercy, Humble, TX 77338" [ref=e1038]:
+              - generic "21507 Aldercy, Humble, TX 77338" [ref=e1039]
+            - cell "Humble" [ref=e1040]
+            - cell "$232,000" [ref=e1041]:
+              - generic [ref=e1042]: $232,000
+            - cell "1d" [ref=e1043]:
+              - generic [ref=e1044]: 1d
+            - cell "—" [ref=e1045]
+            - cell "8" [ref=e1046]
+            - cell [ref=e1047]:
+              - generic [ref=e1048]:
+                - button "Send to jill.jarvis@cbunited.com" [ref=e1049]:
+                  - img [ref=e1050]
+                - link "View listing" [ref=e1053] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/21507-aldercy-humble-tx-77338/7909658
+                  - img [ref=e1054]
+          - row "10 Scraped unknown unknown unknown unknown unknown unknown unknown unknown unknown unknown jane.nguyen@alpharealtors.net Jane NgaDung Nguyen 281-933-6999 3710 Embarcadero Dr, Houston, TX 77082 Houston $258,999 1d — 14" [ref=e1058]:
+            - cell "10" [ref=e1059]
+            - cell "Scraped" [ref=e1060]
+            - cell "unknown unknown unknown unknown unknown unknown unknown unknown unknown unknown" [ref=e1061]:
+              - generic [ref=e1062]:
+                - generic [ref=e1063]:
+                  - img [ref=e1064]
+                  - text: unknown
+                - generic [ref=e1068]:
+                  - img [ref=e1069]
+                  - text: unknown
+                - generic [ref=e1073]:
+                  - img [ref=e1074]
+                  - text: unknown
+                - generic [ref=e1078]:
+                  - img [ref=e1079]
+                  - text: unknown
+                - generic [ref=e1083]:
+                  - img [ref=e1084]
+                  - text: unknown
+                - generic [ref=e1088]:
+                  - img [ref=e1089]
+                  - text: unknown
+                - generic [ref=e1093]:
+                  - img [ref=e1094]
+                  - text: unknown
+                - generic [ref=e1098]:
+                  - img [ref=e1099]
+                  - text: unknown
+                - generic [ref=e1103]:
+                  - img [ref=e1104]
+                  - text: unknown
+                - generic [ref=e1108]:
+                  - img [ref=e1109]
+                  - text: unknown
+            - cell "jane.nguyen@alpharealtors.net" [ref=e1113]:
+              - link "jane.nguyen@alpharealtors.net" [ref=e1114] [cursor=pointer]:
+                - /url: mailto:jane.nguyen@alpharealtors.net
+            - cell "Jane NgaDung Nguyen" [ref=e1115]
+            - cell "281-933-6999" [ref=e1116]:
+              - link "281-933-6999" [ref=e1117] [cursor=pointer]:
+                - /url: tel:281-933-6999
+            - cell "3710 Embarcadero Dr, Houston, TX 77082" [ref=e1118]:
+              - generic "3710 Embarcadero Dr, Houston, TX 77082" [ref=e1119]
+            - cell "Houston" [ref=e1120]
+            - cell "$258,999" [ref=e1121]:
+              - generic [ref=e1122]: $258,999
+            - cell "1d" [ref=e1123]:
+              - generic [ref=e1124]: 1d
+            - cell "—" [ref=e1125]
+            - cell "14" [ref=e1126]
+            - cell [ref=e1127]:
+              - generic [ref=e1128]:
+                - button "Send to jane.nguyen@alpharealtors.net" [ref=e1129]:
+                  - img [ref=e1130]
+                - link "View listing" [ref=e1133] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3710-embarcadero-dr-houston-tx-77082/3519430
+                  - img [ref=e1134]
+          - row "10 Scraped — houston@tripointehomes.com Jared Turner 346-266-0958 4638 Flintrock Park Dr, Spring, TX 77386 Spring $547,315 1d — 7" [ref=e1138]:
+            - cell "10" [ref=e1139]
+            - cell "Scraped" [ref=e1140]
+            - cell "—" [ref=e1141]
+            - cell "houston@tripointehomes.com" [ref=e1142]:
+              - link "houston@tripointehomes.com" [ref=e1143] [cursor=pointer]:
+                - /url: mailto:houston@tripointehomes.com
+            - cell "Jared Turner" [ref=e1144]
+            - cell "346-266-0958" [ref=e1145]:
+              - link "346-266-0958" [ref=e1146] [cursor=pointer]:
+                - /url: tel:346-266-0958
+            - cell "4638 Flintrock Park Dr, Spring, TX 77386" [ref=e1147]:
+              - generic "4638 Flintrock Park Dr, Spring, TX 77386" [ref=e1148]
+            - cell "Spring" [ref=e1149]
+            - cell "$547,315" [ref=e1150]:
+              - generic [ref=e1151]: $547,315
+            - cell "1d" [ref=e1152]:
+              - generic [ref=e1153]: 1d
+            - cell "—" [ref=e1154]
+            - cell "7" [ref=e1155]
+            - cell [ref=e1156]:
+              - generic [ref=e1157]:
+                - button "Send to houston@tripointehomes.com" [ref=e1158]:
+                  - img [ref=e1159]
+                - link "View listing" [ref=e1162] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/4638-flintrock-park-dr-spring-tx-77386/17570971
+                  - img [ref=e1163]
+          - row "10 Scraped unknown boards@lpt.com Mayra Lozano 877-366-2213 215 Fresa Rd, Pasadena, TX 77502 Pasadena $425,000 7d — 11" [ref=e1167]:
+            - cell "10" [ref=e1168]
+            - cell "Scraped" [ref=e1169]
+            - cell "unknown" [ref=e1170]:
+              - generic [ref=e1172]:
+                - img [ref=e1173]
+                - text: unknown
+            - cell "boards@lpt.com" [ref=e1177]:
+              - link "boards@lpt.com" [ref=e1178] [cursor=pointer]:
+                - /url: mailto:boards@lpt.com
+            - cell "Mayra Lozano" [ref=e1179]
+            - cell "877-366-2213" [ref=e1180]:
+              - link "877-366-2213" [ref=e1181] [cursor=pointer]:
+                - /url: tel:877-366-2213
+            - cell "215 Fresa Rd, Pasadena, TX 77502" [ref=e1182]:
+              - generic "215 Fresa Rd, Pasadena, TX 77502" [ref=e1183]
+            - cell "Pasadena" [ref=e1184]
+            - cell "$425,000" [ref=e1185]:
+              - generic [ref=e1186]: $425,000
+            - cell "7d" [ref=e1187]:
+              - generic [ref=e1188]: 7d
+            - cell "—" [ref=e1189]
+            - cell "11" [ref=e1190]
+            - cell [ref=e1191]:
+              - generic [ref=e1192]:
+                - button "Send to boards@lpt.com" [ref=e1193]:
+                  - img [ref=e1194]
+                - link "View listing" [ref=e1197] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/215-fresa-rd-pasadena-tx-77502/3218565
+                  - img [ref=e1198]
+          - row "10 Scraped unknown houstonrealtorteam@gmail.com George Chiriboga 713-589-3234 6323 Encenada Green Trl, Humble, TX 77346 Humble $150,000 3d — 6" [ref=e1202]:
+            - cell "10" [ref=e1203]
+            - cell "Scraped" [ref=e1204]
+            - cell "unknown" [ref=e1205]:
+              - generic [ref=e1207]:
+                - img [ref=e1208]
+                - text: unknown
+            - cell "houstonrealtorteam@gmail.com" [ref=e1212]:
+              - link "houstonrealtorteam@gmail.com" [ref=e1213] [cursor=pointer]:
+                - /url: mailto:houstonrealtorteam@gmail.com
+            - cell "George Chiriboga" [ref=e1214]
+            - cell "713-589-3234" [ref=e1215]:
+              - link "713-589-3234" [ref=e1216] [cursor=pointer]:
+                - /url: tel:713-589-3234
+            - cell "6323 Encenada Green Trl, Humble, TX 77346" [ref=e1217]:
+              - generic "6323 Encenada Green Trl, Humble, TX 77346" [ref=e1218]
+            - cell "Humble" [ref=e1219]
+            - cell "$150,000" [ref=e1220]:
+              - generic [ref=e1221]: $150,000
+            - cell "3d" [ref=e1222]:
+              - generic [ref=e1223]: 3d
+            - cell "—" [ref=e1224]
+            - cell "6" [ref=e1225]
+            - cell [ref=e1226]:
+              - generic [ref=e1227]:
+                - button "Send to houstonrealtorteam@gmail.com" [ref=e1228]:
+                  - img [ref=e1229]
+                - link "View listing" [ref=e1232] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/6323-encenada-green-trl-humble-tx-77346/7932343
+                  - img [ref=e1233]
+          - row "10 Scraped — dianaagent@sbcglobal.net Diana Alderman 281-463-1712 14906 El Miranda Dr, Houston, TX 77095 Houston $420,000 1d — 1" [ref=e1237]:
+            - cell "10" [ref=e1238]
+            - cell "Scraped" [ref=e1239]
+            - cell "—" [ref=e1240]
+            - cell "dianaagent@sbcglobal.net" [ref=e1241]:
+              - link "dianaagent@sbcglobal.net" [ref=e1242] [cursor=pointer]:
+                - /url: mailto:dianaagent@sbcglobal.net
+            - cell "Diana Alderman" [ref=e1243]
+            - cell "281-463-1712" [ref=e1244]:
+              - link "281-463-1712" [ref=e1245] [cursor=pointer]:
+                - /url: tel:281-463-1712
+            - cell "14906 El Miranda Dr, Houston, TX 77095" [ref=e1246]:
+              - generic "14906 El Miranda Dr, Houston, TX 77095" [ref=e1247]
+            - cell "Houston" [ref=e1248]
+            - cell "$420,000" [ref=e1249]:
+              - generic [ref=e1250]: $420,000
+            - cell "1d" [ref=e1251]:
+              - generic [ref=e1252]: 1d
+            - cell "—" [ref=e1253]
+            - cell "1" [ref=e1254]
+            - cell [ref=e1255]:
+              - generic [ref=e1256]:
+                - button "Send to dianaagent@sbcglobal.net" [ref=e1257]:
+                  - img [ref=e1258]
+                - link "View listing" [ref=e1261] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/14906-el-miranda-dr-houston-tx-77095/3415318
+                  - img [ref=e1262]
+          - row "10 Scraped — charlie@rmxone.com Valeria Duque 281-367-7770 0 Sagewood dr Dr, Spring, TX 77386 Spring $650,000 1d — 1" [ref=e1266]:
+            - cell "10" [ref=e1267]
+            - cell "Scraped" [ref=e1268]
+            - cell "—" [ref=e1269]
+            - cell "charlie@rmxone.com" [ref=e1270]:
+              - link "charlie@rmxone.com" [ref=e1271] [cursor=pointer]:
+                - /url: mailto:charlie@rmxone.com
+            - cell "Valeria Duque" [ref=e1272]
+            - cell "281-367-7770" [ref=e1273]:
+              - link "281-367-7770" [ref=e1274] [cursor=pointer]:
+                - /url: tel:281-367-7770
+            - cell "0 Sagewood dr Dr, Spring, TX 77386" [ref=e1275]:
+              - generic "0 Sagewood dr Dr, Spring, TX 77386" [ref=e1276]
+            - cell "Spring" [ref=e1277]
+            - cell "$650,000" [ref=e1278]:
+              - generic [ref=e1279]: $650,000
+            - cell "1d" [ref=e1280]:
+              - generic [ref=e1281]: 1d
+            - cell "—" [ref=e1282]
+            - cell "1" [ref=e1283]
+            - cell [ref=e1284]:
+              - generic [ref=e1285]:
+                - button "Send to charlie@rmxone.com" [ref=e1286]:
+                  - img [ref=e1287]
+                - link "View listing" [ref=e1290] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/0-sagewood-spring-tx-77386/14136507
+                  - img [ref=e1291]
+          - row "10 Scraped — tx.broker@exprealty.net Jessica Flowers 888-519-7431 14727 Waynewood Dr, Cypress, TX 77429 Cypress $565,000 1d — 1" [ref=e1295]:
+            - cell "10" [ref=e1296]
+            - cell "Scraped" [ref=e1297]
+            - cell "—" [ref=e1298]
+            - cell "tx.broker@exprealty.net" [ref=e1299]:
+              - link "tx.broker@exprealty.net" [ref=e1300] [cursor=pointer]:
+                - /url: mailto:tx.broker@exprealty.net
+            - cell "Jessica Flowers" [ref=e1301]
+            - cell "888-519-7431" [ref=e1302]:
+              - link "888-519-7431" [ref=e1303] [cursor=pointer]:
+                - /url: tel:888-519-7431
+            - cell "14727 Waynewood Dr, Cypress, TX 77429" [ref=e1304]:
+              - generic "14727 Waynewood Dr, Cypress, TX 77429" [ref=e1305]
+            - cell "Cypress" [ref=e1306]
+            - cell "$565,000" [ref=e1307]:
+              - generic [ref=e1308]: $565,000
+            - cell "1d" [ref=e1309]:
+              - generic [ref=e1310]: 1d
+            - cell "—" [ref=e1311]
+            - cell "1" [ref=e1312]
+            - cell [ref=e1313]:
+              - generic [ref=e1314]:
+                - button "Send to tx.broker@exprealty.net" [ref=e1315]:
+                  - img [ref=e1316]
+                - link "View listing" [ref=e1319] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/14727-waynewood-dr-cypress-tx-77429/3305966
+                  - img [ref=e1320]
+          - row "0 Scraped — info@cbarealtors.com Jennifer Telle 832-678-4770 14306 Wallis Cove Dr, Houston, TX 77068 Houston $307,000 1d — 34" [ref=e1324]:
+            - cell "0" [ref=e1325]
+            - cell "Scraped" [ref=e1326]
+            - cell "—" [ref=e1327]
+            - cell "info@cbarealtors.com" [ref=e1328]:
+              - link "info@cbarealtors.com" [ref=e1329] [cursor=pointer]:
+                - /url: mailto:info@cbarealtors.com
+            - cell "Jennifer Telle" [ref=e1330]
+            - cell "832-678-4770" [ref=e1331]:
+              - link "832-678-4770" [ref=e1332] [cursor=pointer]:
+                - /url: tel:832-678-4770
+            - cell "14306 Wallis Cove Dr, Houston, TX 77068" [ref=e1333]:
+              - generic "14306 Wallis Cove Dr, Houston, TX 77068" [ref=e1334]
+            - cell "Houston" [ref=e1335]
+            - cell "$307,000" [ref=e1336]:
+              - generic [ref=e1337]: $307,000
+            - cell "1d" [ref=e1338]:
+              - generic [ref=e1339]: 1d
+            - cell "—" [ref=e1340]
+            - cell "34" [ref=e1341]
+            - cell [ref=e1342]:
+              - generic [ref=e1343]:
+                - button "Send to info@cbarealtors.com" [ref=e1344]:
+                  - img [ref=e1345]
+                - link "View listing" [ref=e1348] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/14306-wallis-cove-dr-houston-tx-77068/15937690
+                  - img [ref=e1349]
+          - row "0 Scraped — har@realmpro.com Usman Toor 281-870-0000 2107 Stuart St, Houston, TX 77004 Houston $425,000 1d — 30" [ref=e1353]:
+            - cell "0" [ref=e1354]
+            - cell "Scraped" [ref=e1355]
+            - cell "—" [ref=e1356]
+            - cell "har@realmpro.com" [ref=e1357]:
+              - link "har@realmpro.com" [ref=e1358] [cursor=pointer]:
+                - /url: mailto:har@realmpro.com
+            - cell "Usman Toor" [ref=e1359]
+            - cell "281-870-0000" [ref=e1360]:
+              - link "281-870-0000" [ref=e1361] [cursor=pointer]:
+                - /url: tel:281-870-0000
+            - cell "2107 Stuart St, Houston, TX 77004" [ref=e1362]:
+              - generic "2107 Stuart St, Houston, TX 77004" [ref=e1363]
+            - cell "Houston" [ref=e1364]
+            - cell "$425,000" [ref=e1365]:
+              - generic [ref=e1366]: $425,000
+            - cell "1d" [ref=e1367]:
+              - generic [ref=e1368]: 1d
+            - cell "—" [ref=e1369]
+            - cell "30" [ref=e1370]
+            - cell [ref=e1371]:
+              - generic [ref=e1372]:
+                - button "Send to har@realmpro.com" [ref=e1373]:
+                  - img [ref=e1374]
+                - link "View listing" [ref=e1377] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/2107-stuart-st-houston-tx-77004/13388304
+                  - img [ref=e1378]
+          - row "0 Scraped — — Semyon Sharetskiy 844-444-6237 330 Janisch Rd A, Houston, TX 77018 Houston $449,990 1d — 40" [ref=e1382]:
+            - cell "0" [ref=e1383]
+            - cell "Scraped" [ref=e1384]
+            - cell "—" [ref=e1385]
+            - cell "—" [ref=e1386]
+            - cell "Semyon Sharetskiy" [ref=e1387]
+            - cell "844-444-6237" [ref=e1388]:
+              - link "844-444-6237" [ref=e1389] [cursor=pointer]:
+                - /url: tel:844-444-6237
+            - cell "330 Janisch Rd A, Houston, TX 77018" [ref=e1390]:
+              - generic "330 Janisch Rd A, Houston, TX 77018" [ref=e1391]
+            - cell "Houston" [ref=e1392]
+            - cell "$449,990" [ref=e1393]:
+              - generic [ref=e1394]: $449,990
+            - cell "1d" [ref=e1395]:
+              - generic [ref=e1396]: 1d
+            - cell "—" [ref=e1397]
+            - cell "40" [ref=e1398]
+            - cell [ref=e1399]:
+              - link "View listing" [ref=e1401] [cursor=pointer]:
+                - /url: https://www.har.com/homedetail/330-janisch-rd-a-houston-tx-77018/17544206
+                - img [ref=e1402]
+          - row "0 Scraped — bobby.leonhardt@att.net Bobby Leonhardt 281-550-0550 10330 Sablebrook Ln, Houston, TX 77095 Houston $359,000 1d — 38" [ref=e1406]:
+            - cell "0" [ref=e1407]
+            - cell "Scraped" [ref=e1408]
+            - cell "—" [ref=e1409]
+            - cell "bobby.leonhardt@att.net" [ref=e1410]:
+              - link "bobby.leonhardt@att.net" [ref=e1411] [cursor=pointer]:
+                - /url: mailto:bobby.leonhardt@att.net
+            - cell "Bobby Leonhardt" [ref=e1412]
+            - cell "281-550-0550" [ref=e1413]:
+              - link "281-550-0550" [ref=e1414] [cursor=pointer]:
+                - /url: tel:281-550-0550
+            - cell "10330 Sablebrook Ln, Houston, TX 77095" [ref=e1415]:
+              - generic "10330 Sablebrook Ln, Houston, TX 77095" [ref=e1416]
+            - cell "Houston" [ref=e1417]
+            - cell "$359,000" [ref=e1418]:
+              - generic [ref=e1419]: $359,000
+            - cell "1d" [ref=e1420]:
+              - generic [ref=e1421]: 1d
+            - cell "—" [ref=e1422]
+            - cell "38" [ref=e1423]
+            - cell [ref=e1424]:
+              - generic [ref=e1425]:
+                - button "Send to bobby.leonhardt@att.net" [ref=e1426]:
+                  - img [ref=e1427]
+                - link "View listing" [ref=e1430] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/10330-sablebrook-ln-houston-tx-77095/10726416?lid=10787818
+                  - img [ref=e1431]
+          - row "0 Scraped — brokerhou@hsmove.com Danny Hudson 713-785-6666 14122 Champion Village Dr, Houston, TX 77069 Houston $630,000 1d — 48" [ref=e1435]:
+            - cell "0" [ref=e1436]
+            - cell "Scraped" [ref=e1437]
+            - cell "—" [ref=e1438]
+            - cell "brokerhou@hsmove.com" [ref=e1439]:
+              - link "brokerhou@hsmove.com" [ref=e1440] [cursor=pointer]:
+                - /url: mailto:brokerhou@hsmove.com
+            - cell "Danny Hudson" [ref=e1441]
+            - cell "713-785-6666" [ref=e1442]:
+              - link "713-785-6666" [ref=e1443] [cursor=pointer]:
+                - /url: tel:713-785-6666
+            - cell "14122 Champion Village Dr, Houston, TX 77069" [ref=e1444]:
+              - generic "14122 Champion Village Dr, Houston, TX 77069" [ref=e1445]
+            - cell "Houston" [ref=e1446]
+            - cell "$630,000" [ref=e1447]:
+              - generic [ref=e1448]: $630,000
+            - cell "1d" [ref=e1449]:
+              - generic [ref=e1450]: 1d
+            - cell "—" [ref=e1451]
+            - cell "48" [ref=e1452]
+            - cell [ref=e1453]:
+              - generic [ref=e1454]:
+                - button "Send to brokerhou@hsmove.com" [ref=e1455]:
+                  - img [ref=e1456]
+                - link "View listing" [ref=e1459] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/14122-champion-village-dr-houston-tx-77069/3585947
+                  - img [ref=e1460]
+          - row "0 Scraped — brett.woodroof@garygreene.com Kimberly Kluge 281-444-5140 11139 Pembroke Ridge Dr, Houston, TX 77065 Houston $260,000 1d — 29" [ref=e1464]:
+            - cell "0" [ref=e1465]
+            - cell "Scraped" [ref=e1466]
+            - cell "—" [ref=e1467]
+            - cell "brett.woodroof@garygreene.com" [ref=e1468]:
+              - link "brett.woodroof@garygreene.com" [ref=e1469] [cursor=pointer]:
+                - /url: mailto:brett.woodroof@garygreene.com
+            - cell "Kimberly Kluge" [ref=e1470]
+            - cell "281-444-5140" [ref=e1471]:
+              - link "281-444-5140" [ref=e1472] [cursor=pointer]:
+                - /url: tel:281-444-5140
+            - cell "11139 Pembroke Ridge Dr, Houston, TX 77065" [ref=e1473]:
+              - generic "11139 Pembroke Ridge Dr, Houston, TX 77065" [ref=e1474]
+            - cell "Houston" [ref=e1475]
+            - cell "$260,000" [ref=e1476]:
+              - generic [ref=e1477]: $260,000
+            - cell "1d" [ref=e1478]:
+              - generic [ref=e1479]: 1d
+            - cell "—" [ref=e1480]
+            - cell "29" [ref=e1481]
+            - cell [ref=e1482]:
+              - generic [ref=e1483]:
+                - button "Send to brett.woodroof@garygreene.com" [ref=e1484]:
+                  - img [ref=e1485]
+                - link "View listing" [ref=e1488] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/11139-pembroke-ridge-dr-houston-tx-77065/3775335
+                  - img [ref=e1489]
+          - row "0 Scraped — Info@CBURE.com Sonia Ponce 832-760-1733 4303 Dacca Dr, Houston, TX 77047 Houston $230,000 1d — 17" [ref=e1493]:
+            - cell "0" [ref=e1494]
+            - cell "Scraped" [ref=e1495]
+            - cell "—" [ref=e1496]
+            - cell "Info@CBURE.com" [ref=e1497]:
+              - link "Info@CBURE.com" [ref=e1498] [cursor=pointer]:
+                - /url: mailto:Info@CBURE.com
+            - cell "Sonia Ponce" [ref=e1499]
+            - cell "832-760-1733" [ref=e1500]:
+              - link "832-760-1733" [ref=e1501] [cursor=pointer]:
+                - /url: tel:832-760-1733
+            - cell "4303 Dacca Dr, Houston, TX 77047" [ref=e1502]:
+              - generic "4303 Dacca Dr, Houston, TX 77047" [ref=e1503]
+            - cell "Houston" [ref=e1504]
+            - cell "$230,000" [ref=e1505]:
+              - generic [ref=e1506]: $230,000
+            - cell "1d" [ref=e1507]:
+              - generic [ref=e1508]: 1d
+            - cell "—" [ref=e1509]
+            - cell "17" [ref=e1510]
+            - cell [ref=e1511]:
+              - generic [ref=e1512]:
+                - button "Send to Info@CBURE.com" [ref=e1513]:
+                  - img [ref=e1514]
+                - link "View listing" [ref=e1517] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/4303-dacca-dr-houston-tx-77047/3246685?lid=10784615
+                  - img [ref=e1518]
+          - row "0 Scraped — noe.realtor@gmail.com Jose Rayo 713-637-4150 8331 Garland St St, Houston, TX 77017 Houston $209,000 1d — 30" [ref=e1522]:
+            - cell "0" [ref=e1523]
+            - cell "Scraped" [ref=e1524]
+            - cell "—" [ref=e1525]
+            - cell "noe.realtor@gmail.com" [ref=e1526]:
+              - link "noe.realtor@gmail.com" [ref=e1527] [cursor=pointer]:
+                - /url: mailto:noe.realtor@gmail.com
+            - cell "Jose Rayo" [ref=e1528]
+            - cell "713-637-4150" [ref=e1529]:
+              - link "713-637-4150" [ref=e1530] [cursor=pointer]:
+                - /url: tel:713-637-4150
+            - cell "8331 Garland St St, Houston, TX 77017" [ref=e1531]:
+              - generic "8331 Garland St St, Houston, TX 77017" [ref=e1532]
+            - cell "Houston" [ref=e1533]
+            - cell "$209,000" [ref=e1534]:
+              - generic [ref=e1535]: $209,000
+            - cell "1d" [ref=e1536]:
+              - generic [ref=e1537]: 1d
+            - cell "—" [ref=e1538]
+            - cell "30" [ref=e1539]
+            - cell [ref=e1540]:
+              - generic [ref=e1541]:
+                - button "Send to noe.realtor@gmail.com" [ref=e1542]:
+                  - img [ref=e1543]
+                - link "View listing" [ref=e1546] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/8331-garland-st-houston-tx-77017/9393166
+                  - img [ref=e1547]
+          - row "0 Scraped — houston-aem@compass.com Maritza Canenguez-Botsford 832-899-4788 2923 Kenross St, Houston, TX 77043 Houston $650,000 1d — 34" [ref=e1551]:
+            - cell "0" [ref=e1552]
+            - cell "Scraped" [ref=e1553]
+            - cell "—" [ref=e1554]
+            - cell "houston-aem@compass.com" [ref=e1555]:
+              - link "houston-aem@compass.com" [ref=e1556] [cursor=pointer]:
+                - /url: mailto:houston-aem@compass.com
+            - cell "Maritza Canenguez-Botsford" [ref=e1557]
+            - cell "832-899-4788" [ref=e1558]:
+              - link "832-899-4788" [ref=e1559] [cursor=pointer]:
+                - /url: tel:832-899-4788
+            - cell "2923 Kenross St, Houston, TX 77043" [ref=e1560]:
+              - generic "2923 Kenross St, Houston, TX 77043" [ref=e1561]
+            - cell "Houston" [ref=e1562]
+            - cell "$650,000" [ref=e1563]:
+              - generic [ref=e1564]: $650,000
+            - cell "1d" [ref=e1565]:
+              - generic [ref=e1566]: 1d
+            - cell "—" [ref=e1567]
+            - cell "34" [ref=e1568]
+            - cell [ref=e1569]:
+              - generic [ref=e1570]:
+                - button "Send to houston-aem@compass.com" [ref=e1571]:
+                  - img [ref=e1572]
+                - link "View listing" [ref=e1575] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/2923-kenross-st-houston-tx-77043/10111077
+                  - img [ref=e1576]
+          - row "0 Scraped — houston-aem@compass.com Allie Scheurich 832-899-4788 2203 Lamonte Ln, Houston, TX 77018 Houston $665,000 1d — 24" [ref=e1580]:
+            - cell "0" [ref=e1581]
+            - cell "Scraped" [ref=e1582]
+            - cell "—" [ref=e1583]
+            - cell "houston-aem@compass.com" [ref=e1584]:
+              - link "houston-aem@compass.com" [ref=e1585] [cursor=pointer]:
+                - /url: mailto:houston-aem@compass.com
+            - cell "Allie Scheurich" [ref=e1586]
+            - cell "832-899-4788" [ref=e1587]:
+              - link "832-899-4788" [ref=e1588] [cursor=pointer]:
+                - /url: tel:832-899-4788
+            - cell "2203 Lamonte Ln, Houston, TX 77018" [ref=e1589]:
+              - generic "2203 Lamonte Ln, Houston, TX 77018" [ref=e1590]
+            - cell "Houston" [ref=e1591]
+            - cell "$665,000" [ref=e1592]:
+              - generic [ref=e1593]: $665,000
+            - cell "1d" [ref=e1594]:
+              - generic [ref=e1595]: 1d
+            - cell "—" [ref=e1596]
+            - cell "24" [ref=e1597]
+            - cell [ref=e1598]:
+              - generic [ref=e1599]:
+                - button "Send to houston-aem@compass.com" [ref=e1600]:
+                  - img [ref=e1601]
+                - link "View listing" [ref=e1604] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/2203-lamonte-ln-houston-tx-77018/7972290
+                  - img [ref=e1605]
+          - row "0 Scraped — mariabonillarealtor@gmail.com Maria Bonilla 281-917-7671 6005 Pineapple St, Houston, TX 77048 Houston $239,990 1d — 23" [ref=e1609]:
+            - cell "0" [ref=e1610]
+            - cell "Scraped" [ref=e1611]
+            - cell "—" [ref=e1612]
+            - cell "mariabonillarealtor@gmail.com" [ref=e1613]:
+              - link "mariabonillarealtor@gmail.com" [ref=e1614] [cursor=pointer]:
+                - /url: mailto:mariabonillarealtor@gmail.com
+            - cell "Maria Bonilla" [ref=e1615]
+            - cell "281-917-7671" [ref=e1616]:
+              - link "281-917-7671" [ref=e1617] [cursor=pointer]:
+                - /url: tel:281-917-7671
+            - cell "6005 Pineapple St, Houston, TX 77048" [ref=e1618]:
+              - generic "6005 Pineapple St, Houston, TX 77048" [ref=e1619]
+            - cell "Houston" [ref=e1620]
+            - cell "$239,990" [ref=e1621]:
+              - generic [ref=e1622]: $239,990
+            - cell "1d" [ref=e1623]:
+              - generic [ref=e1624]: 1d
+            - cell "—" [ref=e1625]
+            - cell "23" [ref=e1626]
+            - cell [ref=e1627]:
+              - generic [ref=e1628]:
+                - button "Send to mariabonillarealtor@gmail.com" [ref=e1629]:
+                  - img [ref=e1630]
+                - link "View listing" [ref=e1633] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/6005-pineapple-st-houston-tx-77048/17086750
+                  - img [ref=e1634]
+          - row "0 Scraped — officefunding@gmail.com Ashlee Morris 281-463-3300 8830 Distant Woods Dr, Houston, TX 77095 Houston $430,000 1d — 50" [ref=e1638]:
+            - cell "0" [ref=e1639]
+            - cell "Scraped" [ref=e1640]
+            - cell "—" [ref=e1641]
+            - cell "officefunding@gmail.com" [ref=e1642]:
+              - link "officefunding@gmail.com" [ref=e1643] [cursor=pointer]:
+                - /url: mailto:officefunding@gmail.com
+            - cell "Ashlee Morris" [ref=e1644]
+            - cell "281-463-3300" [ref=e1645]:
+              - link "281-463-3300" [ref=e1646] [cursor=pointer]:
+                - /url: tel:281-463-3300
+            - cell "8830 Distant Woods Dr, Houston, TX 77095" [ref=e1647]:
+              - generic "8830 Distant Woods Dr, Houston, TX 77095" [ref=e1648]
+            - cell "Houston" [ref=e1649]
+            - cell "$430,000" [ref=e1650]:
+              - generic [ref=e1651]: $430,000
+            - cell "1d" [ref=e1652]:
+              - generic [ref=e1653]: 1d
+            - cell "—" [ref=e1654]
+            - cell "50" [ref=e1655]
+            - cell [ref=e1656]:
+              - generic [ref=e1657]:
+                - button "Send to officefunding@gmail.com" [ref=e1658]:
+                  - img [ref=e1659]
+                - link "View listing" [ref=e1662] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/8830-distant-woods-dr-houston-tx-77095/7903190
+                  - img [ref=e1663]
+          - row "0 Scraped — chaille@garygreene.com Bradley Bain 281-367-3531 1902 Fletcher Street, Houston, TX 77009 Houston $309,000 1d — 28" [ref=e1667]:
+            - cell "0" [ref=e1668]
+            - cell "Scraped" [ref=e1669]
+            - cell "—" [ref=e1670]
+            - cell "chaille@garygreene.com" [ref=e1671]:
+              - link "chaille@garygreene.com" [ref=e1672] [cursor=pointer]:
+                - /url: mailto:chaille@garygreene.com
+            - cell "Bradley Bain" [ref=e1673]
+            - cell "281-367-3531" [ref=e1674]:
+              - link "281-367-3531" [ref=e1675] [cursor=pointer]:
+                - /url: tel:281-367-3531
+            - cell "1902 Fletcher Street, Houston, TX 77009" [ref=e1676]:
+              - generic "1902 Fletcher Street, Houston, TX 77009" [ref=e1677]
+            - cell "Houston" [ref=e1678]
+            - cell "$309,000" [ref=e1679]:
+              - generic [ref=e1680]: $309,000
+            - cell "1d" [ref=e1681]:
+              - generic [ref=e1682]: 1d
+            - cell "—" [ref=e1683]
+            - cell "28" [ref=e1684]
+            - cell [ref=e1685]:
+              - generic [ref=e1686]:
+                - button "Send to chaille@garygreene.com" [ref=e1687]:
+                  - img [ref=e1688]
+                - link "View listing" [ref=e1691] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/1902-fletcher-st-houston-tx-77009/3740912
+                  - img [ref=e1692]
+          - row "0 Scraped — — Mark Hunek 281-646-7363 21634 Park Villa Dr, Katy, TX 77450 Katy $285,000 1d — 37" [ref=e1696]:
+            - cell "0" [ref=e1697]
+            - cell "Scraped" [ref=e1698]
+            - cell "—" [ref=e1699]
+            - cell "—" [ref=e1700]
+            - cell "Mark Hunek" [ref=e1701]
+            - cell "281-646-7363" [ref=e1702]:
+              - link "281-646-7363" [ref=e1703] [cursor=pointer]:
+                - /url: tel:281-646-7363
+            - cell "21634 Park Villa Dr, Katy, TX 77450" [ref=e1704]:
+              - generic "21634 Park Villa Dr, Katy, TX 77450" [ref=e1705]
+            - cell "Katy" [ref=e1706]
+            - cell "$285,000" [ref=e1707]:
+              - generic [ref=e1708]: $285,000
+            - cell "1d" [ref=e1709]:
+              - generic [ref=e1710]: 1d
+            - cell "—" [ref=e1711]
+            - cell "37" [ref=e1712]
+            - cell [ref=e1713]:
+              - link "View listing" [ref=e1715] [cursor=pointer]:
+                - /url: https://www.har.com/homedetail/21634-park-villa-dr-katy-tx-77450/3416345
+                - img [ref=e1716]
+          - row "0 Scraped — info@whitepicketrealty.com Florencia Cabeza 888-226-1024 3036 High Plains Dr, Katy, TX 77449 Katy $250,000 1d — 48" [ref=e1720]:
+            - cell "0" [ref=e1721]
+            - cell "Scraped" [ref=e1722]
+            - cell "—" [ref=e1723]
+            - cell "info@whitepicketrealty.com" [ref=e1724]:
+              - link "info@whitepicketrealty.com" [ref=e1725] [cursor=pointer]:
+                - /url: mailto:info@whitepicketrealty.com
+            - cell "Florencia Cabeza" [ref=e1726]
+            - cell "888-226-1024" [ref=e1727]:
+              - link "888-226-1024" [ref=e1728] [cursor=pointer]:
+                - /url: tel:888-226-1024
+            - cell "3036 High Plains Dr, Katy, TX 77449" [ref=e1729]:
+              - generic "3036 High Plains Dr, Katy, TX 77449" [ref=e1730]
+            - cell "Katy" [ref=e1731]
+            - cell "$250,000" [ref=e1732]:
+              - generic [ref=e1733]: $250,000
+            - cell "1d" [ref=e1734]:
+              - generic [ref=e1735]: 1d
+            - cell "—" [ref=e1736]
+            - cell "48" [ref=e1737]
+            - cell [ref=e1738]:
+              - generic [ref=e1739]:
+                - button "Send to info@whitepicketrealty.com" [ref=e1740]:
+                  - img [ref=e1741]
+                - link "View listing" [ref=e1744] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/3036-high-plains-dr-katy-tx-77449/3548358
+                  - img [ref=e1745]
+          - row "0 Scraped — houston-aem@compass.com Jill Almai 832-899-4788 24122 Valencia Ridge Ln, Katy, TX 77494 Katy $365,000 1d — 48" [ref=e1749]:
+            - cell "0" [ref=e1750]
+            - cell "Scraped" [ref=e1751]
+            - cell "—" [ref=e1752]
+            - cell "houston-aem@compass.com" [ref=e1753]:
+              - link "houston-aem@compass.com" [ref=e1754] [cursor=pointer]:
+                - /url: mailto:houston-aem@compass.com
+            - cell "Jill Almai" [ref=e1755]
+            - cell "832-899-4788" [ref=e1756]:
+              - link "832-899-4788" [ref=e1757] [cursor=pointer]:
+                - /url: tel:832-899-4788
+            - cell "24122 Valencia Ridge Ln, Katy, TX 77494" [ref=e1758]:
+              - generic "24122 Valencia Ridge Ln, Katy, TX 77494" [ref=e1759]
+            - cell "Katy" [ref=e1760]
+            - cell "$365,000" [ref=e1761]:
+              - generic [ref=e1762]: $365,000
+            - cell "1d" [ref=e1763]:
+              - generic [ref=e1764]: 1d
+            - cell "—" [ref=e1765]
+            - cell "48" [ref=e1766]
+            - cell [ref=e1767]:
+              - generic [ref=e1768]:
+                - button "Send to houston-aem@compass.com" [ref=e1769]:
+                  - img [ref=e1770]
+                - link "View listing" [ref=e1773] [cursor=pointer]:
+                  - /url: https://www.har.com/homedetail/24122-valencia-ridge-ln-katy-tx-77494/12381090
+                  - img [ref=e1774]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e135] [cursor=pointer]:
+    - img [ref=e136]
+  - alert [ref=e4]

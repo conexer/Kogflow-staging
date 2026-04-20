@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(claude /status)",
+      "Bash(cat ~/.claude/*.json)",
+      "Bash(xargs grep:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('email'\\) or d.get\\('account'\\) or list\\(d.keys\\(\\)\\)[:5]\\)\")",
+      "Bash(gh auth:*)",
+      "Bash(gh --version which vercel)",
+      "Bash(vercel --version which supabase)",
+      "Bash(supabase --version which npx)",
+      "Bash(npx vercel:*)",
+      "Bash(npm list:*)",
+      "Bash(where vercel:*)",
+      "Bash(where supabase:*)"
+    ]
+  }
+}

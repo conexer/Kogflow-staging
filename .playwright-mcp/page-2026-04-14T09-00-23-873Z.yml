@@ -1,0 +1,98 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e6]:
+            - img [ref=e7]
+            - text: Outreach Pipeline
+            - generic [ref=e9]: Internal Only
+          - paragraph [ref=e10]: Autonomous Kogflow Beta Outreach — Movoto → Moondream → Kie.ai → Gmail
+        - button [ref=e12]:
+          - img [ref=e13]
+      - generic [ref=e18]:
+        - button "dashboard" [ref=e19]
+        - button "leads" [ref=e20]
+        - button "config" [ref=e21]
+        - button "email" [ref=e22]
+        - button "⚙ Setup" [ref=e23]
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e29]: Total Leads
+            - img [ref=e30]
+          - generic [ref=e34]: "0"
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Staged
+            - img [ref=e38]
+          - generic [ref=e42]: "0"
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]: Emailed
+            - img [ref=e46]
+          - generic [ref=e49]: "0"
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]: Avg ICP Score
+            - img [ref=e53]
+          - generic [ref=e55]: "0"
+      - generic [ref=e56]:
+        - heading "Pipeline Stages" [level=2] [ref=e57]:
+          - img [ref=e58]
+          - text: Pipeline Stages
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: 0 Scraped
+            - img [ref=e62]
+          - generic [ref=e64]:
+            - generic [ref=e65]: 0 Scored
+            - img [ref=e66]
+          - generic [ref=e68]:
+            - generic [ref=e69]: 0 Staged
+            - img [ref=e70]
+          - generic [ref=e72]:
+            - generic [ref=e73]: 0 Form Filled
+            - img [ref=e74]
+          - generic [ref=e77]: 0 Emailed
+      - generic [ref=e78]:
+        - heading "ICP Scoring System" [level=2] [ref=e79]:
+          - img [ref=e80]
+          - text: ICP Scoring System
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]: "+40"
+            - generic [ref=e85]:
+              - generic [ref=e86]: Vacant / Unfurnished
+              - generic [ref=e87]: High visual need for staging
+          - generic [ref=e88]:
+            - generic [ref=e89]: "+25"
+            - generic [ref=e90]:
+              - generic [ref=e91]: Price Reduced
+              - generic [ref=e92]: Signals marketing failure
+          - generic [ref=e93]:
+            - generic [ref=e94]: "+20"
+            - generic [ref=e95]:
+              - generic [ref=e96]: Days on Market 60+
+              - generic [ref=e97]: High owner pressure
+          - generic [ref=e98]:
+            - generic [ref=e99]: "+10"
+            - generic [ref=e100]:
+              - generic [ref=e101]: Low Photo Count (<15)
+              - generic [ref=e102]: Tech-lagging indicator
+          - generic [ref=e103]:
+            - generic [ref=e104]: "+5"
+            - generic [ref=e105]:
+              - generic [ref=e106]: Days on Market 30–59
+              - generic [ref=e107]: Moderate frustration
+      - generic [ref=e108]:
+        - heading "Test Moondream Vision" [level=2] [ref=e109]:
+          - img [ref=e110]
+          - text: Test Moondream Vision
+        - paragraph [ref=e113]: Paste any real estate photo URL to test room detection
+        - generic [ref=e114]:
+          - textbox "https://photos.movoto.com/..." [ref=e115]
+          - button "Test" [ref=e116]
+  - region "Notifications alt+T"
+  - alert [ref=e117]

@@ -1,0 +1,114 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "No project selected. Hit enter to select a project, folder, or organization." [ref=e40]
+        - button "Open search" [ref=e47] [cursor=pointer]:
+          - img [ref=e49]
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e55]:
+              - button "Activate Cloud Shell (G then S)" [disabled]:
+                - generic:
+                  - img
+            - button "1 unread notifications. Open notifications" [ref=e59] [cursor=pointer]:
+              - generic [ref=e62]: "1"
+            - button "Settings and utilities" [ref=e67] [cursor=pointer]:
+              - img [ref=e69]
+          - img [ref=e73]
+    - generic [ref=e93]:
+      - navigation "APIs & Services" [ref=e100]:
+        - generic [ref=e101]:
+          - heading "APIs & Services" [level=2] [ref=e103]:
+            - link "APIs & Services" [ref=e104] [cursor=pointer]:
+              - /url: /apis
+              - img [ref=e107]
+              - generic [ref=e111]: APIs & Services
+          - list "Enabled APIs & services, 1 of 5 More options Library, 2 of 5 More options Credentials, 3 of 5 More options OAuth consent screen, 4 of 5 More options Page usage agreements, 5 of 5 More options" [ref=e115]:
+            - listitem [ref=e116]:
+              - generic [ref=e119]:
+                - link "Enabled APIs & services, 1 of 5" [ref=e120] [cursor=pointer]:
+                  - /url: /apis/dashboard
+                  - generic [ref=e121]:
+                    - img [ref=e124]
+                    - generic [ref=e126]: Enabled APIs & services
+                - button "More options" [ref=e128] [cursor=pointer]:
+                  - img [ref=e130]
+            - listitem [ref=e132]:
+              - generic [ref=e135]:
+                - link "Library, 2 of 5" [ref=e136] [cursor=pointer]:
+                  - /url: /apis/library
+                  - generic [ref=e137]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Library
+                - button "More options" [ref=e144] [cursor=pointer]:
+                  - img [ref=e146]
+            - listitem [ref=e148]:
+              - generic [ref=e151]:
+                - link "Credentials, 3 of 5" [ref=e152] [cursor=pointer]:
+                  - /url: /apis/credentials
+                  - generic [ref=e153]:
+                    - img [ref=e156]
+                    - generic [ref=e158]: Credentials
+                - button "More options" [ref=e160] [cursor=pointer]:
+                  - img [ref=e162]
+            - listitem [ref=e164]:
+              - generic [ref=e167]:
+                - link "OAuth consent screen, 4 of 5" [ref=e168] [cursor=pointer]:
+                  - /url: /apis/credentials/consent
+                  - generic [ref=e169]:
+                    - img [ref=e172]
+                    - generic [ref=e174]: OAuth consent screen
+                - button "More options" [ref=e176] [cursor=pointer]:
+                  - img [ref=e178]
+            - listitem [ref=e180]:
+              - generic [ref=e183]:
+                - link "Page usage agreements, 5 of 5" [ref=e184] [cursor=pointer]:
+                  - /url: /apis/agreements
+                  - generic [ref=e185]:
+                    - img [ref=e188]
+                    - generic [ref=e191]: Page usage agreements
+                - button "More options" [ref=e193] [cursor=pointer]:
+                  - img [ref=e195]
+          - button "Toggle APIs & Services navigation menu" [pressed] [ref=e199] [cursor=pointer]:
+            - img [ref=e202]
+      - main [ref=e205]:
+        - progressbar [ref=e213]:
+          - img [ref=e215]
+          - generic [ref=e218]:
+            - img [ref=e220]
+            - img [ref=e223]
+            - img [ref=e226]
+  - iframe [ref=e236]:
+    
+  - paragraph
+  - iframe [ref=e238]:
+    

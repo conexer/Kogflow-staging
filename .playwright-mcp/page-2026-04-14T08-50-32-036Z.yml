@@ -1,0 +1,1120 @@
+- generic [ref=e2]:
+  - region
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner "Global Navigation Menu" [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - button "Open menu" [ref=e12] [cursor=pointer]:
+            - img [ref=e13]
+          - link "Homepage (g then d)" [ref=e15] [cursor=pointer]:
+            - /url: /
+            - img [ref=e16]
+        - generic [ref=e18]:
+          - navigation "Breadcrumbs" [ref=e19]:
+            - list [ref=e20]:
+              - listitem [ref=e21]:
+                - link "conexer" [ref=e22] [cursor=pointer]:
+                  - /url: /conexer
+                  - generic [ref=e23]: conexer
+              - listitem [ref=e24]:
+                - link "Kogflow-staging" [ref=e25] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging
+                  - generic [ref=e26]: Kogflow-staging
+          - button "Search or jump to… (forward slash)" [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e34]:
+              - link "Chat with Copilot" [ref=e36] [cursor=pointer]:
+                - /url: /copilot
+                - img [ref=e37]
+              - button "Open Copilot…" [ref=e41] [cursor=pointer]:
+                - generic:
+                  - img
+            - button "Create new..." [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]:
+                - generic:
+                  - img
+              - generic:
+                - img
+            - link "Issues" [ref=e45] [cursor=pointer]:
+              - /url: /issues
+              - img [ref=e46]
+            - link "Pull requests" [ref=e49] [cursor=pointer]:
+              - /url: /pulls
+              - img [ref=e50]
+            - link "Repositories" [ref=e52] [cursor=pointer]:
+              - /url: /repos
+              - img [ref=e53]
+          - link "You have no unread notifications (g then n)" [ref=e55] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e56]
+          - button "Open user navigation menu" [ref=e59] [cursor=pointer]:
+            - img "User avatar" [ref=e60]
+      - heading "Repository navigation" [level=2] [ref=e61]
+      - navigation "Repository" [ref=e62]:
+        - list [ref=e63]:
+          - listitem [ref=e64]:
+            - link "Code" [ref=e65] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging
+              - generic [ref=e66]: Code
+          - listitem [ref=e67]:
+            - link "Issues" [ref=e68] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/issues
+              - generic [ref=e69]: Issues
+          - listitem [ref=e70]:
+            - link "Pull requests" [ref=e71] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/pulls
+              - generic [ref=e72]: Pull requests
+          - listitem [ref=e73]:
+            - link "Actions" [ref=e74] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/actions
+              - generic [ref=e75]: Actions
+          - listitem [ref=e76]:
+            - link "Projects" [ref=e77] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/projects
+              - generic [ref=e78]: Projects
+          - listitem [ref=e79]:
+            - link "Wiki" [ref=e80] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/wiki
+              - generic [ref=e81]: Wiki
+          - listitem [ref=e82]:
+            - link "Security and quality (1)" [ref=e83] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/security
+              - generic [ref=e84]: Security and quality
+              - generic [ref=e85]:
+                - generic [ref=e86]: "1"
+                - generic [ref=e87]: (1)
+          - listitem [ref=e88]:
+            - link "Insights" [ref=e89] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/pulse
+              - generic [ref=e90]: Insights
+          - listitem [ref=e91]:
+            - link "Settings" [ref=e92] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/settings
+              - generic [ref=e93]: Settings
+  - main [ref=e97]:
+    - generic [ref=e103]:
+      - heading "Commits" [level=1] [ref=e107]
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - heading "Branch selector" [level=2] [ref=e114]
+          - button "main branch" [ref=e115] [cursor=pointer]:
+            - generic [ref=e116]:
+              - generic [ref=e118]:
+                - img [ref=e120]
+                - generic [ref=e123]: main
+              - generic:
+                - img
+          - generic [ref=e124]:
+            - heading "User selector" [level=2] [ref=e125]
+            - button "All users" [ref=e127] [cursor=pointer]:
+              - generic [ref=e130]:
+                - img [ref=e132]
+                - generic [ref=e134]: All users
+              - generic:
+                - img
+            - heading "Datepicker" [level=2] [ref=e135]
+            - button "All time" [ref=e136] [cursor=pointer]:
+              - generic [ref=e137]:
+                - generic:
+                  - img
+                - generic [ref=e138]: All time
+                - generic:
+                  - img
+        - generic [ref=e139]:
+          - heading "Commit History" [level=2] [ref=e140]
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - img [ref=e145]
+              - generic [ref=e147]:
+                - heading "Commits on Apr 14, 2026" [level=3] [ref=e148]
+                - list "Commits on Apr 14, 2026" [ref=e151]:
+                  - 'listitem "merge: unify prod fixes with staging repo history. More information available below." [ref=e152]':
+                    - generic [ref=e153]:
+                      - 'heading "merge: unify prod fixes with staging repo history" [level=4] [ref=e154]':
+                        - 'link "merge: unify prod fixes with staging repo history" [ref=e156] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/fb3fe871c056545df01d585c8fbbfe81eb3806e9
+                      - button "Show description for fb3fe87" [ref=e157] [cursor=pointer]:
+                        - img [ref=e158]
+                    - generic [ref=e164]:
+                      - generic [ref=e166]:
+                        - img "Kogflow" [ref=e167]
+                        - img "claude" [ref=e168]
+                      - generic "Kogflow" [ref=e170]
+                      - generic [ref=e171]: and
+                      - link "commits by claude" [ref=e173] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e174]: committed
+                      - generic "Apr 14, 2026, 1:50 AM PDT" [ref=e175]: Apr 14, 2026now
+                    - generic [ref=e180]:
+                      - generic [ref=e181]:
+                        - tooltip "View commit details" [ref=e182]:
+                          - link "fb3fe87" [ref=e183] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/fb3fe871c056545df01d585c8fbbfe81eb3806e9
+                            - generic [ref=e185]: fb3fe87
+                        - button "Copy full SHA for fb3fe87" [ref=e187] [cursor=pointer]:
+                          - img [ref=e188]
+                      - tooltip "Browse repository at this point" [ref=e191]:
+                        - link "Browse repository at this point" [ref=e192] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/fb3fe871c056545df01d585c8fbbfe81eb3806e9
+                          - img [ref=e193]
+                  - 'listitem "feat: show Outreach Pipeline link in navbar and sidebar for admin users. More information available below." [ref=e195]':
+                    - generic [ref=e196]:
+                      - 'heading "feat: show Outreach Pipeline link in navbar and sidebar for admin users" [level=4] [ref=e197]':
+                        - 'link "feat: show Outreach Pipeline link in navbar and sidebar for admin users" [ref=e199] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/731a43a0456781fa67e6c35efbca88d1093cab6c
+                      - button "Show description for 731a43a" [ref=e200] [cursor=pointer]:
+                        - img [ref=e201]
+                    - generic [ref=e207]:
+                      - generic [ref=e209]:
+                        - img "Kogflow" [ref=e210]
+                        - img "claude" [ref=e211]
+                      - generic "Kogflow" [ref=e213]
+                      - generic [ref=e214]: and
+                      - link "commits by claude" [ref=e216] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e217]: committed
+                      - generic "Apr 14, 2026, 1:39 AM PDT" [ref=e218]: Apr 14, 202611 minutes ago
+                    - generic [ref=e223]:
+                      - generic [ref=e224]:
+                        - tooltip "View commit details" [ref=e225]:
+                          - link "731a43a" [ref=e226] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/731a43a0456781fa67e6c35efbca88d1093cab6c
+                            - generic [ref=e228]: 731a43a
+                        - button "Copy full SHA for 731a43a" [ref=e230] [cursor=pointer]:
+                          - img [ref=e231]
+                      - tooltip "Browse repository at this point" [ref=e234]:
+                        - link "Browse repository at this point" [ref=e235] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/731a43a0456781fa67e6c35efbca88d1093cab6c
+                          - img [ref=e236]
+                  - 'listitem "feat: wire up outreach pipeline with Zyte, Moondream, CapMonster, Kie.ai. More information available below." [ref=e238]':
+                    - generic [ref=e239]:
+                      - 'heading "feat: wire up outreach pipeline with Zyte, Moondream, CapMonster, Kie.ai" [level=4] [ref=e240]':
+                        - 'link "feat: wire up outreach pipeline with Zyte, Moondream, CapMonster, Kie.ai" [ref=e242] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/1233ff57452a3b7d898f1bffe64626e19f1f401b
+                      - button "Show description for 1233ff5" [ref=e243] [cursor=pointer]:
+                        - img [ref=e244]
+                    - generic [ref=e250]:
+                      - generic [ref=e252]:
+                        - img "Kogflow" [ref=e253]
+                        - img "claude" [ref=e254]
+                      - generic "Kogflow" [ref=e256]
+                      - generic [ref=e257]: and
+                      - link "commits by claude" [ref=e259] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e260]: committed
+                      - generic "Apr 14, 2026, 1:21 AM PDT" [ref=e261]: Apr 14, 202628 minutes ago
+                    - generic [ref=e266]:
+                      - generic [ref=e267]:
+                        - tooltip "View commit details" [ref=e268]:
+                          - link "1233ff5" [ref=e269] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/1233ff57452a3b7d898f1bffe64626e19f1f401b
+                            - generic [ref=e271]: 1233ff5
+                        - button "Copy full SHA for 1233ff5" [ref=e273] [cursor=pointer]:
+                          - img [ref=e274]
+                      - tooltip "Browse repository at this point" [ref=e277]:
+                        - link "Browse repository at this point" [ref=e278] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/1233ff57452a3b7d898f1bffe64626e19f1f401b
+                          - img [ref=e279]
+                  - 'listitem "feat: add admin-only /outreach pipeline control page. More information available below." [ref=e281]':
+                    - generic [ref=e282]:
+                      - 'heading "feat: add admin-only /outreach pipeline control page" [level=4] [ref=e283]':
+                        - 'link "feat: add admin-only /outreach pipeline control page" [ref=e285] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/267d01f966f1284c8ebe5956b54549e70b42607a
+                      - button "Show description for 267d01f" [ref=e286] [cursor=pointer]:
+                        - img [ref=e287]
+                    - generic [ref=e293]:
+                      - generic [ref=e295]:
+                        - img "Kogflow" [ref=e296]
+                        - img "claude" [ref=e297]
+                      - generic "Kogflow" [ref=e299]
+                      - generic [ref=e300]: and
+                      - link "commits by claude" [ref=e302] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e303]: committed
+                      - generic "Apr 14, 2026, 1:07 AM PDT" [ref=e304]: Apr 14, 202643 minutes ago
+                    - generic [ref=e309]:
+                      - generic [ref=e310]:
+                        - tooltip "View commit details" [ref=e311]:
+                          - link "267d01f" [ref=e312] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/267d01f966f1284c8ebe5956b54549e70b42607a
+                            - generic [ref=e314]: 267d01f
+                        - button "Copy full SHA for 267d01f" [ref=e316] [cursor=pointer]:
+                          - img [ref=e317]
+                      - tooltip "Browse repository at this point" [ref=e320]:
+                        - link "Browse repository at this point" [ref=e321] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/267d01f966f1284c8ebe5956b54549e70b42607a
+                          - img [ref=e322]
+            - generic [ref=e324]:
+              - img [ref=e327]
+              - generic [ref=e329]:
+                - heading "Commits on Apr 10, 2026" [level=3] [ref=e330]
+                - list "Commits on Apr 10, 2026" [ref=e333]:
+                  - 'listitem "fix: prevent duplicate assets from concurrent polling on AI staging completion. More information available below." [ref=e334]':
+                    - generic [ref=e335]:
+                      - 'heading "fix: prevent duplicate assets from concurrent polling on AI staging completion" [level=4] [ref=e336]':
+                        - 'link "fix: prevent duplicate assets from concurrent polling on AI staging completion" [ref=e338] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/c75ebe8f8f9c0691ad5cfd5c211f0fc4af7f3ca7
+                      - button "Show description for c75ebe8" [ref=e339] [cursor=pointer]:
+                        - img [ref=e340]
+                    - generic [ref=e346]:
+                      - generic [ref=e348]:
+                        - img "Kogflow" [ref=e349]
+                        - img "claude" [ref=e350]
+                      - generic "Kogflow" [ref=e352]
+                      - generic [ref=e353]: and
+                      - link "commits by claude" [ref=e355] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e356]: committed
+                      - generic "Apr 10, 2026, 6:08 PM PDT" [ref=e357]: Apr 10, 20263 days ago
+                    - generic [ref=e362]:
+                      - generic [ref=e363]:
+                        - tooltip "View commit details" [ref=e364]:
+                          - link "c75ebe8" [ref=e365] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/c75ebe8f8f9c0691ad5cfd5c211f0fc4af7f3ca7
+                            - generic [ref=e367]: c75ebe8
+                        - button "Copy full SHA for c75ebe8" [ref=e369] [cursor=pointer]:
+                          - img [ref=e370]
+                      - tooltip "Browse repository at this point" [ref=e373]:
+                        - link "Browse repository at this point" [ref=e374] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/c75ebe8f8f9c0691ad5cfd5c211f0fc4af7f3ca7
+                          - img [ref=e375]
+                  - 'listitem "fix: custom style text now sent to AI prompt instead of literal word ''custom''. More information available below." [ref=e377]':
+                    - generic [ref=e378]:
+                      - 'heading "fix: custom style text now sent to AI prompt instead of literal word ''custom''" [level=4] [ref=e379]':
+                        - 'link "fix: custom style text now sent to AI prompt instead of literal word ''custom''" [ref=e381] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/e65a2e7cd008ff4159fd062363939eba66000744
+                      - button "Show description for e65a2e7" [ref=e382] [cursor=pointer]:
+                        - img [ref=e383]
+                    - generic [ref=e389]:
+                      - generic [ref=e391]:
+                        - img "Kogflow" [ref=e392]
+                        - img "claude" [ref=e393]
+                      - generic "Kogflow" [ref=e395]
+                      - generic [ref=e396]: and
+                      - link "commits by claude" [ref=e398] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e399]: committed
+                      - generic "Apr 10, 2026, 6:05 PM PDT" [ref=e400]: Apr 10, 20263 days ago
+                    - generic [ref=e405]:
+                      - generic [ref=e406]:
+                        - tooltip "View commit details" [ref=e407]:
+                          - link "e65a2e7" [ref=e408] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/e65a2e7cd008ff4159fd062363939eba66000744
+                            - generic [ref=e410]: e65a2e7
+                        - button "Copy full SHA for e65a2e7" [ref=e412] [cursor=pointer]:
+                          - img [ref=e413]
+                      - tooltip "Browse repository at this point" [ref=e416]:
+                        - link "Browse repository at this point" [ref=e417] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/e65a2e7cd008ff4159fd062363939eba66000744
+                          - img [ref=e418]
+                  - 'listitem "fix: AI staged images now persist in project assets after refresh. More information available below." [ref=e420]':
+                    - generic [ref=e421]:
+                      - 'heading "fix: AI staged images now persist in project assets after refresh" [level=4] [ref=e422]':
+                        - 'link "fix: AI staged images now persist in project assets after refresh" [ref=e424] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/0639e82a5107526d5147caaefc750275b6bd60eb
+                      - button "Show description for 0639e82" [ref=e425] [cursor=pointer]:
+                        - img [ref=e426]
+                    - generic [ref=e432]:
+                      - generic [ref=e434]:
+                        - img "Kogflow" [ref=e435]
+                        - img "claude" [ref=e436]
+                      - generic "Kogflow" [ref=e438]
+                      - generic [ref=e439]: and
+                      - link "commits by claude" [ref=e441] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e442]: committed
+                      - generic "Apr 10, 2026, 6:00 PM PDT" [ref=e443]: Apr 10, 20263 days ago
+                    - generic [ref=e448]:
+                      - generic [ref=e449]:
+                        - tooltip "View commit details" [ref=e450]:
+                          - link "0639e82" [ref=e451] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/0639e82a5107526d5147caaefc750275b6bd60eb
+                            - generic [ref=e453]: "0639e82"
+                        - button "Copy full SHA for 0639e82" [ref=e455] [cursor=pointer]:
+                          - img [ref=e456]
+                      - tooltip "Browse repository at this point" [ref=e459]:
+                        - link "Browse repository at this point" [ref=e460] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/0639e82a5107526d5147caaefc750275b6bd60eb
+                          - img [ref=e461]
+                  - 'listitem "fix: update nav links — Virtual Staging to /dashboard, 1-Click Video to /dashboard?tab=videos. More information available below." [ref=e463]':
+                    - generic [ref=e464]:
+                      - 'heading "fix: update nav links — Virtual Staging to /dashboard, 1-Click Video to /dashboard?tab=videos" [level=4] [ref=e465]':
+                        - 'link "fix: update nav links — Virtual Staging to /dashboard, 1-Click Video to /dashboard?tab=videos" [ref=e467] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/e1d599d0ba0e265825c7b37c532029e78f1a35e4
+                      - button "Show description for e1d599d" [ref=e468] [cursor=pointer]:
+                        - img [ref=e469]
+                    - generic [ref=e475]:
+                      - generic [ref=e477]:
+                        - img "Kogflow" [ref=e478]
+                        - img "claude" [ref=e479]
+                      - generic "Kogflow" [ref=e481]
+                      - generic [ref=e482]: and
+                      - link "commits by claude" [ref=e484] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e485]: committed
+                      - generic "Apr 10, 2026, 5:49 PM PDT" [ref=e486]: Apr 10, 20263 days ago
+                    - generic [ref=e491]:
+                      - generic [ref=e492]:
+                        - tooltip "View commit details" [ref=e493]:
+                          - link "e1d599d" [ref=e494] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/e1d599d0ba0e265825c7b37c532029e78f1a35e4
+                            - generic [ref=e496]: e1d599d
+                        - button "Copy full SHA for e1d599d" [ref=e498] [cursor=pointer]:
+                          - img [ref=e499]
+                      - tooltip "Browse repository at this point" [ref=e502]:
+                        - link "Browse repository at this point" [ref=e503] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/e1d599d0ba0e265825c7b37c532029e78f1a35e4
+                          - img [ref=e504]
+                  - 'listitem "feat: require signup to use app, replace guest access with free account CTA. More information available below." [ref=e506]':
+                    - generic [ref=e507]:
+                      - 'heading "feat: require signup to use app, replace guest access with free account CTA" [level=4] [ref=e508]':
+                        - 'link "feat: require signup to use app, replace guest access with free account CTA" [ref=e510] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/569c196814dd83c1baefe77658e3fec1d8686258
+                      - button "Show description for 569c196" [ref=e511] [cursor=pointer]:
+                        - img [ref=e512]
+                    - generic [ref=e518]:
+                      - generic [ref=e520]:
+                        - img "Kogflow" [ref=e521]
+                        - img "claude" [ref=e522]
+                      - generic "Kogflow" [ref=e524]
+                      - generic [ref=e525]: and
+                      - link "commits by claude" [ref=e527] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e528]: committed
+                      - generic "Apr 10, 2026, 12:31 PM PDT" [ref=e529]: Apr 10, 20264 days ago
+                    - generic [ref=e534]:
+                      - generic [ref=e535]:
+                        - tooltip "View commit details" [ref=e536]:
+                          - link "569c196" [ref=e537] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/569c196814dd83c1baefe77658e3fec1d8686258
+                            - generic [ref=e539]: 569c196
+                        - button "Copy full SHA for 569c196" [ref=e541] [cursor=pointer]:
+                          - img [ref=e542]
+                      - tooltip "Browse repository at this point" [ref=e545]:
+                        - link "Browse repository at this point" [ref=e546] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/569c196814dd83c1baefe77658e3fec1d8686258
+                          - img [ref=e547]
+                  - 'listitem "fix: save AI staged images to project assets so they persist on refresh. More information available below." [ref=e549]':
+                    - generic [ref=e550]:
+                      - 'heading "fix: save AI staged images to project assets so they persist on refresh" [level=4] [ref=e551]':
+                        - 'link "fix: save AI staged images to project assets so they persist on refresh" [ref=e553] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/0929c38c85048c3cb48b233b1fe8500a45a960ae
+                      - button "Show description for 0929c38" [ref=e554] [cursor=pointer]:
+                        - img [ref=e555]
+                    - generic [ref=e561]:
+                      - generic [ref=e563]:
+                        - img "Kogflow" [ref=e564]
+                        - img "claude" [ref=e565]
+                      - generic "Kogflow" [ref=e567]
+                      - generic [ref=e568]: and
+                      - link "commits by claude" [ref=e570] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e571]: committed
+                      - generic "Apr 10, 2026, 11:51 AM PDT" [ref=e572]: Apr 10, 20264 days ago
+                    - generic [ref=e577]:
+                      - generic [ref=e578]:
+                        - tooltip "View commit details" [ref=e579]:
+                          - link "0929c38" [ref=e580] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/0929c38c85048c3cb48b233b1fe8500a45a960ae
+                            - generic [ref=e582]: 0929c38
+                        - button "Copy full SHA for 0929c38" [ref=e584] [cursor=pointer]:
+                          - img [ref=e585]
+                      - tooltip "Browse repository at this point" [ref=e588]:
+                        - link "Browse repository at this point" [ref=e589] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/0929c38c85048c3cb48b233b1fe8500a45a960ae
+                          - img [ref=e590]
+                  - 'listitem "fix: increase staging timeout from 2min to 10min to match kie.ai processing time. More information available below." [ref=e592]':
+                    - generic [ref=e593]:
+                      - 'heading "fix: increase staging timeout from 2min to 10min to match kie.ai processing time" [level=4] [ref=e594]':
+                        - 'link "fix: increase staging timeout from 2min to 10min to match kie.ai processing time" [ref=e596] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/d4b2285c7b3eebcb38b149b8dbb7962955a5656d
+                      - button "Show description for d4b2285" [ref=e597] [cursor=pointer]:
+                        - img [ref=e598]
+                    - generic [ref=e604]:
+                      - generic [ref=e606]:
+                        - img "Kogflow" [ref=e607]
+                        - img "claude" [ref=e608]
+                      - generic "Kogflow" [ref=e610]
+                      - generic [ref=e611]: and
+                      - link "commits by claude" [ref=e613] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e614]: committed
+                      - generic "Apr 10, 2026, 1:58 AM PDT" [ref=e615]: Apr 10, 20264 days ago
+                    - generic [ref=e620]:
+                      - generic [ref=e621]:
+                        - tooltip "View commit details" [ref=e622]:
+                          - link "d4b2285" [ref=e623] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/d4b2285c7b3eebcb38b149b8dbb7962955a5656d
+                            - generic [ref=e625]: d4b2285
+                        - button "Copy full SHA for d4b2285" [ref=e627] [cursor=pointer]:
+                          - img [ref=e628]
+                      - tooltip "Browse repository at this point" [ref=e631]:
+                        - link "Browse repository at this point" [ref=e632] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/d4b2285c7b3eebcb38b149b8dbb7962955a5656d
+                          - img [ref=e633]
+            - generic [ref=e635]:
+              - img [ref=e638]
+              - generic [ref=e640]:
+                - heading "Commits on Apr 9, 2026" [level=3] [ref=e641]
+                - list "Commits on Apr 9, 2026" [ref=e644]:
+                  - 'listitem "feat: add Google OAuth sign in/sign up button. More information available below." [ref=e645]':
+                    - generic [ref=e646]:
+                      - 'heading "feat: add Google OAuth sign in/sign up button" [level=4] [ref=e647]':
+                        - 'link "feat: add Google OAuth sign in/sign up button" [ref=e649] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/46514ad3cf99472cd7733ec2a32821a8d94a2de9
+                      - button "Show description for 46514ad" [ref=e650] [cursor=pointer]:
+                        - img [ref=e651]
+                    - generic [ref=e657]:
+                      - generic [ref=e659]:
+                        - img "Kogflow" [ref=e660]
+                        - img "claude" [ref=e661]
+                      - generic "Kogflow" [ref=e663]
+                      - generic [ref=e664]: and
+                      - link "commits by claude" [ref=e666] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e667]: committed
+                      - generic "Apr 9, 2026, 5:18 PM PDT" [ref=e668]: Apr 9, 20264 days ago
+                    - generic [ref=e673]:
+                      - generic [ref=e674]:
+                        - tooltip "View commit details" [ref=e675]:
+                          - link "46514ad" [ref=e676] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/46514ad3cf99472cd7733ec2a32821a8d94a2de9
+                            - generic [ref=e678]: 46514ad
+                        - button "Copy full SHA for 46514ad" [ref=e680] [cursor=pointer]:
+                          - img [ref=e681]
+                      - tooltip "Browse repository at this point" [ref=e684]:
+                        - link "Browse repository at this point" [ref=e685] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/46514ad3cf99472cd7733ec2a32821a8d94a2de9
+                          - img [ref=e686]
+                  - 'listitem "fix: move credit cost constants out of use server module. More information available below." [ref=e688]':
+                    - generic [ref=e689]:
+                      - 'heading "fix: move credit cost constants out of use server module" [level=4] [ref=e690]':
+                        - 'link "fix: move credit cost constants out of use server module" [ref=e692] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/f1d8603cb600c7d6d7e3bb5139f9b82c6646fa77
+                      - button "Show description for f1d8603" [ref=e693] [cursor=pointer]:
+                        - img [ref=e694]
+                    - generic [ref=e700]:
+                      - generic [ref=e702]:
+                        - img "Kogflow" [ref=e703]
+                        - img "claude" [ref=e704]
+                      - generic "Kogflow" [ref=e706]
+                      - generic [ref=e707]: and
+                      - link "commits by claude" [ref=e709] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e710]: committed
+                      - generic "Apr 9, 2026, 2:51 PM PDT" [ref=e711]: Apr 9, 20264 days ago
+                    - generic [ref=e716]:
+                      - generic [ref=e717]:
+                        - tooltip "View commit details" [ref=e718]:
+                          - link "f1d8603" [ref=e719] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/f1d8603cb600c7d6d7e3bb5139f9b82c6646fa77
+                            - generic [ref=e721]: f1d8603
+                        - button "Copy full SHA for f1d8603" [ref=e723] [cursor=pointer]:
+                          - img [ref=e724]
+                      - tooltip "Browse repository at this point" [ref=e727]:
+                        - link "Browse repository at this point" [ref=e728] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/f1d8603cb600c7d6d7e3bb5139f9b82c6646fa77
+                          - img [ref=e729]
+                  - 'listitem "feat: overhaul credit system to 100-credit scale. More information available below." [ref=e731]':
+                    - generic [ref=e732]:
+                      - 'heading "feat: overhaul credit system to 100-credit scale" [level=4] [ref=e733]':
+                        - 'link "feat: overhaul credit system to 100-credit scale" [ref=e735] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/c94ee9ebc0d81e82581703b15854a436de7c0d5e
+                      - button "Show description for c94ee9e" [ref=e736] [cursor=pointer]:
+                        - img [ref=e737]
+                    - generic [ref=e743]:
+                      - generic [ref=e745]:
+                        - img "Kogflow" [ref=e746]
+                        - img "claude" [ref=e747]
+                      - generic "Kogflow" [ref=e749]
+                      - generic [ref=e750]: and
+                      - link "commits by claude" [ref=e752] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e753]: committed
+                      - generic "Apr 9, 2026, 2:47 PM PDT" [ref=e754]: Apr 9, 20264 days ago
+                    - generic [ref=e759]:
+                      - generic [ref=e760]:
+                        - tooltip "View commit details" [ref=e761]:
+                          - link "c94ee9e" [ref=e762] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/c94ee9ebc0d81e82581703b15854a436de7c0d5e
+                            - generic [ref=e764]: c94ee9e
+                        - button "Copy full SHA for c94ee9e" [ref=e766] [cursor=pointer]:
+                          - img [ref=e767]
+                      - tooltip "Browse repository at this point" [ref=e770]:
+                        - link "Browse repository at this point" [ref=e771] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/c94ee9ebc0d81e82581703b15854a436de7c0d5e
+                          - img [ref=e772]
+                  - 'listitem "feat: add 3D parallax and depth to video walkthrough prompt. More information available below." [ref=e774]':
+                    - generic [ref=e775]:
+                      - 'heading "feat: add 3D parallax and depth to video walkthrough prompt" [level=4] [ref=e776]':
+                        - 'link "feat: add 3D parallax and depth to video walkthrough prompt" [ref=e778] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/a19f575d57447acb6fff77116b25b720b4f78d27
+                      - button "Show description for a19f575" [ref=e779] [cursor=pointer]:
+                        - img [ref=e780]
+                    - generic [ref=e786]:
+                      - generic [ref=e788]:
+                        - img "Kogflow" [ref=e789]
+                        - img "claude" [ref=e790]
+                      - generic "Kogflow" [ref=e792]
+                      - generic [ref=e793]: and
+                      - link "commits by claude" [ref=e795] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e796]: committed
+                      - generic "Apr 9, 2026, 1:56 PM PDT" [ref=e797]: Apr 9, 20264 days ago
+                    - generic [ref=e802]:
+                      - generic [ref=e803]:
+                        - tooltip "View commit details" [ref=e804]:
+                          - link "a19f575" [ref=e805] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/a19f575d57447acb6fff77116b25b720b4f78d27
+                            - generic [ref=e807]: a19f575
+                        - button "Copy full SHA for a19f575" [ref=e809] [cursor=pointer]:
+                          - img [ref=e810]
+                      - tooltip "Browse repository at this point" [ref=e813]:
+                        - link "Browse repository at this point" [ref=e814] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/a19f575d57447acb6fff77116b25b720b4f78d27
+                          - img [ref=e815]
+                  - 'listitem "feat: update video generation prompt to realistic walkthrough style. More information available below." [ref=e817]':
+                    - generic [ref=e818]:
+                      - 'heading "feat: update video generation prompt to realistic walkthrough style" [level=4] [ref=e819]':
+                        - 'link "feat: update video generation prompt to realistic walkthrough style" [ref=e821] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/0d59cd1ee88bdaf86635af6cc8c880e4cb1e92a5
+                      - button "Show description for 0d59cd1" [ref=e822] [cursor=pointer]:
+                        - img [ref=e823]
+                    - generic [ref=e829]:
+                      - generic [ref=e831]:
+                        - img "Kogflow" [ref=e832]
+                        - img "claude" [ref=e833]
+                      - generic "Kogflow" [ref=e835]
+                      - generic [ref=e836]: and
+                      - link "commits by claude" [ref=e838] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e839]: committed
+                      - generic "Apr 9, 2026, 12:59 PM PDT" [ref=e840]: Apr 9, 20265 days ago
+                    - generic [ref=e845]:
+                      - generic [ref=e846]:
+                        - tooltip "View commit details" [ref=e847]:
+                          - link "0d59cd1" [ref=e848] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/0d59cd1ee88bdaf86635af6cc8c880e4cb1e92a5
+                            - generic [ref=e850]: 0d59cd1
+                        - button "Copy full SHA for 0d59cd1" [ref=e852] [cursor=pointer]:
+                          - img [ref=e853]
+                      - tooltip "Browse repository at this point" [ref=e856]:
+                        - link "Browse repository at this point" [ref=e857] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/0d59cd1ee88bdaf86635af6cc8c880e4cb1e92a5
+                          - img [ref=e858]
+                  - 'listitem "feat: switch video generation to AtlasCloud Seedance v1 Pro Fast. More information available below." [ref=e860]':
+                    - generic [ref=e861]:
+                      - 'heading "feat: switch video generation to AtlasCloud Seedance v1 Pro Fast" [level=4] [ref=e862]':
+                        - 'link "feat: switch video generation to AtlasCloud Seedance v1 Pro Fast" [ref=e864] [cursor=pointer]':
+                          - /url: /conexer/Kogflow-staging/commit/cfaa44bbc8fe331116a7efa4a93c44eb20de5b82
+                      - button "Show description for cfaa44b" [ref=e865] [cursor=pointer]:
+                        - img [ref=e866]
+                    - generic [ref=e872]:
+                      - generic [ref=e874]:
+                        - img "Kogflow" [ref=e875]
+                        - img "claude" [ref=e876]
+                      - generic "Kogflow" [ref=e878]
+                      - generic [ref=e879]: and
+                      - link "commits by claude" [ref=e881] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commits?author=claude
+                        - text: claude
+                      - generic [ref=e882]: committed
+                      - generic "Apr 9, 2026, 11:55 AM PDT" [ref=e883]: Apr 9, 20265 days ago
+                    - generic [ref=e888]:
+                      - generic [ref=e889]:
+                        - tooltip "View commit details" [ref=e890]:
+                          - link "cfaa44b" [ref=e891] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/cfaa44bbc8fe331116a7efa4a93c44eb20de5b82
+                            - generic [ref=e893]: cfaa44b
+                        - button "Copy full SHA for cfaa44b" [ref=e895] [cursor=pointer]:
+                          - img [ref=e896]
+                      - tooltip "Browse repository at this point" [ref=e899]:
+                        - link "Browse repository at this point" [ref=e900] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/cfaa44bbc8fe331116a7efa4a93c44eb20de5b82
+                          - img [ref=e901]
+            - generic [ref=e903]:
+              - img [ref=e906]
+              - generic [ref=e908]:
+                - heading "Commits on Mar 19, 2026" [level=3] [ref=e909]
+                - list "Commits on Mar 19, 2026" [ref=e912]:
+                  - 'listitem "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution. More information available below." [ref=e913]':
+                    - 'heading "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution" [level=4] [ref=e915]':
+                      - 'link "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution" [ref=e917] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/8b45d9def2d2fdd8a3caa236235df5a90f2c2094
+                    - generic [ref=e922]:
+                      - generic [ref=e923]:
+                        - img "author" [ref=e924]
+                        - generic "Kogflow" [ref=e925]
+                      - generic [ref=e926]: committed
+                      - generic "Mar 19, 2026, 1:14 AM PDT" [ref=e927]: Mar 19, 2026last month
+                    - generic [ref=e932]:
+                      - generic [ref=e933]:
+                        - tooltip "View commit details" [ref=e934]:
+                          - link "8b45d9d" [ref=e935] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/8b45d9def2d2fdd8a3caa236235df5a90f2c2094
+                            - generic [ref=e937]: 8b45d9d
+                        - button "Copy full SHA for 8b45d9d" [ref=e939] [cursor=pointer]:
+                          - img [ref=e940]
+                      - tooltip "Browse repository at this point" [ref=e943]:
+                        - link "Browse repository at this point" [ref=e944] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/8b45d9def2d2fdd8a3caa236235df5a90f2c2094
+                          - img [ref=e945]
+                  - 'listitem "chore: cleanup legacy RunningHub domain references and App IDs. More information available below." [ref=e947]':
+                    - 'heading "chore: cleanup legacy RunningHub domain references and App IDs" [level=4] [ref=e949]':
+                      - 'link "chore: cleanup legacy RunningHub domain references and App IDs" [ref=e951] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/87473df8dda12341d6ea0ac598d8fa77428fe024
+                    - generic [ref=e956]:
+                      - generic [ref=e957]:
+                        - img "author" [ref=e958]
+                        - generic "Kogflow" [ref=e959]
+                      - generic [ref=e960]: committed
+                      - generic "Mar 19, 2026, 1:14 AM PDT" [ref=e961]: Mar 19, 2026last month
+                    - generic [ref=e966]:
+                      - generic [ref=e967]:
+                        - tooltip "View commit details" [ref=e968]:
+                          - link "87473df" [ref=e969] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/87473df8dda12341d6ea0ac598d8fa77428fe024
+                            - generic [ref=e971]: 87473df
+                        - button "Copy full SHA for 87473df" [ref=e973] [cursor=pointer]:
+                          - img [ref=e974]
+                      - tooltip "Browse repository at this point" [ref=e977]:
+                        - link "Browse repository at this point" [ref=e978] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/87473df8dda12341d6ea0ac598d8fa77428fe024
+                          - img [ref=e979]
+            - generic [ref=e981]:
+              - img [ref=e984]
+              - generic [ref=e986]:
+                - heading "Commits on Mar 18, 2026" [level=3] [ref=e987]
+                - list "Commits on Mar 18, 2026" [ref=e990]:
+                  - 'listitem "chore: cleanup legacy RunningHub domain references and App IDs. More information available below." [ref=e991]':
+                    - 'heading "chore: cleanup legacy RunningHub domain references and App IDs" [level=4] [ref=e993]':
+                      - 'link "chore: cleanup legacy RunningHub domain references and App IDs" [ref=e995] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/09b35cf9ab97ae564aa815a7eb88368b056c84b9
+                    - generic [ref=e1000]:
+                      - generic [ref=e1001]:
+                        - img "author" [ref=e1002]
+                        - generic "Kogflow" [ref=e1003]
+                      - generic [ref=e1004]: committed
+                      - generic "Mar 18, 2026, 8:00 PM PDT" [ref=e1005]: Mar 18, 2026last month
+                    - generic [ref=e1010]:
+                      - generic [ref=e1011]:
+                        - tooltip "View commit details" [ref=e1012]:
+                          - link "09b35cf" [ref=e1013] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/09b35cf9ab97ae564aa815a7eb88368b056c84b9
+                            - generic [ref=e1015]: 09b35cf
+                        - button "Copy full SHA for 09b35cf" [ref=e1017] [cursor=pointer]:
+                          - img [ref=e1018]
+                      - tooltip "Browse repository at this point" [ref=e1021]:
+                        - link "Browse repository at this point" [ref=e1022] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/09b35cf9ab97ae564aa815a7eb88368b056c84b9
+                          - img [ref=e1023]
+                  - 'listitem "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution. More information available below." [ref=e1025]':
+                    - 'heading "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution" [level=4] [ref=e1027]':
+                      - 'link "fix: build failure on Vercel due to ffmpeg-installer platform-specific resolution" [ref=e1029] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/ce81e9962cf34ae09257c86e034c1ea1434810c3
+                    - generic [ref=e1034]:
+                      - generic [ref=e1035]:
+                        - img "author" [ref=e1036]
+                        - generic "Kogflow" [ref=e1037]
+                      - generic [ref=e1038]: committed
+                      - generic "Mar 18, 2026, 7:36 PM PDT" [ref=e1039]: Mar 18, 2026last month
+                    - generic [ref=e1044]:
+                      - generic [ref=e1045]:
+                        - tooltip "View commit details" [ref=e1046]:
+                          - link "ce81e99" [ref=e1047] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/ce81e9962cf34ae09257c86e034c1ea1434810c3
+                            - generic [ref=e1049]: ce81e99
+                        - button "Copy full SHA for ce81e99" [ref=e1051] [cursor=pointer]:
+                          - img [ref=e1052]
+                      - tooltip "Browse repository at this point" [ref=e1055]:
+                        - link "Browse repository at this point" [ref=e1056] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/ce81e9962cf34ae09257c86e034c1ea1434810c3
+                          - img [ref=e1057]
+                  - 'listitem "feat: implement video generation fallback and update prompt. More information available below." [ref=e1059]':
+                    - 'heading "feat: implement video generation fallback and update prompt" [level=4] [ref=e1061]':
+                      - 'link "feat: implement video generation fallback and update prompt" [ref=e1063] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/da7f796647e62b8f389367f4e82cf9c236fd8f3a
+                    - generic [ref=e1068]:
+                      - generic [ref=e1069]:
+                        - img "author" [ref=e1070]
+                        - generic "Kogflow" [ref=e1071]
+                      - generic [ref=e1072]: committed
+                      - generic "Mar 18, 2026, 3:40 PM PDT" [ref=e1073]: Mar 18, 2026last month
+                    - generic [ref=e1078]:
+                      - generic [ref=e1079]:
+                        - tooltip "View commit details" [ref=e1080]:
+                          - link "da7f796" [ref=e1081] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/da7f796647e62b8f389367f4e82cf9c236fd8f3a
+                            - generic [ref=e1083]: da7f796
+                        - button "Copy full SHA for da7f796" [ref=e1085] [cursor=pointer]:
+                          - img [ref=e1086]
+                      - tooltip "Browse repository at this point" [ref=e1089]:
+                        - link "Browse repository at this point" [ref=e1090] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/da7f796647e62b8f389367f4e82cf9c236fd8f3a
+                          - img [ref=e1091]
+                  - 'listitem "fix: switch RunningHub endpoint to .ai for WAN 2.2 compatibility. More information available below." [ref=e1093]':
+                    - 'heading "fix: switch RunningHub endpoint to .ai for WAN 2.2 compatibility" [level=4] [ref=e1095]':
+                      - 'link "fix: switch RunningHub endpoint to .ai for WAN 2.2 compatibility" [ref=e1097] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/70198fabdf7718719dfc8ba3563518958bae02db
+                    - generic [ref=e1102]:
+                      - generic [ref=e1103]:
+                        - img "author" [ref=e1104]
+                        - generic "Kogflow" [ref=e1105]
+                      - generic [ref=e1106]: committed
+                      - generic "Mar 18, 2026, 1:09 PM PDT" [ref=e1107]: Mar 18, 2026last month
+                    - generic [ref=e1112]:
+                      - generic [ref=e1113]:
+                        - tooltip "View commit details" [ref=e1114]:
+                          - link "70198fa" [ref=e1115] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/70198fabdf7718719dfc8ba3563518958bae02db
+                            - generic [ref=e1117]: 70198fa
+                        - button "Copy full SHA for 70198fa" [ref=e1119] [cursor=pointer]:
+                          - img [ref=e1120]
+                      - tooltip "Browse repository at this point" [ref=e1123]:
+                        - link "Browse repository at this point" [ref=e1124] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/70198fabdf7718719dfc8ba3563518958bae02db
+                          - img [ref=e1125]
+            - generic [ref=e1127]:
+              - img [ref=e1130]
+              - generic [ref=e1132]:
+                - heading "Commits on Mar 6, 2026" [level=3] [ref=e1133]
+                - list "Commits on Mar 6, 2026" [ref=e1136]:
+                  - listitem "Production Deploy v0.2.0. More information available below." [ref=e1137]:
+                    - heading "Production Deploy v0.2.0" [level=4] [ref=e1139]:
+                      - link "Production Deploy v0.2.0" [ref=e1141] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commit/69007cb80c66747bc7b42daaa3a87211425f54b6
+                    - generic [ref=e1146]:
+                      - generic [ref=e1147]:
+                        - img "author" [ref=e1148]
+                        - generic "Kogflow" [ref=e1149]
+                      - generic [ref=e1150]: committed
+                      - generic "Mar 6, 2026, 1:52 AM PST" [ref=e1151]: Mar 6, 2026on Mar 6
+                    - generic [ref=e1156]:
+                      - generic [ref=e1157]:
+                        - tooltip "View commit details" [ref=e1158]:
+                          - link "69007cb" [ref=e1159] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/69007cb80c66747bc7b42daaa3a87211425f54b6
+                            - generic [ref=e1161]: 69007cb
+                        - button "Copy full SHA for 69007cb" [ref=e1163] [cursor=pointer]:
+                          - img [ref=e1164]
+                      - tooltip "Browse repository at this point" [ref=e1167]:
+                        - link "Browse repository at this point" [ref=e1168] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/69007cb80c66747bc7b42daaa3a87211425f54b6
+                          - img [ref=e1169]
+                  - 'listitem "chore: bump version to 0.2.0. More information available below." [ref=e1171]':
+                    - 'heading "chore: bump version to 0.2.0" [level=4] [ref=e1173]':
+                      - 'link "chore: bump version to 0.2.0" [ref=e1175] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/069ca5b5da96761ce682b5ea5bf2864b23ce0565
+                    - generic [ref=e1180]:
+                      - generic [ref=e1181]:
+                        - img "author" [ref=e1182]
+                        - generic "Kogflow" [ref=e1183]
+                      - generic [ref=e1184]: committed
+                      - generic "Mar 6, 2026, 1:52 AM PST" [ref=e1185]: Mar 6, 2026on Mar 6
+                    - generic [ref=e1190]:
+                      - generic [ref=e1191]:
+                        - tooltip "View commit details" [ref=e1192]:
+                          - link "069ca5b" [ref=e1193] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/069ca5b5da96761ce682b5ea5bf2864b23ce0565
+                            - generic [ref=e1195]: 069ca5b
+                        - button "Copy full SHA for 069ca5b" [ref=e1197] [cursor=pointer]:
+                          - img [ref=e1198]
+                      - tooltip "Browse repository at this point" [ref=e1201]:
+                        - link "Browse repository at this point" [ref=e1202] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/069ca5b5da96761ce682b5ea5bf2864b23ce0565
+                          - img [ref=e1203]
+                  - 'listitem "chore: trigger redeploy to invalidate edge cache. More information available below." [ref=e1205]':
+                    - 'heading "chore: trigger redeploy to invalidate edge cache" [level=4] [ref=e1207]':
+                      - 'link "chore: trigger redeploy to invalidate edge cache" [ref=e1209] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/596f4fb062abab22035a9eaa9ecb897839a65796
+                    - generic [ref=e1214]:
+                      - generic [ref=e1215]:
+                        - img "author" [ref=e1216]
+                        - generic "Kogflow" [ref=e1217]
+                      - generic [ref=e1218]: committed
+                      - generic "Mar 6, 2026, 1:47 AM PST" [ref=e1219]: Mar 6, 2026on Mar 6
+                    - generic [ref=e1224]:
+                      - generic [ref=e1225]:
+                        - tooltip "View commit details" [ref=e1226]:
+                          - link "596f4fb" [ref=e1227] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/596f4fb062abab22035a9eaa9ecb897839a65796
+                            - generic [ref=e1229]: 596f4fb
+                        - button "Copy full SHA for 596f4fb" [ref=e1231] [cursor=pointer]:
+                          - img [ref=e1232]
+                      - tooltip "Browse repository at this point" [ref=e1235]:
+                        - link "Browse repository at this point" [ref=e1236] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/596f4fb062abab22035a9eaa9ecb897839a65796
+                          - img [ref=e1237]
+                  - 'listitem "chore: remove hardcoded api keys from DEPLOY.md. More information available below." [ref=e1239]':
+                    - 'heading "chore: remove hardcoded api keys from DEPLOY.md" [level=4] [ref=e1241]':
+                      - 'link "chore: remove hardcoded api keys from DEPLOY.md" [ref=e1243] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/3d641bc9878f82809469c6efcc2a4409451bff8b
+                    - generic [ref=e1248]:
+                      - generic [ref=e1249]:
+                        - img "author" [ref=e1250]
+                        - generic "Kogflow" [ref=e1251]
+                      - generic [ref=e1252]: committed
+                      - generic "Mar 6, 2026, 1:24 AM PST" [ref=e1253]: Mar 6, 2026on Mar 6
+                    - generic [ref=e1258]:
+                      - generic [ref=e1259]:
+                        - tooltip "View commit details" [ref=e1260]:
+                          - link "3d641bc" [ref=e1261] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/3d641bc9878f82809469c6efcc2a4409451bff8b
+                            - generic [ref=e1263]: 3d641bc
+                        - button "Copy full SHA for 3d641bc" [ref=e1265] [cursor=pointer]:
+                          - img [ref=e1266]
+                      - tooltip "Browse repository at this point" [ref=e1269]:
+                        - link "Browse repository at this point" [ref=e1270] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/3d641bc9878f82809469c6efcc2a4409451bff8b
+                          - img [ref=e1271]
+                  - listitem "Implement Video Generation Queue, updated prompt, and UI improvements. More information available below." [ref=e1273]:
+                    - heading "Implement Video Generation Queue, updated prompt, and UI improvements" [level=4] [ref=e1275]:
+                      - link "Implement Video Generation Queue, updated prompt, and UI improvements" [ref=e1277] [cursor=pointer]:
+                        - /url: /conexer/Kogflow-staging/commit/21ab4a7762295f35927dcb6ecd41ff7412f3e1fb
+                    - generic [ref=e1282]:
+                      - generic [ref=e1283]:
+                        - img "author" [ref=e1284]
+                        - generic "Kogflow" [ref=e1285]
+                      - generic [ref=e1286]: committed
+                      - generic "Mar 6, 2026, 12:41 AM PST" [ref=e1287]: Mar 6, 2026on Mar 6
+                    - generic [ref=e1292]:
+                      - generic [ref=e1293]:
+                        - tooltip "View commit details" [ref=e1294]:
+                          - link "21ab4a7" [ref=e1295] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/21ab4a7762295f35927dcb6ecd41ff7412f3e1fb
+                            - generic [ref=e1297]: 21ab4a7
+                        - button "Copy full SHA for 21ab4a7" [ref=e1299] [cursor=pointer]:
+                          - img [ref=e1300]
+                      - tooltip "Browse repository at this point" [ref=e1303]:
+                        - link "Browse repository at this point" [ref=e1304] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/21ab4a7762295f35927dcb6ecd41ff7412f3e1fb
+                          - img [ref=e1305]
+            - generic [ref=e1307]:
+              - img [ref=e1310]
+              - generic [ref=e1312]:
+                - heading "Commits on Mar 5, 2026" [level=3] [ref=e1313]
+                - list "Commits on Mar 5, 2026" [ref=e1316]:
+                  - 'listitem "feat: updated video generation prompt to very slow walk-through. More information available below." [ref=e1317]':
+                    - 'heading "feat: updated video generation prompt to very slow walk-through" [level=4] [ref=e1319]':
+                      - 'link "feat: updated video generation prompt to very slow walk-through" [ref=e1321] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/2fcfbd108ee019bbb066523bca5fe4f6a2c9dcf4
+                    - generic [ref=e1326]:
+                      - generic [ref=e1327]:
+                        - img "author" [ref=e1328]
+                        - generic "Kogflow" [ref=e1329]
+                      - generic [ref=e1330]: committed
+                      - generic "Mar 5, 2026, 11:34 PM PST" [ref=e1331]: Mar 5, 2026on Mar 5
+                    - generic [ref=e1336]:
+                      - generic [ref=e1337]:
+                        - tooltip "View commit details" [ref=e1338]:
+                          - link "2fcfbd1" [ref=e1339] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/2fcfbd108ee019bbb066523bca5fe4f6a2c9dcf4
+                            - generic [ref=e1341]: 2fcfbd1
+                        - button "Copy full SHA for 2fcfbd1" [ref=e1343] [cursor=pointer]:
+                          - img [ref=e1344]
+                      - tooltip "Browse repository at this point" [ref=e1347]:
+                        - link "Browse repository at this point" [ref=e1348] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/2fcfbd108ee019bbb066523bca5fe4f6a2c9dcf4
+                          - img [ref=e1349]
+                  - 'listitem "feat: add full-screen video player modal to dashboard. More information available below." [ref=e1351]':
+                    - 'heading "feat: add full-screen video player modal to dashboard" [level=4] [ref=e1353]':
+                      - 'link "feat: add full-screen video player modal to dashboard" [ref=e1355] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/a00eb27322855931fbbe0c90d1625d7f76204127
+                    - generic [ref=e1360]:
+                      - generic [ref=e1361]:
+                        - img "author" [ref=e1362]
+                        - generic "Kogflow" [ref=e1363]
+                      - generic [ref=e1364]: committed
+                      - generic "Mar 5, 2026, 10:50 PM PST" [ref=e1365]: Mar 5, 2026on Mar 5
+                    - generic [ref=e1370]:
+                      - generic [ref=e1371]:
+                        - tooltip "View commit details" [ref=e1372]:
+                          - link "a00eb27" [ref=e1373] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/a00eb27322855931fbbe0c90d1625d7f76204127
+                            - generic [ref=e1375]: a00eb27
+                        - button "Copy full SHA for a00eb27" [ref=e1377] [cursor=pointer]:
+                          - img [ref=e1378]
+                      - tooltip "Browse repository at this point" [ref=e1381]:
+                        - link "Browse repository at this point" [ref=e1382] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/a00eb27322855931fbbe0c90d1625d7f76204127
+                          - img [ref=e1383]
+                  - 'listitem "style: change video card ''X'' icon to ''Play'' icon. More information available below." [ref=e1385]':
+                    - 'heading "style: change video card ''X'' icon to ''Play'' icon" [level=4] [ref=e1387]':
+                      - 'link "style: change video card ''X'' icon to ''Play'' icon" [ref=e1389] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/13bbefe923933d021db30c549dae547dd930d51d
+                    - generic [ref=e1394]:
+                      - generic [ref=e1395]:
+                        - img "author" [ref=e1396]
+                        - generic "Kogflow" [ref=e1397]
+                      - generic [ref=e1398]: committed
+                      - generic "Mar 5, 2026, 10:45 PM PST" [ref=e1399]: Mar 5, 2026on Mar 5
+                    - generic [ref=e1404]:
+                      - generic [ref=e1405]:
+                        - tooltip "View commit details" [ref=e1406]:
+                          - link "13bbefe" [ref=e1407] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/13bbefe923933d021db30c549dae547dd930d51d
+                            - generic [ref=e1409]: 13bbefe
+                        - button "Copy full SHA for 13bbefe" [ref=e1411] [cursor=pointer]:
+                          - img [ref=e1412]
+                      - tooltip "Browse repository at this point" [ref=e1415]:
+                        - link "Browse repository at this point" [ref=e1416] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/13bbefe923933d021db30c549dae547dd930d51d
+                          - img [ref=e1417]
+                  - 'listitem "feat: switch to free WAN 2.2 video generator. More information available below." [ref=e1419]':
+                    - 'heading "feat: switch to free WAN 2.2 video generator" [level=4] [ref=e1421]':
+                      - 'link "feat: switch to free WAN 2.2 video generator" [ref=e1423] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/083edc87e1692081bda39849ecab4a65eb28b19f
+                    - generic [ref=e1428]:
+                      - generic [ref=e1429]:
+                        - img "author" [ref=e1430]
+                        - generic "Kogflow" [ref=e1431]
+                      - generic [ref=e1432]: committed
+                      - generic "Mar 5, 2026, 8:47 PM PST" [ref=e1433]: Mar 5, 2026on Mar 5
+                    - generic [ref=e1438]:
+                      - generic [ref=e1439]:
+                        - tooltip "View commit details" [ref=e1440]:
+                          - link "083edc8" [ref=e1441] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/083edc87e1692081bda39849ecab4a65eb28b19f
+                            - generic [ref=e1443]: 083edc8
+                        - button "Copy full SHA for 083edc8" [ref=e1445] [cursor=pointer]:
+                          - img [ref=e1446]
+                      - tooltip "Browse repository at this point" [ref=e1449]:
+                        - link "Browse repository at this point" [ref=e1450] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/083edc87e1692081bda39849ecab4a65eb28b19f
+                          - img [ref=e1451]
+            - generic [ref=e1453]:
+              - img [ref=e1456]
+              - generic [ref=e1458]:
+                - heading "Commits on Feb 19, 2026" [level=3] [ref=e1459]
+                - list "Commits on Feb 19, 2026" [ref=e1462]:
+                  - 'listitem "fix: enforce linear steady camera motion and revert to 30fps. More information available below." [ref=e1463]':
+                    - 'heading "fix: enforce linear steady camera motion and revert to 30fps" [level=4] [ref=e1465]':
+                      - 'link "fix: enforce linear steady camera motion and revert to 30fps" [ref=e1467] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/5aaf9128106e96dec49c1c78e308d429bb32d5a7
+                    - generic [ref=e1472]:
+                      - generic [ref=e1473]:
+                        - img "author" [ref=e1474]
+                        - generic "Kogflow" [ref=e1475]
+                      - generic [ref=e1476]: committed
+                      - generic "Feb 19, 2026, 2:24 PM PST" [ref=e1477]: Feb 19, 2026on Feb 19
+                    - generic [ref=e1482]:
+                      - generic [ref=e1483]:
+                        - tooltip "View commit details" [ref=e1484]:
+                          - link "5aaf912" [ref=e1485] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/5aaf9128106e96dec49c1c78e308d429bb32d5a7
+                            - generic [ref=e1487]: 5aaf912
+                        - button "Copy full SHA for 5aaf912" [ref=e1489] [cursor=pointer]:
+                          - img [ref=e1490]
+                      - tooltip "Browse repository at this point" [ref=e1493]:
+                        - link "Browse repository at this point" [ref=e1494] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/5aaf9128106e96dec49c1c78e308d429bb32d5a7
+                          - img [ref=e1495]
+                  - 'listitem "fix: refine video overlay styling and position. More information available below." [ref=e1497]':
+                    - 'heading "fix: refine video overlay styling and position" [level=4] [ref=e1499]':
+                      - 'link "fix: refine video overlay styling and position" [ref=e1501] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/fa3e8a17e14941f1f9935eb18b812da7c0fe2155
+                    - generic [ref=e1506]:
+                      - generic [ref=e1507]:
+                        - img "author" [ref=e1508]
+                        - generic "Kogflow" [ref=e1509]
+                      - generic [ref=e1510]: committed
+                      - generic "Feb 19, 2026, 2:14 PM PST" [ref=e1511]: Feb 19, 2026on Feb 19
+                    - generic [ref=e1516]:
+                      - generic [ref=e1517]:
+                        - tooltip "View commit details" [ref=e1518]:
+                          - link "fa3e8a1" [ref=e1519] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/fa3e8a17e14941f1f9935eb18b812da7c0fe2155
+                            - generic [ref=e1521]: fa3e8a1
+                        - button "Copy full SHA for fa3e8a1" [ref=e1523] [cursor=pointer]:
+                          - img [ref=e1524]
+                      - tooltip "Browse repository at this point" [ref=e1527]:
+                        - link "Browse repository at this point" [ref=e1528] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/fa3e8a17e14941f1f9935eb18b812da7c0fe2155
+                          - img [ref=e1529]
+                  - 'listitem "feat: add video download button, refine 60fps smoothness and set 4s duration. More information available below." [ref=e1531]':
+                    - 'heading "feat: add video download button, refine 60fps smoothness and set 4s duration" [level=4] [ref=e1533]':
+                      - 'link "feat: add video download button, refine 60fps smoothness and set 4s duration" [ref=e1535] [cursor=pointer]':
+                        - /url: /conexer/Kogflow-staging/commit/053daa22c78da088c60ff1f55ac0045fc28ebf5b
+                    - generic [ref=e1540]:
+                      - generic [ref=e1541]:
+                        - img "author" [ref=e1542]
+                        - generic "Kogflow" [ref=e1543]
+                      - generic [ref=e1544]: committed
+                      - generic "Feb 19, 2026, 2:04 PM PST" [ref=e1545]: Feb 19, 2026on Feb 19
+                    - generic [ref=e1550]:
+                      - generic [ref=e1551]:
+                        - tooltip "View commit details" [ref=e1552]:
+                          - link "053daa2" [ref=e1553] [cursor=pointer]:
+                            - /url: /conexer/Kogflow-staging/commit/053daa22c78da088c60ff1f55ac0045fc28ebf5b
+                            - generic [ref=e1555]: 053daa2
+                        - button "Copy full SHA for 053daa2" [ref=e1557] [cursor=pointer]:
+                          - img [ref=e1558]
+                      - tooltip "Browse repository at this point" [ref=e1561]:
+                        - link "Browse repository at this point" [ref=e1562] [cursor=pointer]:
+                          - /url: /conexer/Kogflow-staging/tree/053daa22c78da088c60ff1f55ac0045fc28ebf5b
+                          - img [ref=e1563]
+        - navigation "Pagination" [ref=e1565]:
+          - generic [ref=e1566]:
+            - generic [ref=e1567]:
+              - img [ref=e1568]
+              - text: Previous
+            - link "Next Page" [ref=e1570] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/commits/main?after=fb3fe871c056545df01d585c8fbbfe81eb3806e9+34
+              - text: Next
+              - img [ref=e1571]
+  - contentinfo [ref=e1573]:
+    - heading "Footer" [level=2] [ref=e1574]
+    - generic [ref=e1575]:
+      - generic [ref=e1576]:
+        - link "GitHub Homepage" [ref=e1577] [cursor=pointer]:
+          - /url: https://github.com
+          - img [ref=e1578]
+        - generic [ref=e1580]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e1581]:
+        - heading "Footer navigation" [level=3] [ref=e1582]
+        - list "Footer navigation" [ref=e1583]:
+          - listitem [ref=e1584]:
+            - link "Terms" [ref=e1585] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e1586]:
+            - link "Privacy" [ref=e1587] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e1588]:
+            - link "Security" [ref=e1589] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e1590]:
+            - link "Status" [ref=e1591] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e1592]:
+            - link "Community" [ref=e1593] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e1594]:
+            - link "Docs" [ref=e1595] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e1596]:
+            - link "Contact" [ref=e1597] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e1598]:
+            - button "Manage cookies" [ref=e1600] [cursor=pointer]
+          - listitem [ref=e1601]:
+            - button "Do not share my personal information" [ref=e1603] [cursor=pointer]

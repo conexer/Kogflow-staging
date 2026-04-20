@@ -1,0 +1,3 @@
+[   11669ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://kogflow.vercel.app/login:0
+[   17596ms] [LOG] Loading profile for user: 12ec4435-4ca8-470e-836a-0851912b12aa @ https://kogflow.vercel.app/_next/static/chunks/cd51576e9ab3138f.js:0
+[   18685ms] [LOG] Profile loaded: {id: 12ec4435-4ca8-470e-836a-0851912b12aa, email: conexer@gmail.com, credits: 4820, subscription_tier: free, stripe_customer_id: cus_TjSovJ8esynIWA} @ https://kogflow.vercel.app/_next/static/chunks/cd51576e9ab3138f.js:0

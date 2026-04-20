@@ -1,0 +1,474 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "You're currently working in Private Car Buyer. Hit enter to switch projects, folders, or organizations" [ref=e385]:
+            - generic [ref=e386]:
+              - img [ref=e388]
+              - generic [ref=e391]: Private Car Buyer
+        - search "Google Cloud Platform" [ref=e37]:
+          - combobox [ref=e38]:
+            - searchbox "Enter query to search for resources, docs, products, and more" [ref=e39]
+          - button "Clear search input" [ref=e362] [cursor=pointer]:
+            - img [ref=e364]
+          - button "See all search results" [disabled]:
+            - generic:
+              - img
+            - generic: Search
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - button "Open or close Gemini Cloud Assist chat (Alt G)" [ref=e396] [cursor=pointer]:
+              - img [ref=e398]
+            - button "Activate Cloud Shell (G then S)" [ref=e45] [cursor=pointer]:
+              - img [ref=e47]
+            - button "Open notifications" [ref=e1490] [cursor=pointer]:
+              - img [ref=e1492]
+            - button "Settings and utilities" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+          - 'button "Account: Minh Do (conexer@gmail.com)" [ref=e68]':
+            - img [ref=e69]
+    - main [ref=e90]:
+      - generic [ref=e402]:
+        - tablist "Tab bar for home navigation" [ref=e404]:
+          - generic [ref=e407]:
+            - 'tab "Selected tab: Dashboard" [selected] [ref=e408] [cursor=pointer]':
+              - generic [ref=e410]: Dashboard
+            - tab "Activity" [ref=e411] [cursor=pointer]:
+              - generic [ref=e413]: Activity
+            - tab "Recommendations" [ref=e414] [cursor=pointer]:
+              - generic [ref=e416]: Recommendations
+        - 'tabpanel "Selected tab: Dashboard" [ref=e417]':
+          - generic [ref=e424]:
+            - generic [ref=e427]:
+              - generic [ref=e428]:
+                - generic:
+                  - heading [level=1]
+              - button "Customize" [ref=e434]:
+                - generic [ref=e436]:
+                  - img [ref=e438]:
+                    - img [ref=e439]
+                  - text: Customize
+            - generic [ref=e442]:
+              - generic [ref=e446]:
+                - img [ref=e447]
+                - generic [ref=e450]:
+                  - generic "Go to Cloud Hub for better visibility" [ref=e451]:
+                    - heading "Go to Cloud Hub for better visibility" [level=2] [ref=e452]:
+                      - generic [ref=e453]: Go to Cloud Hub for better visibility
+                  - button "Dismiss promotion" [ref=e455] [cursor=pointer]:
+                    - img [ref=e457]:
+                      - img [ref=e458]
+                  - generic [ref=e461]: This dashboard is no longer updated and will shut down in 2027. Cloud Hub offers a more comprehensive view across health, security, cost, optimization, and other data about your projects and applications.
+                  - generic [ref=e463]:
+                    - link "Go to Cloud Hub" [ref=e464] [cursor=pointer]:
+                      - /url: /cloud-hub/home?project=private-car-buyer
+                      - generic [ref=e465]: Go to Cloud Hub
+                    - link "Learn more about Cloud Hub external, opens new window" [ref=e466] [cursor=pointer]:
+                      - /url: https://cloud.google.com/hub/docs/overview
+                      - generic [ref=e467]:
+                        - text: Learn more
+                        - img "external, opens new window" [ref=e468]:
+                          - img "external, opens new window" [ref=e469]:
+                            - img [ref=e470]
+              - generic [ref=e474]:
+                - generic [ref=e476]:
+                  - generic [ref=e480]:
+                    - generic [ref=e482]:
+                      - img [ref=e486]:
+                        - img [ref=e487]
+                      - heading "Project info" [level=2] [ref=e490]
+                    - button "More options for Project info" [ref=e493] [cursor=pointer]:
+                      - img [ref=e495]:
+                        - img [ref=e496]
+                    - generic [ref=e500]:
+                      - list [ref=e501]:
+                        - listitem [ref=e502]:
+                          - generic [ref=e506]:
+                            - generic [ref=e508]: Project name
+                            - generic [ref=e510]: Private Car Buyer
+                        - listitem [ref=e511]:
+                          - generic [ref=e515]:
+                            - generic [ref=e517]: Project number
+                            - generic [ref=e519]: "775468672212"
+                        - listitem [ref=e520]:
+                          - generic [ref=e524]:
+                            - generic [ref=e526]: Project ID
+                            - generic [ref=e528]: private-car-buyer
+                      - button "Add people to this project" [ref=e531]:
+                        - generic [ref=e532]: Add people to this project
+                      - link "Go to project settings" [ref=e534] [cursor=pointer]:
+                        - /url: /iam-admin/settings?project=private-car-buyer
+                        - img [ref=e537]:
+                          - img [ref=e538]
+                        - paragraph [ref=e540]: Go to project settings
+                  - generic [ref=e544]:
+                    - generic [ref=e546]:
+                      - img [ref=e550]:
+                        - img [ref=e551]
+                      - heading "Resources" [level=2] [ref=e558]
+                    - button "More options for Resources" [ref=e561] [cursor=pointer]:
+                      - img [ref=e563]:
+                        - img [ref=e564]
+                    - generic [ref=e569]:
+                      - link "BigQuery Data warehouse/analytics" [ref=e572] [cursor=pointer]:
+                        - /url: /bigquery?project=private-car-buyer
+                        - img [ref=e575]:
+                          - img [ref=e576]
+                        - generic [ref=e582]:
+                          - generic [ref=e584]: BigQuery
+                          - generic [ref=e586]: Data warehouse/analytics
+                      - link "SQL Managed MySQL, PostgreSQL, SQL Server" [ref=e589] [cursor=pointer]:
+                        - /url: /sql?project=private-car-buyer
+                        - img [ref=e592]:
+                          - img [ref=e593]
+                        - generic [ref=e599]:
+                          - generic [ref=e601]: SQL
+                          - generic [ref=e605]: Managed MySQL, PostgreSQL, SQL Server
+                      - link "Compute Engine VMs, GPUs, TPUs, Disks" [ref=e608] [cursor=pointer]:
+                        - /url: /compute?project=private-car-buyer
+                        - img [ref=e611]:
+                          - img [ref=e612]
+                        - generic [ref=e628]:
+                          - generic [ref=e630]: Compute Engine
+                          - generic [ref=e632]: VMs, GPUs, TPUs, Disks
+                      - link "Storage Multi-class multi-region object storage" [ref=e635] [cursor=pointer]:
+                        - /url: /storage?project=private-car-buyer
+                        - img [ref=e638]:
+                          - img [ref=e639]
+                        - generic [ref=e643]:
+                          - generic [ref=e645]: Storage
+                          - generic [ref=e647]: Multi-class multi-region object storage
+                      - link "Cloud Run functions Event-driven serverless functions" [ref=e650] [cursor=pointer]:
+                        - /url: /functions?project=private-car-buyer
+                        - img [ref=e653]:
+                          - img [ref=e654]
+                        - generic [ref=e666]:
+                          - generic [ref=e668]: Cloud Run functions
+                          - generic [ref=e670]: Event-driven serverless functions
+                      - link "Cloud Run Fully managed application platform" [ref=e673] [cursor=pointer]:
+                        - /url: /run?project=private-car-buyer
+                        - img [ref=e676]:
+                          - img [ref=e677]
+                        - generic [ref=e682]:
+                          - generic [ref=e684]: Cloud Run
+                          - generic [ref=e686]: Fully managed application platform
+                  - generic [ref=e690]:
+                    - generic [ref=e692]:
+                      - img [ref=e696]:
+                        - img [ref=e697]
+                      - heading "Getting Started" [level=2] [ref=e700]
+                    - button "More options for Getting Started" [ref=e703] [cursor=pointer]:
+                      - img [ref=e705]:
+                        - img [ref=e706]
+                    - generic [ref=e708]:
+                      - generic [ref=e710]:
+                        - link "Explore and enable APIs" [ref=e714] [cursor=pointer]:
+                          - /url: /apis?project=private-car-buyer
+                          - img [ref=e719]:
+                            - img [ref=e720]
+                          - generic [ref=e726]: Explore and enable APIs
+                        - link "Deploy a prebuilt solution" [ref=e730] [cursor=pointer]:
+                          - /url: /marketplace?project=private-car-buyer
+                          - img [ref=e735]:
+                            - img [ref=e736]
+                          - generic [ref=e746]: Deploy a prebuilt solution
+                        - generic [ref=e750]:
+                          - img [ref=e755]:
+                            - img [ref=e756]
+                          - generic [ref=e765]: Add dynamic logging to a running application
+                        - link "Monitor errors with Error Reporting" [ref=e769] [cursor=pointer]:
+                          - /url: /errors?project=private-car-buyer
+                          - img [ref=e774]:
+                            - img [ref=e775]
+                          - generic [ref=e782]: Monitor errors with Error Reporting
+                        - link "Deploy a Hello World app" [ref=e786] [cursor=pointer]:
+                          - /url: https://cloud.google.com/run/docs/quickstarts/build-and-deploy
+                          - img [ref=e791]:
+                            - img [ref=e792]
+                          - generic [ref=e799]: Deploy a Hello World app
+                        - link "Take a VM quickstart" [ref=e803] [cursor=pointer]:
+                          - /url: /home/dashboard?project=private-car-buyer
+                          - img [ref=e808]:
+                            - img [ref=e809]
+                          - generic [ref=e827]: Take a VM quickstart
+                        - link "Create a Cloud Storage bucket" [ref=e831] [cursor=pointer]:
+                          - /url: /home/dashboard?project=private-car-buyer
+                          - img [ref=e836]:
+                            - img [ref=e837]
+                          - generic [ref=e843]: Create a Cloud Storage bucket
+                        - link "Create a Cloud Run function" [ref=e847] [cursor=pointer]:
+                          - /url: /functions/run_redirect?project=private-car-buyer
+                          - img [ref=e852]:
+                            - img [ref=e853]
+                          - generic [ref=e867]: Create a Cloud Run function
+                        - link "Install the Cloud SDK" [ref=e871] [cursor=pointer]:
+                          - /url: https://cloud.google.com/sdk/#download
+                          - img [ref=e876]:
+                            - img [ref=e877]
+                          - generic [ref=e886]: Install the Cloud SDK
+                      - link "Explore all tutorials" [ref=e888] [cursor=pointer]:
+                        - /url: /getting-started?project=private-car-buyer
+                        - img [ref=e891]:
+                          - img [ref=e892]
+                        - paragraph [ref=e894]: Explore all tutorials
+                - generic [ref=e896]:
+                  - generic [ref=e900]:
+                    - generic [ref=e902]:
+                      - img [ref=e906]:
+                        - img [ref=e907]
+                      - heading "App Engine" [level=2] [ref=e913]
+                    - button "More options for App Engine" [ref=e916] [cursor=pointer]:
+                      - img [ref=e918]:
+                        - img [ref=e919]
+                    - generic [ref=e921]:
+                      - generic [ref=e925]:
+                        - generic "A chart." [ref=e926]:
+                          - generic [ref=e932]: Summary (count/sec)
+                        - group "Line chart" [ref=e936]:
+                          - img [ref=e947]
+                          - paragraph [ref=e949]: Line chart
+                          - generic [ref=e950]:
+                            - paragraph
+                            - paragraph
+                        - img [ref=e954]
+                      - link "Go to the App Engine dashboard" [ref=e959] [cursor=pointer]:
+                        - /url: /appengine?project=private-car-buyer
+                        - img [ref=e962]:
+                          - img [ref=e963]
+                        - paragraph [ref=e965]: Go to the App Engine dashboard
+                  - generic [ref=e1025]:
+                    - generic [ref=e1027]:
+                      - img [ref=e1031]:
+                        - img [ref=e1032]
+                      - heading "APIs" [level=2] [ref=e1036]
+                    - button "More options for APIs" [ref=e1039] [cursor=pointer]:
+                      - img [ref=e1041]:
+                        - img [ref=e1042]
+                    - generic [ref=e1044]:
+                      - generic [ref=e1047]:
+                        - generic "A chart showing the number of API requests per second" [ref=e1048]:
+                          - generic [ref=e1054]: Requests (requests/sec)
+                        - group "Line chart" [ref=e1058]:
+                          - generic [ref=e1059]:
+                            - generic [ref=e1496]:
+                              - img [ref=e1497]:
+                                - img [ref=e1498]
+                              - text: No data is available for the selected time frame.
+                            - img [ref=e1075]
+                          - paragraph [ref=e1077]: Line chart
+                          - generic [ref=e1078]:
+                            - paragraph
+                            - paragraph
+                            - paragraph
+                        - img [ref=e1082]
+                      - link "Go to APIs overview" [ref=e1086] [cursor=pointer]:
+                        - /url: /apis/enabled?project=private-car-buyer&show=all
+                        - img [ref=e1089]:
+                          - img [ref=e1090]
+                        - paragraph [ref=e1092]: Go to APIs overview
+                - generic [ref=e1094]:
+                  - generic [ref=e1098]:
+                    - generic [ref=e1101]:
+                      - img [ref=e1105]:
+                        - img [ref=e1106]
+                      - heading "Google Cloud Platform status" [level=2] [ref=e1113]
+                    - button "More options for Google Cloud Platform status" [ref=e1116] [cursor=pointer]:
+                      - img [ref=e1118]:
+                        - img [ref=e1119]
+                    - generic [ref=e1121]:
+                      - link "All services normal" [ref=e1127] [cursor=pointer]:
+                        - /url: /home/dashboard?project=private-car-buyer
+                        - generic [ref=e1131]: All services normal
+                      - link "Go to Cloud status dashboard" [ref=e1133] [cursor=pointer]:
+                        - /url: https://status.cloud.google.com/
+                        - img [ref=e1136]:
+                          - img [ref=e1137]
+                        - paragraph [ref=e1139]: Go to Cloud status dashboard
+                  - generic [ref=e1143]:
+                    - generic [ref=e1145]:
+                      - img [ref=e1149]:
+                        - img [ref=e1150]
+                      - heading "Billing" [level=2] [ref=e1161]
+                    - button "More options for Billing" [ref=e1164] [cursor=pointer]:
+                      - img [ref=e1166]:
+                        - img [ref=e1167]
+                    - generic [ref=e1169]:
+                      - generic [ref=e1171]:
+                        - link "Estimated charges USD $0.00 For the billing period Apr 1 – 9, 2026" [ref=e1175] [cursor=pointer]:
+                          - /url: /home/dashboard?project=private-car-buyer
+                          - generic [ref=e1177]:
+                            - generic [ref=e1178]:
+                              - generic:
+                                - generic [ref=e1179]: Estimated charges
+                                - generic [ref=e1180]: USD $0.00
+                            - generic [ref=e1182]: For the billing period Apr 1 – 9, 2026
+                        - link "Take a tour of billing" [ref=e1186] [cursor=pointer]:
+                          - /url: /home/dashboard?project=private-car-buyer
+                          - img [ref=e1191]:
+                            - img [ref=e1192]
+                          - generic [ref=e1205]: Take a tour of billing
+                      - link "View detailed charges" [ref=e1207] [cursor=pointer]:
+                        - /url: /billing/015AE6-C35A8B-3B6B10/reports;grouping=GROUP_BY_SKU;projects=private-car-buyer?project=private-car-buyer
+                        - img [ref=e1210]:
+                          - img [ref=e1211]
+                        - paragraph [ref=e1213]: View detailed charges
+                  - generic [ref=e1217]:
+                    - generic [ref=e1219]:
+                      - img [ref=e1223]:
+                        - img [ref=e1224]
+                      - heading "Monitoring" [level=2] [ref=e1228]
+                    - button "More options for Monitoring" [ref=e1231] [cursor=pointer]:
+                      - img [ref=e1233]:
+                        - img [ref=e1234]
+                    - generic [ref=e1238]:
+                      - generic [ref=e1239]:
+                        - link "Create my dashboard" [ref=e1242] [cursor=pointer]:
+                          - /url: /monitoring/dashboards?project=private-car-buyer
+                          - generic [ref=e1244]: Create my dashboard
+                        - link "Set up alerting policies" [ref=e1247] [cursor=pointer]:
+                          - /url: /monitoring/alerting?project=private-car-buyer
+                          - generic [ref=e1249]: Set up alerting policies
+                        - link "Create uptime checks" [ref=e1252] [cursor=pointer]:
+                          - /url: /monitoring/uptime?project=private-car-buyer
+                          - generic [ref=e1254]: Create uptime checks
+                      - link "View all dashboards" [ref=e1258] [cursor=pointer]:
+                        - /url: /monitoring/dashboards?project=private-car-buyer
+                        - generic [ref=e1260]: View all dashboards
+                      - link "Go to Monitoring" [ref=e1262] [cursor=pointer]:
+                        - /url: /monitoring?project=private-car-buyer
+                        - img [ref=e1265]:
+                          - img [ref=e1266]
+                        - paragraph [ref=e1268]: Go to Monitoring
+                  - generic [ref=e1272]:
+                    - generic [ref=e1274]:
+                      - img [ref=e1278]:
+                        - img [ref=e1279]
+                      - heading "Error Reporting" [level=2] [ref=e1283]
+                    - button "More options for Error Reporting" [ref=e1286] [cursor=pointer]:
+                      - img [ref=e1288]:
+                        - img [ref=e1289]
+                    - generic [ref=e1291]:
+                      - link "No sign of any errors. Have you set up Error Reporting?" [ref=e1297] [cursor=pointer]:
+                        - /url: /home/dashboard?project=private-car-buyer
+                        - generic [ref=e1303]: No sign of any errors. Have you set up Error Reporting?
+                      - link "Learn how to set up Error Reporting" [ref=e1305] [cursor=pointer]:
+                        - /url: https://cloud.google.com/error-reporting/docs/setup/
+                        - img [ref=e1308]:
+                          - img [ref=e1309]
+                        - paragraph [ref=e1311]: Learn how to set up Error Reporting
+                  - generic [ref=e1315]:
+                    - generic [ref=e1317]:
+                      - img [ref=e1321]:
+                        - img [ref=e1322]
+                      - heading "News" [level=2] [ref=e1325]
+                    - button "More options for News" [ref=e1328] [cursor=pointer]:
+                      - img [ref=e1330]:
+                        - img [ref=e1331]
+                    - generic [ref=e1333]:
+                      - generic [ref=e1335]:
+                        - link "A developer’s guide to architecting reliable GPU infrastructure at scale 2 hours ago" [ref=e1339] [cursor=pointer]:
+                          - /url: https://cloud.google.com/blog/products/compute/a-guide-to-architecting-reliable-gpu-infrastructure/
+                          - generic [ref=e1341]:
+                            - generic [ref=e1345]: A developer’s guide to architecting reliable GPU infrastructure at scale
+                            - generic [ref=e1347]: 2 hours ago
+                        - 'link "Guardrails at the gateway: Securing AI inference on GKE with Model Armor 7 hours ago" [ref=e1351] [cursor=pointer]':
+                          - /url: https://cloud.google.com/blog/products/identity-security/securing-ai-inference-on-gke-with-model-armor/
+                          - generic [ref=e1353]:
+                            - generic [ref=e1357]: "Guardrails at the gateway: Securing AI inference on GKE with Model Armor"
+                            - generic [ref=e1359]: 7 hours ago
+                        - link "How Estée Lauder Companies uses Cloud Run worker pools for its pull-based agentic workloads 8 hours ago" [ref=e1363] [cursor=pointer]:
+                          - /url: https://cloud.google.com/blog/products/serverless/cloud-run-worker-pools-at-estee-lauder-companies/
+                          - generic [ref=e1365]:
+                            - generic [ref=e1369]: How Estée Lauder Companies uses Cloud Run worker pools for its pull-based agentic workloads
+                            - generic [ref=e1371]: 8 hours ago
+                      - link "Read all news" [ref=e1373] [cursor=pointer]:
+                        - /url: https://cloud.google.com/blog
+                        - img [ref=e1376]:
+                          - img [ref=e1377]
+                        - paragraph [ref=e1379]: Read all news
+                      - link "Read all release notes" [ref=e1381] [cursor=pointer]:
+                        - /url: /release-notes?project=private-car-buyer
+                        - img [ref=e1385]:
+                          - img [ref=e1501]
+                        - paragraph [ref=e1386]: Read all release notes
+                  - generic [ref=e1390]:
+                    - generic [ref=e1392]:
+                      - img [ref=e1396]:
+                        - img [ref=e1397]
+                      - heading "Documentation" [level=2] [ref=e1400]
+                    - button "More options for Documentation" [ref=e1403] [cursor=pointer]:
+                      - img [ref=e1405]:
+                        - img [ref=e1406]
+                    - generic [ref=e1410]:
+                      - link "Learn about Compute Engine" [ref=e1414] [cursor=pointer]:
+                        - /url: https://cloud.google.com/compute/docs/
+                        - generic [ref=e1418]: Learn about Compute Engine
+                      - link "Learn about Cloud Storage" [ref=e1422] [cursor=pointer]:
+                        - /url: https://cloud.google.com/storage/docs/
+                        - generic [ref=e1426]: Learn about Cloud Storage
+                      - link "Learn about Cloud Run" [ref=e1430] [cursor=pointer]:
+                        - /url: https://cloud.google.com/run/docs/
+                        - generic [ref=e1434]: Learn about Cloud Run
+      - dialog "notification" [ref=e1436]:
+        - generic [ref=e1440]:
+          - generic "Now viewing project \"Private Car Buyer\" in organization \"No organization\"" [ref=e1504]
+          - button "Close message" [ref=e1505] [cursor=pointer]:
+            - img [ref=e1445]:
+              - img [ref=e1446]
+  - iframe [ref=e212]:
+    
+  - iframe [ref=e213]:
+    
+  - iframe [ref=e372]:
+    
+  - dialog "Notifications" [ref=e1450]:
+    - generic [ref=e1452]:
+      - generic [ref=e1454]: Notifications
+      - group "Notification item 1 of 1" [ref=e1506]:
+        - generic [ref=e1510]:
+          - generic [ref=e1511]:
+            - img "This task has finished." [ref=e1512]:
+              - img [ref=e1513]:
+                - img [ref=e1514]
+            - 'button "Create Project: Kogflow Just now" [ref=e1517]':
+              - text: "Create Project: Kogflow"
+              - generic [ref=e1518]: Just now
+          - button "Navigate to kogflow project" [ref=e1520]:
+            - generic [ref=e1521]: Select Project
+      - link "See all activities" [ref=e1484] [cursor=pointer]:
+        - /url: /logs/query;query=%2528logName%20%3D%20%22projects%2Fprivate-car-buyer%2Flogs%2Fcloudaudit.googleapis.com%252Factivity%22%20OR%20logName%20%3D%20%22projects%2Fprivate-car-buyer%2Flogs%2Fcloudaudit.googleapis.com%252Fdata_access%22%20OR%20labels.activity_type_name:*%2529;timeRange=P7D?project=private-car-buyer
+        - generic [ref=e1485]: See all activities
+  - iframe [ref=e1488]:
+    
+  - iframe [ref=e1489]:
+    
+  - iframe [ref=e1522]:
+    

@@ -1,0 +1,557 @@
+- generic [ref=e2]:
+  - region
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner "Global Navigation Menu" [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - button "Open menu" [ref=e12] [cursor=pointer]:
+            - img [ref=e13]
+          - link "Homepage (g then d)" [ref=e15] [cursor=pointer]:
+            - /url: /
+            - img [ref=e16]
+        - generic [ref=e18]:
+          - navigation "Breadcrumbs" [ref=e19]:
+            - list [ref=e20]:
+              - listitem [ref=e21]:
+                - link "conexer" [ref=e22] [cursor=pointer]:
+                  - /url: /conexer
+                  - generic [ref=e23]: conexer
+              - listitem [ref=e24]:
+                - link "Kogflow-staging" [ref=e25] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging
+                  - generic [ref=e26]: Kogflow-staging
+          - button "Search or jump to… (forward slash)" [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e34]:
+              - link "Chat with Copilot" [ref=e36] [cursor=pointer]:
+                - /url: /copilot
+                - img [ref=e37]
+              - button "Open Copilot…" [ref=e41] [cursor=pointer]:
+                - generic:
+                  - img
+            - button "Create new..." [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]:
+                - generic:
+                  - img
+              - generic:
+                - img
+            - link "Issues" [ref=e45] [cursor=pointer]:
+              - /url: /issues
+              - img [ref=e46]
+            - link "Pull requests" [ref=e49] [cursor=pointer]:
+              - /url: /pulls
+              - img [ref=e50]
+            - link "Repositories" [ref=e52] [cursor=pointer]:
+              - /url: /repos
+              - img [ref=e53]
+          - link "You have no unread notifications (g then n)" [ref=e55] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e56]
+          - button "Open user navigation menu" [ref=e59] [cursor=pointer]:
+            - img "User avatar" [ref=e60]
+      - heading "Repository navigation" [level=2] [ref=e61]
+      - navigation "Repository" [ref=e62]:
+        - list [ref=e63]:
+          - listitem [ref=e64]:
+            - link "Code" [ref=e65] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging
+              - generic [ref=e66]: Code
+          - listitem [ref=e67]:
+            - link "Issues" [ref=e68] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/issues
+              - generic [ref=e69]: Issues
+          - listitem [ref=e70]:
+            - link "Pull requests" [ref=e71] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/pulls
+              - generic [ref=e72]: Pull requests
+          - listitem [ref=e73]:
+            - link "Actions" [ref=e74] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/actions
+              - generic [ref=e75]: Actions
+          - listitem [ref=e76]:
+            - link "Projects" [ref=e77] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/projects
+              - generic [ref=e78]: Projects
+          - listitem [ref=e79]:
+            - link "Wiki" [ref=e80] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/wiki
+              - generic [ref=e81]: Wiki
+          - listitem [ref=e82]:
+            - link "Security and quality (1)" [ref=e83] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/security
+              - generic [ref=e84]: Security and quality
+              - generic [ref=e85]:
+                - generic [ref=e86]: "1"
+                - generic [ref=e87]: (1)
+          - listitem [ref=e88]:
+            - link "Insights" [ref=e89] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/pulse
+              - generic [ref=e90]: Insights
+          - listitem [ref=e91]:
+            - link "Settings" [ref=e92] [cursor=pointer]:
+              - /url: /conexer/Kogflow-staging/settings
+              - generic [ref=e93]: Settings
+  - main [ref=e97]:
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - heading "Get started with GitHub Actions" [level=1] [ref=e107]
+        - paragraph [ref=e108]: Build, test, and deploy your code. Make code reviews, branch management, and issue triaging work the way you want. Select a workflow to get started.
+        - paragraph [ref=e109]:
+          - text: Skip this and
+          - link "set up a workflow yourself" [ref=e110] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fmain.yml&workflow_template=blank
+            - text: set up a workflow yourself
+            - img [ref=e111]
+      - generic [ref=e115]:
+        - img [ref=e116]
+        - textbox "Search workflows" [ref=e118]
+      - heading "Suggested for this repository" [level=2] [ref=e120]
+      - generic [ref=e121]:
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - heading "Webpack" [level=3] [ref=e126]
+              - paragraph [ref=e127]: By GitHub Actions
+            - img "Webpack logo" [ref=e130]
+          - generic [ref=e131]:
+            - paragraph [ref=e133]: Build a NodeJS project with npm and webpack.
+            - generic [ref=e134]:
+              - link "Configure" [ref=e135] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fwebpack.yml&workflow_template=ci%2Fwebpack
+              - generic [ref=e137]: JavaScript
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - heading "Deno" [level=3] [ref=e143]
+              - paragraph [ref=e144]: By GitHub Actions
+            - img "Deno logo" [ref=e147]
+          - generic [ref=e148]:
+            - paragraph [ref=e150]: Test your Deno project
+            - generic [ref=e151]:
+              - link "Configure" [ref=e152] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fdeno.yml&workflow_template=ci%2Fdeno
+              - generic [ref=e154]: JavaScript
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]:
+              - heading "Jekyll using Docker image" [level=3] [ref=e160]
+              - paragraph [ref=e161]: By GitHub Actions
+            - img "Jekyll using Docker image logo" [ref=e164]
+          - generic [ref=e165]:
+            - paragraph [ref=e167]: Package a Jekyll site using the jekyll/builder Docker image.
+            - generic [ref=e168]:
+              - link "Configure" [ref=e169] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fjekyll-docker.yml&workflow_template=ci%2Fjekyll-docker
+              - generic [ref=e171]: HTML
+        - generic [ref=e174]:
+          - generic [ref=e175]:
+            - generic [ref=e176]:
+              - heading "Publish Node.js Package to GitHub Packages" [level=3] [ref=e177]
+              - paragraph [ref=e178]: By GitHub Actions
+            - img "Publish Node.js Package to GitHub Packages logo" [ref=e181]
+          - generic [ref=e182]:
+            - paragraph [ref=e184]: Publishes a Node.js package to GitHub Packages.
+            - generic [ref=e185]:
+              - link "Configure" [ref=e186] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fnpm-publish-github-packages.yml&workflow_template=ci%2Fnpm-publish-github-packages
+              - generic [ref=e188]: JavaScript
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - generic [ref=e193]:
+              - heading "Publish Node.js Package" [level=3] [ref=e194]
+              - paragraph [ref=e195]: By GitHub Actions
+            - img "Publish Node.js Package logo" [ref=e198]
+          - generic [ref=e199]:
+            - paragraph [ref=e201]: Publishes a Node.js package to npm.
+            - generic [ref=e202]:
+              - link "Configure" [ref=e203] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fnpm-publish.yml&workflow_template=ci%2Fnpm-publish
+              - generic [ref=e205]: JavaScript
+      - generic [ref=e207]:
+        - heading "Deployment" [level=2] [ref=e208]
+        - link "View all" [ref=e209] [cursor=pointer]:
+          - /url: /conexer/Kogflow-staging/actions/new?category=deployment
+          - generic [ref=e210]: View all
+      - generic [ref=e211]:
+        - generic [ref=e213]:
+          - generic [ref=e214]:
+            - generic [ref=e215]:
+              - heading "Deploy Node.js to Azure Web App" [level=3] [ref=e216]
+              - paragraph [ref=e217]: By Microsoft Azure
+            - img "Deploy Node.js to Azure Web App logo" [ref=e220]
+          - generic [ref=e221]:
+            - paragraph [ref=e223]: Build a Node.js project and deploy it to an Azure Web App.
+            - generic [ref=e224]:
+              - link "Configure" [ref=e225] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fazure-webapps-node.yml&workflow_template=deployments%2Fazure-webapps-node
+              - generic [ref=e227]: Deployment
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - generic [ref=e232]:
+              - heading "Deploy Node.js to Azure Functions App" [level=3] [ref=e233]
+              - paragraph [ref=e234]: By Microsoft Azure
+            - img "Deploy Node.js to Azure Functions App logo" [ref=e237]
+          - generic [ref=e238]:
+            - paragraph [ref=e240]: Build a Node.js project and deploy it to an Azure Functions App on Windows or Linux.
+            - generic [ref=e241]:
+              - link "Configure" [ref=e242] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fazure-functions-app-nodejs.yml&workflow_template=deployments%2Fazure-functions-app-nodejs
+              - generic [ref=e244]: Deployment
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - heading "Deploy to Amazon ECS" [level=3] [ref=e250]
+              - paragraph [ref=e251]: By Amazon Web Services
+            - img "Deploy to Amazon ECS logo" [ref=e254]
+          - generic [ref=e255]:
+            - paragraph [ref=e257]: Deploy a container to an Amazon ECS service powered by AWS Fargate or Amazon EC2.
+            - generic [ref=e258]:
+              - link "Configure" [ref=e259] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Faws.yml&workflow_template=deployments%2Faws
+              - generic [ref=e261]: Deployment
+        - generic [ref=e264]:
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - heading "Build and Deploy to GKE" [level=3] [ref=e267]
+              - paragraph [ref=e268]: By Google Cloud
+            - img "Build and Deploy to GKE logo" [ref=e271]
+          - generic [ref=e272]:
+            - paragraph [ref=e274]: Build a docker container, publish it to Google Container Registry, and deploy to GKE.
+            - generic [ref=e275]:
+              - link "Configure" [ref=e276] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fgoogle.yml&workflow_template=deployments%2Fgoogle
+              - generic [ref=e278]: Deployment
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - generic [ref=e283]:
+              - heading "Terraform" [level=3] [ref=e284]
+              - paragraph [ref=e285]: By HashiCorp
+            - img "Terraform logo" [ref=e288]
+          - generic [ref=e289]:
+            - paragraph [ref=e291]: Set up Terraform CLI in your GitHub Actions workflow.
+            - generic [ref=e292]:
+              - link "Configure" [ref=e293] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fterraform.yml&workflow_template=deployments%2Fterraform
+              - generic [ref=e295]: Deployment
+        - generic [ref=e298]:
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - heading "Deploy to Alibaba Cloud ACK" [level=3] [ref=e301]
+              - paragraph [ref=e302]: By Alibaba Cloud
+            - img "Deploy to Alibaba Cloud ACK logo" [ref=e305]
+          - generic [ref=e306]:
+            - paragraph [ref=e308]: Deploy a container to Alibaba Cloud Container Service for Kubernetes (ACK).
+            - generic [ref=e309]:
+              - link "Configure" [ref=e310] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Falibabacloud.yml&workflow_template=deployments%2Falibabacloud
+              - generic [ref=e312]: Deployment
+        - generic [ref=e315]:
+          - generic [ref=e316]:
+            - generic [ref=e317]:
+              - heading "Deploy to IBM Cloud Kubernetes Service" [level=3] [ref=e318]
+              - paragraph [ref=e319]: By IBM
+            - img "Deploy to IBM Cloud Kubernetes Service logo" [ref=e322]
+          - generic [ref=e323]:
+            - paragraph [ref=e325]: Build a docker container, publish it to IBM Cloud Container Registry, and deploy to IBM Cloud Kubernetes Service.
+            - generic [ref=e326]:
+              - link "Configure" [ref=e327] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fibm.yml&workflow_template=deployments%2Fibm
+              - generic [ref=e329]: Deployment
+        - generic [ref=e332]:
+          - generic [ref=e333]:
+            - generic [ref=e334]:
+              - heading "Tencent Kubernetes Engine" [level=3] [ref=e335]
+              - paragraph [ref=e336]: By Tencent Cloud
+            - img "Tencent Kubernetes Engine logo" [ref=e339]
+          - generic [ref=e340]:
+            - paragraph [ref=e342]: This workflow will build a docker container, publish and deploy it to Tencent Kubernetes Engine (TKE).
+            - generic [ref=e343]:
+              - link "Configure" [ref=e344] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Ftencent.yml&workflow_template=deployments%2Ftencent
+              - generic [ref=e346]: Deployment
+      - generic [ref=e348]:
+        - generic [ref=e349]:
+          - heading "Security" [level=2] [ref=e350]
+          - link "View all" [ref=e351] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=security
+            - generic [ref=e352]: View all
+        - generic [ref=e353]:
+          - generic [ref=e355]:
+            - generic [ref=e356]:
+              - generic [ref=e357]:
+                - heading "CodeQL Analysis" [level=3] [ref=e358]
+                - paragraph [ref=e359]: By GitHub
+              - img [ref=e362]
+            - generic [ref=e364]:
+              - paragraph [ref=e366]: Security analysis from GitHub for C, C++, C#, Go, Java, JavaScript, TypeScript, Python, Ruby, Kotlin and Swift developers.
+              - generic [ref=e367]:
+                - link "Configure" [ref=e368] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fcodeql.yml&workflow_template=code-scanning%2Fcodeql
+                - generic [ref=e370]: Code scanning
+          - generic [ref=e373]:
+            - generic [ref=e374]:
+              - generic [ref=e375]:
+                - heading "Fortify Scan" [level=3] [ref=e376]
+                - paragraph [ref=e377]: By OpenText
+              - img "Fortify Scan logo" [ref=e380]
+            - generic [ref=e381]:
+              - paragraph [ref=e383]: Integrate Fortify's comprehensive static code analysis (SAST) for 33+ languages into your DevSecOps workflows.
+              - generic [ref=e384]:
+                - link "Configure" [ref=e385] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Ffortify.yml&workflow_template=code-scanning%2Ffortify
+                - generic [ref=e387]: Code scanning
+          - generic [ref=e390]:
+            - generic [ref=e391]:
+              - generic [ref=e392]:
+                - heading "SonarCloud" [level=3] [ref=e393]
+                - paragraph [ref=e394]: By Sonar
+              - img "SonarCloud logo" [ref=e397]
+            - generic [ref=e398]:
+              - paragraph [ref=e400]: Static analysis of code for vulnerability detection, covering 26+ languages. Start cleaning your code in minutes!
+              - generic [ref=e401]:
+                - link "Configure" [ref=e402] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fsonarcloud.yml&workflow_template=code-scanning%2Fsonarcloud
+                - generic [ref=e404]: Code scanning
+          - generic [ref=e407]:
+            - generic [ref=e408]:
+              - generic [ref=e409]:
+                - heading "SonarQube" [level=3] [ref=e410]
+                - paragraph [ref=e411]: By Sonar
+              - img "SonarQube logo" [ref=e414]
+            - generic [ref=e415]:
+              - paragraph [ref=e417]: Static analysis of code for vulnerability detection, covering 26+ languages. Start cleaning your code in minutes!
+              - generic [ref=e418]:
+                - link "Configure" [ref=e419] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fsonarqube.yml&workflow_template=code-scanning%2Fsonarqube
+                - generic [ref=e421]: Code scanning
+      - generic [ref=e423]:
+        - heading "Continuous integration" [level=2] [ref=e424]
+        - link "View all" [ref=e425] [cursor=pointer]:
+          - /url: /conexer/Kogflow-staging/actions/new?category=continuous-integration
+          - generic [ref=e426]: View all
+      - generic [ref=e427]:
+        - generic [ref=e429]:
+          - generic [ref=e430]:
+            - generic [ref=e431]:
+              - heading "SLSA Generic generator" [level=3] [ref=e432]
+              - paragraph [ref=e433]: By Open Source Security Foundation (OpenSSF)
+            - img "SLSA Generic generator logo" [ref=e436]
+          - generic [ref=e437]:
+            - paragraph [ref=e439]: Generate SLSA3 provenance for your existing release workflows
+            - generic [ref=e440]:
+              - link "Configure" [ref=e441] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fgenerator-generic-ossf-slsa3-publish.yml&workflow_template=ci%2Fgenerator-generic-ossf-slsa3-publish
+              - generic [ref=e443]: Go
+        - generic [ref=e446]:
+          - generic [ref=e447]:
+            - generic [ref=e448]:
+              - heading "Datadog Synthetics" [level=3] [ref=e449]
+              - paragraph [ref=e450]: By Datadog
+            - img "Datadog Synthetics logo" [ref=e453]
+          - generic [ref=e454]:
+            - paragraph [ref=e456]: Run Datadog Synthetic tests within your GitHub Actions workflow
+            - generic [ref=e457]:
+              - link "Configure" [ref=e458] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fdatadog-synthetics.yml&workflow_template=ci%2Fdatadog-synthetics
+              - generic [ref=e460]: JavaScript
+        - generic [ref=e463]:
+          - generic [ref=e464]:
+            - generic [ref=e465]:
+              - heading "Node.js" [level=3] [ref=e466]
+              - paragraph [ref=e467]: By GitHub Actions
+            - img "Node.js logo" [ref=e470]
+          - generic [ref=e471]:
+            - paragraph [ref=e473]: Build and test a Node.js project with npm.
+            - generic [ref=e474]:
+              - link "Configure" [ref=e475] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fnode.js.yml&workflow_template=ci%2Fnode.js
+              - generic [ref=e477]: JavaScript
+        - generic [ref=e480]:
+          - generic [ref=e481]:
+            - generic [ref=e482]:
+              - heading "Scala" [level=3] [ref=e483]
+              - paragraph [ref=e484]: By GitHub Actions
+            - img "Scala logo" [ref=e487]
+          - generic [ref=e488]:
+            - paragraph [ref=e490]: Build and test a Scala project with SBT.
+            - generic [ref=e491]:
+              - link "Configure" [ref=e492] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fscala.yml&workflow_template=ci%2Fscala
+              - generic [ref=e494]: Scala
+      - generic [ref=e496]:
+        - generic [ref=e497]:
+          - heading "Automation" [level=2] [ref=e498]
+          - link "View all" [ref=e499] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=automation
+            - generic [ref=e500]: View all
+        - generic [ref=e501]:
+          - generic [ref=e503]:
+            - generic [ref=e504]:
+              - generic [ref=e505]:
+                - heading "Greetings" [level=3] [ref=e506]
+                - paragraph [ref=e507]: By GitHub Actions
+              - img [ref=e510]
+            - generic [ref=e514]:
+              - paragraph [ref=e516]: Greets users who are first time contributors to the repo
+              - generic [ref=e517]:
+                - link "Configure" [ref=e518] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fgreetings.yml&workflow_template=automation%2Fgreetings
+                - generic [ref=e520]: Automation
+          - generic [ref=e523]:
+            - generic [ref=e524]:
+              - generic [ref=e525]:
+                - heading "Manual workflow" [level=3] [ref=e526]
+                - paragraph [ref=e527]: By GitHub Actions
+              - img [ref=e530]
+            - generic [ref=e532]:
+              - paragraph [ref=e534]: Simple workflow that is manually triggered.
+              - generic [ref=e535]:
+                - link "Configure" [ref=e536] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fmanual.yml&workflow_template=automation%2Fmanual
+                - generic [ref=e538]: Automation
+          - generic [ref=e541]:
+            - generic [ref=e542]:
+              - generic [ref=e543]:
+                - heading "Stale" [level=3] [ref=e544]
+                - paragraph [ref=e545]: By GitHub Actions
+              - img [ref=e548]
+            - generic [ref=e551]:
+              - paragraph [ref=e553]: Checks for stale issues and pull requests
+              - generic [ref=e554]:
+                - link "Configure" [ref=e555] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fstale.yml&workflow_template=automation%2Fstale
+                - generic [ref=e557]: Automation
+          - generic [ref=e560]:
+            - generic [ref=e561]:
+              - generic [ref=e562]:
+                - heading "AI issue summary" [level=3] [ref=e563]
+                - paragraph [ref=e564]: By GitHub Actions
+              - img [ref=e567]
+            - generic [ref=e569]:
+              - paragraph [ref=e571]: Summarizes new issues
+              - generic [ref=e572]:
+                - link "Configure" [ref=e573] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fsummary.yml&workflow_template=automation%2Fsummary
+                - generic [ref=e575]: Automation
+      - generic [ref=e577]:
+        - generic [ref=e578]:
+          - heading "Pages" [level=2] [ref=e579]
+          - link "View all" [ref=e580] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=pages
+            - generic [ref=e581]: View all
+        - generic [ref=e582]:
+          - generic [ref=e584]:
+            - generic [ref=e585]:
+              - generic [ref=e586]:
+                - heading "Static HTML" [level=3] [ref=e587]
+                - paragraph [ref=e588]: By GitHub Actions
+              - img "Static HTML logo" [ref=e591]
+            - generic [ref=e592]:
+              - paragraph [ref=e594]: Deploy static files in a repository without a build.
+              - generic [ref=e595]:
+                - link "Configure" [ref=e596] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fstatic.yml&workflow_template=pages%2Fstatic
+                - generic [ref=e598]: HTML
+          - generic [ref=e601]:
+            - generic [ref=e602]:
+              - generic [ref=e603]:
+                - heading "Hugo" [level=3] [ref=e604]
+                - paragraph [ref=e605]: By GitHub Actions
+              - img "Hugo logo" [ref=e608]
+            - generic [ref=e609]:
+              - paragraph [ref=e611]: Package a Hugo site.
+              - link "Configure" [ref=e613] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fhugo.yml&workflow_template=pages%2Fhugo
+          - generic [ref=e615]:
+            - generic [ref=e616]:
+              - generic [ref=e617]:
+                - heading "NuxtJS" [level=3] [ref=e618]
+                - paragraph [ref=e619]: By GitHub Actions
+              - img "NuxtJS logo" [ref=e622]
+            - generic [ref=e623]:
+              - paragraph [ref=e625]: Package a NuxtJS site.
+              - link "Configure" [ref=e627] [cursor=pointer]:
+                - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fnuxtjs.yml&workflow_template=pages%2Fnuxtjs
+          - generic [ref=e629]:
+            - generic [ref=e630]:
+              - generic [ref=e631]:
+                - heading "Astro" [level=3] [ref=e632]
+                - paragraph [ref=e633]: By GitHub Actions
+              - img "Astro logo" [ref=e636]
+            - generic [ref=e637]:
+              - paragraph [ref=e639]: Deploy an Astro site.
+              - generic [ref=e640]:
+                - link "Configure" [ref=e641] [cursor=pointer]:
+                  - /url: /conexer/Kogflow-staging/new/main?filename=.github%2Fworkflows%2Fastro.yml&workflow_template=pages%2Fastro
+                - generic [ref=e643]: Astro
+      - generic [ref=e647]:
+        - heading "Browse all categories" [level=2] [ref=e648]
+        - generic [ref=e649]:
+          - link "Deployment" [ref=e651] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=deployment
+          - link "Security" [ref=e653] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=security
+          - link "Continuous integration" [ref=e655] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=continuous-integration
+          - link "Automation" [ref=e657] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=automation
+          - link "Pages" [ref=e659] [cursor=pointer]:
+            - /url: /conexer/Kogflow-staging/actions/new?category=pages
+      - generic [ref=e660]:
+        - heading "Learn more about GitHub Actions" [level=2] [ref=e661]
+        - generic [ref=e662]:
+          - link "Getting started and core concepts New to Actions? Start here. Learn the core concepts and how to get started." [ref=e663] [cursor=pointer]:
+            - /url: https://docs.github.com/actions/writing-workflows/quickstart
+            - img [ref=e664]
+            - heading "Getting started and core concepts" [level=3] [ref=e674]
+            - paragraph [ref=e675]: New to Actions? Start here. Learn the core concepts and how to get started.
+          - link "Configuring and managing workflows Create custom workflows to control your project's life cycle processes." [ref=e676] [cursor=pointer]:
+            - /url: https://docs.github.com/actions/configuring-and-managing-workflows/configuring-and-managing-workflow-files-and-runs
+            - img [ref=e677]
+            - heading "Configuring and managing workflows" [level=3] [ref=e686]
+            - paragraph [ref=e687]: Create custom workflows to control your project's life cycle processes.
+          - link "Any language Language and framework guides Guides for projects written in many programming languages." [ref=e688] [cursor=pointer]:
+            - /url: https://docs.github.com/actions/language-and-framework-guides
+            - img "Any language" [ref=e689]
+            - heading "Language and framework guides" [level=3] [ref=e690]
+            - paragraph [ref=e691]: Guides for projects written in many programming languages.
+  - contentinfo [ref=e692]:
+    - heading "Footer" [level=2] [ref=e693]
+    - generic [ref=e694]:
+      - generic [ref=e695]:
+        - link "GitHub Homepage" [ref=e696] [cursor=pointer]:
+          - /url: https://github.com
+          - img [ref=e697]
+        - generic [ref=e699]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e700]:
+        - heading "Footer navigation" [level=3] [ref=e701]
+        - list "Footer navigation" [ref=e702]:
+          - listitem [ref=e703]:
+            - link "Terms" [ref=e704] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e705]:
+            - link "Privacy" [ref=e706] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e707]:
+            - link "Security" [ref=e708] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e709]:
+            - link "Status" [ref=e710] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e711]:
+            - link "Community" [ref=e712] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e713]:
+            - link "Docs" [ref=e714] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e715]:
+            - link "Contact" [ref=e716] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e717]:
+            - button "Manage cookies" [ref=e719] [cursor=pointer]
+          - listitem [ref=e720]:
+            - button "Do not share my personal information" [ref=e722] [cursor=pointer]

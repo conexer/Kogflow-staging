@@ -1,0 +1,150 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e6]:
+            - img [ref=e7]
+            - text: Outreach Pipeline
+            - generic [ref=e9]: Internal Only
+          - paragraph [ref=e10]: Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail
+        - generic [ref=e11]:
+          - button "Running..." [disabled] [ref=e164]: Running...
+          - button [ref=e12]:
+            - img [ref=e13]
+      - generic [ref=e18]:
+        - button "dashboard" [ref=e19]
+        - button "leads" [ref=e20]
+        - button "config" [ref=e21]
+        - button "email" [ref=e22]
+        - button "⚙ Setup" [ref=e23]
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e29]: Total Leads
+            - img [ref=e30]
+          - generic [ref=e34]: "279"
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Staged
+            - img [ref=e38]
+          - generic [ref=e42]: "0"
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]: Emailed
+            - img [ref=e46]
+          - generic [ref=e49]: "3"
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]: Avg ICP Score
+            - img [ref=e53]
+          - generic [ref=e55]: "3"
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: Total Photos Scraped
+            - img [ref=e60]
+          - generic [ref=e64]: 8,135
+          - generic [ref=e65]: across 279 listings
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - generic [ref=e68]: Listings with Photos
+            - img [ref=e69]
+          - generic [ref=e72]: "274"
+          - generic [ref=e73]: 98% success rate
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: Empty Rooms Found
+            - img [ref=e77]
+          - generic [ref=e79]: "0"
+          - generic [ref=e80]: leads ready to stage
+          - generic [ref=e81]:
+            - button "Submit Batch (3)" [ref=e82]
+            - button "Poll & Email" [ref=e83]
+      - generic [ref=e84]:
+        - heading "Pipeline Stages" [level=2] [ref=e85]:
+          - img [ref=e86]
+          - text: Pipeline Stages
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: 276 Scraped
+            - img [ref=e90]
+          - generic [ref=e92]:
+            - generic [ref=e93]: 0 Scored
+            - img [ref=e94]
+          - generic [ref=e96]:
+            - generic [ref=e97]: 0 Staged
+            - img [ref=e98]
+          - generic [ref=e100]:
+            - generic [ref=e101]: 0 Form Filled
+            - img [ref=e102]
+          - generic [ref=e105]: 3 Emailed
+      - generic [ref=e106]:
+        - heading "ICP Scoring System" [level=2] [ref=e107]:
+          - img [ref=e108]
+          - text: ICP Scoring System
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: "+40"
+            - generic [ref=e113]:
+              - generic [ref=e114]: Vacant / Unfurnished
+              - generic [ref=e115]: High visual need for staging
+          - generic [ref=e116]:
+            - generic [ref=e117]: "+25"
+            - generic [ref=e118]:
+              - generic [ref=e119]: Price Reduced
+              - generic [ref=e120]: Signals marketing failure
+          - generic [ref=e121]:
+            - generic [ref=e122]: "+20"
+            - generic [ref=e123]:
+              - generic [ref=e124]: Days on Market 60+
+              - generic [ref=e125]: High owner pressure
+          - generic [ref=e126]:
+            - generic [ref=e127]: "+10"
+            - generic [ref=e128]:
+              - generic [ref=e129]: Low Photo Count (<15)
+              - generic [ref=e130]: Tech-lagging indicator
+          - generic [ref=e131]:
+            - generic [ref=e132]: "+5"
+            - generic [ref=e133]:
+              - generic [ref=e134]: Days on Market 30–59
+              - generic [ref=e135]: Moderate frustration
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - heading "Live Session Log" [level=2] [ref=e168]:
+            - img [ref=e169]
+            - text: Live Session Log
+          - generic [ref=e172]: 0 lines
+        - generic [ref=e173]:
+          - generic [ref=e174]: Waiting for pipeline to start...
+          - generic [ref=e175]: ▌
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - heading "Site Scrape Tester" [level=2] [ref=e138]:
+            - img [ref=e139]
+            - text: Site Scrape Tester
+          - button "Test All 8 Sites" [ref=e141]:
+            - img [ref=e142]
+            - text: Test All 8 Sites
+        - paragraph [ref=e144]: Tests all 8 sites (homes.com, HomePath, HAR.com, HomeFinder, Estately, RE/MAX, Century21, Coldwell Banker) via Zyte. Compare address counts to find the most scrapable.
+      - generic [ref=e145]:
+        - heading "Test Moondream Vision" [level=2] [ref=e146]:
+          - img [ref=e147]
+          - text: Test Moondream Vision
+        - paragraph [ref=e150]: Paste any real estate photo URL to test room detection
+        - generic [ref=e151]:
+          - textbox "https://photos.harstatic.com/..." [ref=e152]
+          - button "Test" [ref=e153]
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e176]:
+        - generic [ref=e193]: Running pipeline session...
+  - button "Open Next.js Dev Tools" [ref=e194] [cursor=pointer]:
+    - generic [ref=e251]:
+      - text: Rendering
+      - generic [ref=e252]:
+        - generic [ref=e253]: .
+        - generic [ref=e254]: .
+        - generic [ref=e255]: .
+  - alert [ref=e163]

@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "Open sidebar" [ref=e9] [cursor=pointer]:
+            - img [ref=e11]
+          - generic [ref=e15]:
+            - link "kogflow-staging" [ref=e16] [cursor=pointer]:
+              - /url: /conexer/kogflow-staging
+              - generic [ref=e19]: kogflow-staging
+            - button [ref=e20] [cursor=pointer]:
+              - img [ref=e22]
+            - link "Back to team view" [ref=e26] [cursor=pointer]:
+              - /url: /conexer
+              - img [ref=e28]
+        - generic [ref=e31]: Overview
+        - button "Open page actions menu" [ref=e33] [cursor=pointer]:
+          - img [ref=e35]
+      - generic [ref=e39]:
+        - generic [ref=e44]:
+          - heading "Production Deployment" [level=3] [ref=e46]
+          - generic [ref=e56]:
+            - paragraph [ref=e59]: Deployment
+            - paragraph [ref=e63]: Domains
+            - generic [ref=e65]:
+              - paragraph [ref=e67]: Status
+              - paragraph [ref=e70]: Created
+            - paragraph [ref=e73]: Source
+          - button [disabled] [ref=e79] [cursor=pointer]
+        - generic [ref=e90]:
+          - paragraph [ref=e94]
+          - paragraph [ref=e102]
+          - paragraph [ref=e110]
+        - generic [ref=e122]:
+          - img [ref=e125]
+          - img [ref=e136]
+          - img [ref=e147]
+          - img [ref=e158]
+          - generic [ref=e167]:
+            - img [ref=e170]
+            - img [ref=e181]
+            - img [ref=e192]
+            - img [ref=e203]
+            - img [ref=e214]
+            - img [ref=e225]

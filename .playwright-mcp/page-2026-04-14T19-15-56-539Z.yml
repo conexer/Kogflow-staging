@@ -1,0 +1,205 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "You're currently working in Kogflow. Hit enter to switch projects, folders, or organizations" [ref=e232]:
+            - generic [ref=e233]:
+              - img [ref=e235]
+              - generic [ref=e238]: Kogflow
+        - button "Open search" [ref=e47] [cursor=pointer]:
+          - img [ref=e49]
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - button "Open or close Gemini Cloud Assist chat (Alt G)" [ref=e242] [cursor=pointer]:
+              - img [ref=e244]
+            - button "Activate Cloud Shell (G then S)" [ref=e246] [cursor=pointer]:
+              - img [ref=e248]
+            - button "1 unread notifications. Open notifications" [ref=e59] [cursor=pointer]:
+              - generic [ref=e62]: "1"
+            - button "Settings and utilities" [ref=e67] [cursor=pointer]:
+              - img [ref=e69]
+          - 'button "Account: Minh Do (conexer@gmail.com)" [ref=e252]':
+            - img [ref=e253]
+    - generic [ref=e82]:
+      - navigation "Breadcrumb" [ref=e258]:
+        - link "Google Auth Platform" [ref=e261] [cursor=pointer]:
+          - /url: /auth?project=kogflow
+          - img [ref=e264]
+          - generic [ref=e268]: Google Auth Platform
+        - list [ref=e269]:
+          - listitem [ref=e270]:
+            - generic [ref=e271]: /
+            - link "Clients" [ref=e274] [cursor=pointer]:
+              - /url: /auth/clients?project=kogflow
+              - generic [ref=e276]: Clients
+      - generic [ref=e93]:
+        - navigation "Google Auth Platform" [ref=e277]:
+          - generic [ref=e101]:
+            - list "Overview, 1 of 7 More options Branding, 2 of 7 More options Audience, 3 of 7 More options Clients, 4 of 7 More options Data Access, 5 of 7 More options Verification Center, 6 of 7 More options Settings, 7 of 7 More options" [ref=e279]:
+              - listitem [ref=e280]:
+                - generic [ref=e283]:
+                  - link "Overview, 1 of 7" [ref=e284] [cursor=pointer]:
+                    - /url: /auth/overview?project=kogflow
+                    - generic [ref=e285]:
+                      - img [ref=e288]
+                      - generic [ref=e290]: Overview
+                  - button "More options" [ref=e292] [cursor=pointer]:
+                    - img [ref=e294]
+              - listitem [ref=e296]:
+                - generic [ref=e299]:
+                  - link "Branding, 2 of 7" [ref=e300] [cursor=pointer]:
+                    - /url: /auth/branding?project=kogflow
+                    - generic [ref=e301]:
+                      - img [ref=e304]
+                      - generic [ref=e310]: Branding
+                  - button "More options" [ref=e312] [cursor=pointer]:
+                    - img [ref=e314]
+              - listitem [ref=e316]:
+                - generic [ref=e319]:
+                  - link "Audience, 3 of 7" [ref=e320] [cursor=pointer]:
+                    - /url: /auth/audience?project=kogflow
+                    - generic [ref=e321]:
+                      - img [ref=e324]
+                      - generic [ref=e326]: Audience
+                  - button "More options" [ref=e328] [cursor=pointer]:
+                    - img [ref=e330]
+              - listitem [ref=e332]:
+                - generic [ref=e335]:
+                  - link "Clients, 4 of 7" [ref=e336] [cursor=pointer]:
+                    - /url: /auth/clients?project=kogflow
+                    - generic [ref=e337]:
+                      - img [ref=e340]
+                      - generic [ref=e342]: Clients
+                  - button "More options" [ref=e344] [cursor=pointer]:
+                    - img [ref=e346]
+              - listitem [ref=e348]:
+                - generic [ref=e351]:
+                  - link "Data Access, 5 of 7" [ref=e352] [cursor=pointer]:
+                    - /url: /auth/scopes?project=kogflow
+                    - generic [ref=e353]:
+                      - img [ref=e356]
+                      - generic [ref=e359]: Data Access
+                  - button "More options" [ref=e361] [cursor=pointer]:
+                    - img [ref=e363]
+              - listitem [ref=e365]:
+                - generic [ref=e368]:
+                  - link "Verification Center, 6 of 7" [ref=e369] [cursor=pointer]:
+                    - /url: /auth/verification?project=kogflow
+                    - generic [ref=e370]:
+                      - img [ref=e373]
+                      - generic [ref=e376]: Verification Center
+                  - button "More options" [ref=e378] [cursor=pointer]:
+                    - img [ref=e380]
+              - listitem [ref=e382]:
+                - generic [ref=e385]:
+                  - link "Settings, 7 of 7" [ref=e386] [cursor=pointer]:
+                    - /url: /auth/settings?project=kogflow
+                    - generic [ref=e387]:
+                      - img [ref=e390]
+                      - generic [ref=e392]: Settings
+                  - button "More options" [ref=e394] [cursor=pointer]:
+                    - img [ref=e396]
+            - button "Toggle Google Auth Platform navigation menu" [pressed] [ref=e398] [cursor=pointer]:
+              - img [ref=e202]
+        - main [ref=e205]:
+          - generic [ref=e404]:
+            - generic [ref=e407]:
+              - heading "Clients" [level=1] [ref=e410]:
+                - generic [ref=e411]: Clients
+              - generic [ref=e416]:
+                - link "Create client" [ref=e417] [cursor=pointer]:
+                  - /url: /auth/clients/create?project=kogflow
+                  - img [ref=e419]:
+                    - img [ref=e420]
+                  - generic [ref=e422]: Create client
+                - button "Delete client" [disabled] [ref=e423]:
+                  - img [ref=e425]:
+                    - img [ref=e426]
+                  - generic [ref=e428]: Delete
+                - button "Restore deleted credentials" [ref=e429] [cursor=pointer]:
+                  - img [ref=e431]:
+                    - img [ref=e432]
+                  - generic [ref=e434]: Restore deleted OAuth clients
+            - generic [ref=e442]:
+              - heading "OAuth 2.0 Client IDs" [level=2] [ref=e444]
+              - grid "OAuth 2.0 Client IDs , Navigate table with arrow keys. Enter key to interact with cell. Tab to navigate inside cell. Escape to exit cell." [ref=e448]:
+                - rowgroup [ref=e456]:
+                  - row "Row selection Name Creation date Type Client ID Actions" [ref=e457] [cursor=pointer]:
+                    - gridcell "Row selection" [ref=e458]:
+                      - checkbox "Select all rows" [ref=e459]
+                    - columnheader "Name" [ref=e460]:
+                      - generic [ref=e462]:
+                        - generic [ref=e463]: Name
+                        - button "Sort by Name" [ref=e464]:
+                          - img [ref=e466]
+                    - columnheader "Creation date" [ref=e468]:
+                      - generic [ref=e470]:
+                        - generic [ref=e471]: Creation date
+                        - button "Sort by Creation date" [ref=e472]:
+                          - img [ref=e474]
+                    - columnheader "Type" [ref=e476]:
+                      - generic [ref=e478]:
+                        - generic [ref=e479]: Type
+                        - button "Sort by Type" [ref=e480]:
+                          - img [ref=e482]
+                    - columnheader "Client ID" [ref=e484]:
+                      - generic [ref=e486]:
+                        - generic [ref=e487]: Client ID
+                        - button "Sort by Client ID" [ref=e488]:
+                          - img [ref=e490]
+                    - columnheader "Actions" [ref=e492]:
+                      - generic [ref=e494]: Actions
+                - rowgroup [ref=e495]:
+                  - row "Kogflow Web Kogflow Web Apr 9, 2026 Web application 242587333559-gsai... Click to copy the OAuth client Click to edit the OAuth client Click to delete the OAuth client" [ref=e496] [cursor=pointer]:
+                    - gridcell "Kogflow Web" [ref=e497]:
+                      - checkbox "Kogflow Web" [ref=e499]
+                    - rowheader "Kogflow Web" [ref=e500]:
+                      - link "Kogflow Web" [ref=e501]:
+                        - /url: /auth/clients/242587333559-gsaij8448ss0vj4ppl5gt0o8771prm9h.apps.googleusercontent.com?project=kogflow
+                    - gridcell "Apr 9, 2026" [ref=e502]
+                    - gridcell "Web application" [ref=e503]
+                    - gridcell "242587333559-gsai... Click to copy the OAuth client" [ref=e504]:
+                      - code [ref=e505]: 242587333559-gsai...
+                      - button "Click to copy the OAuth client" [ref=e506]:
+                        - img [ref=e508]:
+                          - img [ref=e509]
+                    - gridcell "Click to edit the OAuth client Click to delete the OAuth client" [ref=e511]:
+                      - link "Click to edit the OAuth client" [ref=e512]:
+                        - /url: /auth/clients/242587333559-gsaij8448ss0vj4ppl5gt0o8771prm9h.apps.googleusercontent.com?project=kogflow
+                        - img [ref=e514]:
+                          - img [ref=e515]
+                      - button "Click to delete the OAuth client" [ref=e519]:
+                        - img [ref=e521]:
+                          - img [ref=e522]
+  - iframe [ref=e229]:
+    
+  - iframe [ref=e231]:
+    

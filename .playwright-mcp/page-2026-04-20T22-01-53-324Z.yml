@@ -1,0 +1,143 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - heading "Outreach Pipeline Internal Only" [level=1] [ref=e6]:
+            - img [ref=e7]
+            - text: Outreach Pipeline
+            - generic [ref=e9]: Internal Only
+          - paragraph [ref=e10]: Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail
+        - button [ref=e12]:
+          - img [ref=e13]
+      - generic [ref=e18]:
+        - button "dashboard" [ref=e19]
+        - button "leads" [ref=e20]
+        - button "config" [ref=e21]
+        - button "email" [ref=e22]
+        - button "⚙ Setup" [ref=e23]
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - heading "All-time stats" [level=2] [ref=e27]
+        - button "Reset Stats" [ref=e28]:
+          - img [ref=e29]
+          - text: Reset Stats
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Total Leads
+            - img [ref=e38]
+          - generic [ref=e42]: "0"
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]: Staged
+            - img [ref=e46]
+          - generic [ref=e50]: "0"
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]: Emailed
+            - img [ref=e54]
+          - generic [ref=e57]: "0"
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]: Avg ICP Score
+            - img [ref=e61]
+          - generic [ref=e63]: "0"
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]: Total Photos Scraped
+            - img [ref=e68]
+          - generic [ref=e72]: "0"
+          - generic [ref=e73]: across 0 listings
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: Listings with Photos
+            - img [ref=e77]
+          - generic [ref=e80]: "0"
+          - generic [ref=e81]: 0% success rate
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]: Staged Queue
+            - img [ref=e85]
+          - generic [ref=e87]: "0"
+          - generic [ref=e88]: rooms ready (empty + score ≥35)
+          - generic [ref=e89]:
+            - button "Scan & Prep (3)" [ref=e90]
+            - button "Stage Batch (3)" [ref=e91]
+            - button "Poll & Email" [ref=e92]
+      - generic [ref=e93]:
+        - heading "Pipeline Stages" [level=2] [ref=e94]:
+          - img [ref=e95]
+          - text: Pipeline Stages
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - generic [ref=e98]: 0 Scraped
+            - img [ref=e99]
+          - generic [ref=e101]:
+            - generic [ref=e102]: 0 Scored
+            - img [ref=e103]
+          - generic [ref=e105]:
+            - generic [ref=e106]: 0 Staged
+            - img [ref=e107]
+          - generic [ref=e109]:
+            - generic [ref=e110]: 0 Form Filled
+            - img [ref=e111]
+          - generic [ref=e114]: 0 Emailed
+      - generic [ref=e115]:
+        - heading "ICP Scoring System" [level=2] [ref=e116]:
+          - img [ref=e117]
+          - text: ICP Scoring System
+        - paragraph [ref=e119]: Leads scoring 25+ are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - generic [ref=e122]: "+40"
+            - generic [ref=e123]:
+              - generic [ref=e124]: Vacant / Unfurnished
+              - generic [ref=e125]: High visual need — adds furniture to empty rooms
+          - generic [ref=e126]:
+            - generic [ref=e127]: "+25"
+            - generic [ref=e128]:
+              - generic [ref=e129]: Price Reduced
+              - generic [ref=e130]: Signals marketing failure
+          - generic [ref=e131]:
+            - generic [ref=e132]: "+20"
+            - generic [ref=e133]:
+              - generic [ref=e134]: Days on Market 60+
+              - generic [ref=e135]: High owner pressure
+          - generic [ref=e136]:
+            - generic [ref=e137]: "+10"
+            - generic [ref=e138]:
+              - generic [ref=e139]: Low Photo Count (<15)
+              - generic [ref=e140]: Tech-lagging indicator
+          - generic [ref=e141]:
+            - generic [ref=e142]: "+5"
+            - generic [ref=e143]:
+              - generic [ref=e144]: Days on Market 30–59
+              - generic [ref=e145]: Moderate frustration
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - heading "Activity Log" [level=2] [ref=e148]:
+            - img [ref=e149]
+            - text: Activity Log
+          - generic [ref=e151]: No activity yet
+        - generic [ref=e153]: No pipeline activity yet. Run a session or wait for the scheduled cron.
+      - generic [ref=e154]:
+        - generic [ref=e155]:
+          - heading "Site Scrape Tester" [level=2] [ref=e156]:
+            - img [ref=e157]
+            - text: Site Scrape Tester
+          - button "Test All 8 Sites" [ref=e159]:
+            - img [ref=e160]
+            - text: Test All 8 Sites
+        - paragraph [ref=e162]: Tests all 8 sites (homes.com, HomePath, HAR.com, HomeFinder, Estately, RE/MAX, Century21, Coldwell Banker) via Zyte. Compare address counts to find the most scrapable.
+      - generic [ref=e163]:
+        - heading "Test Moondream Vision" [level=2] [ref=e164]:
+          - img [ref=e165]
+          - text: Test Moondream Vision
+        - paragraph [ref=e168]: Paste any real estate photo URL to test room detection
+        - generic [ref=e169]:
+          - textbox "https://photos.harstatic.com/..." [ref=e170]
+          - button "Test" [ref=e171]
+  - region "Notifications alt+T"
+  - alert [ref=e172]

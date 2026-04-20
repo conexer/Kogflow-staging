@@ -1,0 +1,115 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e28] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e32] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+        - search "Google Cloud Platform" [ref=e37]:
+          - combobox [ref=e38]:
+            - searchbox "Enter query to search for resources, docs, products, and more" [ref=e39]
+          - button "See all search results" [disabled]:
+            - generic:
+              - img
+            - generic: Search
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - button "Activate Cloud Shell (G then S)" [ref=e45] [cursor=pointer]:
+              - img [ref=e47]
+            - button "Open notifications" [ref=e52] [cursor=pointer]:
+              - img [ref=e54]
+            - button "Settings and utilities" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+          - 'button "Account: Minh Do (conexer@gmail.com)" [ref=e68]':
+            - img [ref=e69]
+    - main [ref=e90]:
+      - generic [ref=e108]:
+        - heading "New Project" [level=1] [ref=e114]:
+          - generic [ref=e115]: New Project
+        - generic [ref=e119]:
+          - status [ref=e121]:
+            - img "Warning" [ref=e122]:
+              - img [ref=e123]
+            - generic [ref=e125]:
+              - generic [ref=e127]:
+                - text: You have 17 projects remaining in your quota. Request an increase or delete projects.
+                - link "Learn more external, opens new window" [ref=e128] [cursor=pointer]:
+                  - /url: https://support.google.com/cloud/answer/6330231
+                  - text: Learn more
+                  - img "external, opens new window" [ref=e129]:
+                    - img [ref=e130]
+              - button "Manage Quotas external, opens new window" [ref=e133]:
+                - link "Manage Quotas external, opens new window" [ref=e135] [cursor=pointer]:
+                  - /url: https://support.google.com/code/contact/project_quota_increase
+                  - text: Manage Quotas
+                  - img "external, opens new window" [ref=e136]:
+                    - img [ref=e137]
+          - generic [ref=e140]:
+            - generic [ref=e142] [cursor=pointer]:
+              - generic [ref=e143]:
+                - text: Project name
+                - generic [ref=e144]: "*"
+              - textbox "Project name" [active] [ref=e146]: My Project 50024
+              - button "Help popup for project ID" [ref=e149]:
+                - img [ref=e151]
+            - generic [ref=e155]:
+              - text: "Project ID:"
+              - strong [ref=e156]: lithe-center-492900-b4.
+              - text: It
+              - strong [ref=e157]: cannot be changed later.
+              - button "Edit the project id." [ref=e158]:
+                - generic [ref=e159]: Edit
+          - generic [ref=e164]:
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]:
+                - text: Billing account
+                - generic [ref=e168]: "*"
+              - combobox "Billing account" [ref=e170]:
+                - generic [ref=e171]:
+                  - generic [ref=e173]: Minh US bank
+                  - img [ref=e175]
+            - generic [ref=e180]: Any charges for this project will be billed to the account you select here.
+          - generic [ref=e185]:
+            - generic [ref=e187] [cursor=pointer]:
+              - generic [ref=e188]:
+                - text: Parent resource
+                - generic [ref=e189]: "*"
+              - img [ref=e193]:
+                - img [ref=e194]
+              - textbox "Parent resource" [ref=e197]: No organization
+              - button "Browse parent resource" [ref=e200]:
+                - generic [ref=e201]: Browse
+            - generic [ref=e204]: Select the organization or folder where this resource will be created
+          - button "Create" [ref=e206]:
+            - generic [ref=e207]: Create
+          - button "Cancel" [ref=e208]:
+            - generic [ref=e209]: Cancel
+  - iframe [ref=e212]:
+    
+  - iframe [ref=e213]:
+    

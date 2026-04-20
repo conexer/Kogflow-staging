@@ -1,0 +1,312 @@
+- generic [ref=e1]:
+  - generic [ref=e76]:
+    - banner [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - link "Supabase" [ref=e81] [cursor=pointer]:
+            - /url: /dashboard/org/pykzcesgyzcdjjgcwzdf
+            - img "Supabase" [ref=e82]
+          - generic [ref=e83]:
+            - img [ref=e85]
+            - generic [ref=e87]:
+              - link "Kogflow Free" [ref=e88] [cursor=pointer]:
+                - /url: /dashboard/org/pykzcesgyzcdjjgcwzdf
+                - img [ref=e89]
+                - generic [ref=e99]: Kogflow
+                - generic [ref=e100]: Free
+              - button [ref=e101] [cursor=pointer]:
+                - img [ref=e103]
+            - generic [ref=e106]:
+              - img [ref=e108]
+              - generic [ref=e110]:
+                - link "Kogflow Realtor Staging" [ref=e111] [cursor=pointer]:
+                  - /url: /dashboard/project/vmuvjfflszhifuyvmjwh
+                  - img [ref=e112]
+                  - generic "Kogflow Realtor Staging" [ref=e115]
+                - button [ref=e116] [cursor=pointer]:
+                  - img [ref=e118]
+              - img [ref=e122]
+              - generic [ref=e124]:
+                - link "main Production" [ref=e125] [cursor=pointer]:
+                  - /url: /dashboard/project/vmuvjfflszhifuyvmjwh
+                  - generic "main" [ref=e126]
+                  - generic [ref=e127]: Production
+                - button [ref=e128] [cursor=pointer]:
+                  - img [ref=e130]
+          - button "Connect" [ref=e134] [cursor=pointer]:
+            - img [ref=e136]
+            - generic [ref=e138]: Connect
+        - generic [ref=e139]:
+          - generic [ref=e141] [cursor=pointer]: Feedback
+          - generic [ref=e142]:
+            - button "Search..." [ref=e143] [cursor=pointer]:
+              - generic [ref=e144]:
+                - img [ref=e145]
+                - paragraph [ref=e148]: Search...
+              - generic [ref=e150]: Ctrl K
+            - button [ref=e151] [cursor=pointer]:
+              - img [ref=e153]
+            - button [ref=e157] [cursor=pointer]:
+              - img [ref=e159]
+            - button [ref=e161] [cursor=pointer]:
+              - img [ref=e163]
+            - button [ref=e165] [cursor=pointer]:
+              - img [ref=e169]
+          - link "Upgrade to Pro" [ref=e172] [cursor=pointer]:
+            - /url: /dashboard/org/pykzcesgyzcdjjgcwzdf/billing?panel=subscriptionPlan&source=headerUpgradeCta
+            - generic [ref=e173]: Upgrade to Pro
+          - button "conexer" [ref=e174] [cursor=pointer]:
+            - img "conexer" [ref=e176]
+    - generic [ref=e177]:
+      - generic [ref=e181]:
+        - list [ref=e184]:
+          - generic [ref=e185]:
+            - listitem [ref=e186]:
+              - link "Project Overview" [ref=e187] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh
+                - img [ref=e188]
+                - generic: Project Overview
+            - listitem [ref=e190]:
+              - link "Table Editor" [ref=e191] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/editor
+                - img [ref=e192]
+                - generic: Table Editor
+            - listitem [ref=e194]:
+              - link "SQL Editor" [ref=e195] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/sql
+                - img [ref=e196]
+                - generic: SQL Editor
+          - generic [ref=e198]:
+            - listitem [ref=e199]:
+              - link "Database" [ref=e200] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/database/schemas
+                - img [ref=e201]
+                - generic: Database
+            - listitem [ref=e205]:
+              - link "Authentication" [ref=e206] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/auth/users
+                - img [ref=e207]
+                - generic: Authentication
+            - listitem [ref=e209]:
+              - link "Storage" [ref=e210] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/storage/files
+                - img [ref=e211]
+                - generic: Storage
+            - listitem [ref=e213]:
+              - link "Edge Functions" [ref=e214] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/functions
+                - img [ref=e215]
+                - generic: Edge Functions
+            - listitem [ref=e220]:
+              - link "Realtime" [ref=e221] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/realtime/inspector
+                - img [ref=e222]
+                - generic: Realtime
+          - generic [ref=e224]:
+            - listitem [ref=e226]:
+              - link "Advisors" [ref=e227] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/advisors/security
+                - img [ref=e228]
+                - generic: Advisors
+            - listitem [ref=e230]:
+              - link "Observability" [ref=e231] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/observability
+                - img [ref=e232]
+                - generic: Observability
+            - listitem [ref=e240]:
+              - link "Logs" [ref=e241] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/logs/explorer
+                - img [ref=e242]
+                - generic: Logs
+            - listitem [ref=e243]:
+              - link "Integrations" [ref=e244] [cursor=pointer]:
+                - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/integrations
+                - img [ref=e245]
+                - generic: Integrations
+          - listitem [ref=e249]:
+            - link "Project Settings" [ref=e250] [cursor=pointer]:
+              - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/settings/general
+              - img [ref=e251]
+              - generic: Project Settings
+        - button [ref=e256] [cursor=pointer]:
+          - img [ref=e258]
+      - generic [ref=e265]:
+        - generic [ref=e269]:
+          - heading "SQL Editor" [level=4] [ref=e271]
+          - generic [ref=e273]:
+            - generic [ref=e274]:
+              - generic [ref=e275]:
+                - generic [ref=e277]:
+                  - generic [ref=e278]: Search queries
+                  - textbox "Search queries..." [ref=e279]
+                  - button [ref=e280] [cursor=pointer]:
+                    - img [ref=e281]
+                  - img [ref=e284]
+                - button [ref=e287] [cursor=pointer]:
+                  - img [ref=e289]
+              - button "Shared" [ref=e292] [cursor=pointer]:
+                - img [ref=e293]
+                - generic [ref=e295]: Shared
+              - button "Favorites" [ref=e298] [cursor=pointer]:
+                - img [ref=e299]
+                - generic [ref=e301]: Favorites
+              - generic [ref=e303]:
+                - button "PRIVATE (10)" [expanded] [ref=e652] [cursor=pointer]:
+                  - img [ref=e305]
+                  - generic [ref=e307]: PRIVATE (10)
+                - tree "private-snippets" [ref=e309]:
+                  - generic "Outreach Leads Storage with RLS and Credit Bootstrap" [ref=e653] [cursor=pointer]:
+                    - generic [ref=e516]:
+                      - img [ref=e517]
+                      - generic [ref=e523]: Outreach Leads Storage with RLS and Credit Bootstrap
+                  - generic "Video queue and metadata fields" [ref=e310] [cursor=pointer]:
+                    - generic [ref=e311]:
+                      - img [ref=e312]
+                      - generic [ref=e318]: Video queue and metadata fields
+                  - generic "User Videos Table" [ref=e319] [cursor=pointer]:
+                    - generic [ref=e320]:
+                      - img [ref=e321]
+                      - generic [ref=e327]: User Videos Table
+                  - generic "User Credit Top-up" [ref=e328] [cursor=pointer]:
+                    - generic [ref=e329]:
+                      - img [ref=e330]
+                      - generic [ref=e336]: User Credit Top-up
+                  - generic "User Projects, Assets & Generations Schema with RLS" [ref=e337] [cursor=pointer]:
+                    - generic [ref=e338]:
+                      - img [ref=e339]
+                      - generic [ref=e345]: User Projects, Assets & Generations Schema with RLS
+                  - generic "Project association and assets table with RLS" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]:
+                      - img [ref=e348]
+                      - generic [ref=e354]: Project association and assets table with RLS
+                  - generic "Usage Logging & Subscription Migration" [ref=e355] [cursor=pointer]:
+                    - generic [ref=e356]:
+                      - img [ref=e357]
+                      - generic [ref=e363]: Usage Logging & Subscription Migration
+                  - generic "Auth and Billing Schema Update" [ref=e364] [cursor=pointer]:
+                    - generic [ref=e365]:
+                      - img [ref=e366]
+                      - generic [ref=e372]: Auth and Billing Schema Update
+                  - generic "Auth & Billing + Usage Tracking Update" [ref=e373] [cursor=pointer]:
+                    - generic [ref=e374]:
+                      - img [ref=e375]
+                      - generic [ref=e381]: Auth & Billing + Usage Tracking Update
+                  - generic "User accounts, credits & generation history" [ref=e382] [cursor=pointer]:
+                    - generic [ref=e383]:
+                      - img [ref=e384]
+                      - generic [ref=e390]: User accounts, credits & generation history
+              - generic [ref=e392]:
+                - button "Community" [expanded] [ref=e393] [cursor=pointer]:
+                  - img [ref=e394]
+                  - generic [ref=e396]: Community
+                - generic [ref=e397]:
+                  - link "templates" [ref=e398] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/sql/templates
+                    - img [ref=e399]
+                    - text: templates
+                  - link "quickstarts" [ref=e401] [cursor=pointer]:
+                    - /url: /dashboard/project/vmuvjfflszhifuyvmjwh/sql/quickstarts
+                    - img [ref=e402]
+                    - text: quickstarts
+            - button "View running queries" [ref=e406] [cursor=pointer]:
+              - generic [ref=e407]: View running queries
+        - separator [ref=e408]:
+          - img [ref=e410]
+        - main [ref=e419]:
+          - generic [ref=e420]:
+            - generic [ref=e421]:
+              - generic [ref=e422]:
+                - button [ref=e423] [cursor=pointer]:
+                  - img [ref=e424]
+                - tablist [ref=e427]:
+                  - button "Outreach Leads Storage with RLS and Credit Bootstrap" [ref=e654] [cursor=pointer]:
+                    - tab "Outreach Leads Storage with RLS and Credit Bootstrap" [selected] [ref=e655]:
+                      - img [ref=e527]
+                      - generic [ref=e534]: Outreach Leads Storage with RLS and Credit Bootstrap
+                      - button [ref=e535]:
+                        - img [ref=e536]
+                    - separator [ref=e540]
+                  - button [ref=e541] [cursor=pointer]:
+                    - img [ref=e542]
+              - status [ref=e438]
+            - generic [ref=e441]:
+              - code [ref=e448]:
+                - generic [ref=e449]:
+                  - generic [ref=e451]:
+                    - generic [ref=e545]: "1"
+                    - generic [ref=e546]:
+                      - generic [ref=e547] [cursor=pointer]: 
+                      - generic [ref=e548]: "2"
+                    - generic [ref=e550]: "3"
+                    - generic [ref=e552]: "4"
+                    - generic [ref=e554]: "5"
+                    - generic [ref=e556]: "6"
+                    - generic [ref=e558]: "7"
+                    - generic [ref=e560]: "8"
+                    - generic [ref=e562]: "9"
+                    - generic [ref=e564]: "10"
+                    - generic [ref=e566]: "11"
+                    - generic [ref=e568]: "12"
+                    - generic [ref=e570]: "13"
+                    - generic [ref=e572]: "14"
+                    - generic [ref=e574]: "15"
+                  - generic [ref=e458]:
+                    - generic [ref=e618]: "-- 1. Create outreach_leads table"
+                    - generic [ref=e620]: CREATE TABLE IF NOT EXISTS public.outreach_leads (
+                    - generic [ref=e622]: id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                    - generic [ref=e624]: address TEXT NOT NULL,
+                    - generic [ref=e626]: city TEXT,
+                    - generic [ref=e628]: price NUMERIC,
+                    - generic [ref=e630]: days_on_market INTEGER,
+                    - generic [ref=e632]: price_reduced BOOLEAN DEFAULT false,
+                    - generic [ref=e634]: photo_count INTEGER DEFAULT 0,
+                    - generic [ref=e636]: agent_name TEXT,
+                    - generic [ref=e638]: agent_phone TEXT,
+                    - generic [ref=e640]: agent_email TEXT,
+                    - generic [ref=e642]: listing_url TEXT,
+                    - generic [ref=e644]: movoto_message_url TEXT,
+                    - generic [ref=e646]: keywords TEXT[],
+                  - textbox "Editor content" [active] [ref=e462]: "-- 1. Create outreach_leads table CREATE TABLE IF NOT EXISTS public.outreach_leads ( id UUID DEFAULT gen_random_uuid() PRIMARY KEY, address TEXT NOT NULL, city TEXT, price NUMERIC, days_on_market INTEGER, price_reduced BOOLEAN DEFAULT false, photo_count INTEGER DEFAULT 0, agent_name TEXT,"
+              - separator [ref=e463]:
+                - img [ref=e465]
+              - generic [ref=e474]:
+                - tablist [ref=e475]:
+                  - generic [ref=e476]:
+                    - tab "Results" [selected] [ref=e477] [cursor=pointer]:
+                      - generic [ref=e478]: Results
+                    - tab "Explain" [ref=e479] [cursor=pointer]:
+                      - generic [ref=e480]: Explain
+                    - tab "Chart" [ref=e481] [cursor=pointer]:
+                      - generic [ref=e482]: Chart
+                    - button "Export" [disabled]:
+                      - generic: Export
+                      - generic:
+                        - img
+                  - generic [ref=e483]:
+                    - button [ref=e656] [cursor=pointer]:
+                      - img [ref=e657]
+                    - button [ref=e484] [cursor=pointer]:
+                      - img [ref=e486]
+                    - generic [ref=e491]:
+                      - generic [ref=e492] [cursor=pointer]:
+                        - generic [ref=e493]: Source
+                        - button "Primary database" [ref=e494]:
+                          - generic [ref=e495]: Primary database
+                          - img [ref=e497]
+                      - button "Role postgres" [ref=e499] [cursor=pointer]:
+                        - generic [ref=e501]:
+                          - generic [ref=e502]: Role
+                          - generic [ref=e503]: postgres
+                          - img [ref=e504]
+                      - button "Run Ctrl ↵" [ref=e506] [cursor=pointer]:
+                        - generic [ref=e507]: Run
+                        - generic [ref=e659]: Ctrl ↵
+                - paragraph [ref=e660]: Success. No rows returned
+              - generic "Table grid footer" [ref=e661]:
+                - button "0 row" [ref=e662] [cursor=pointer]:
+                  - paragraph [ref=e663]:
+                    - generic [ref=e664]: 0 row
+  - alert [ref=e75]: SQL Editor | Kogflow Realtor Staging | Kogflow | Supabase
+  - generic [ref=e514]:
+    - alert
+    - alert

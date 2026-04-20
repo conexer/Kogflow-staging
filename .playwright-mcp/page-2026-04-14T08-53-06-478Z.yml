@@ -1,0 +1,194 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Kogflow" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img [ref=e7]
+          - generic [ref=e10]: Kogflow
+        - navigation [ref=e11]:
+          - button "Products" [ref=e13]:
+            - generic [ref=e14]: Products
+            - img [ref=e15]
+          - link "History" [ref=e17] [cursor=pointer]:
+            - /url: /history
+            - img [ref=e18]
+            - generic [ref=e22]: History
+          - link "Pricing" [ref=e23] [cursor=pointer]:
+            - /url: /pricing
+            - img [ref=e24]
+            - generic [ref=e26]: Pricing
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e29]: Free Plan
+              - generic [ref=e30]: 0 Credits
+            - button [ref=e32]:
+              - img [ref=e34]
+    - main [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - img "Slide 1" [ref=e42]
+          - img "Slide 2" [ref=e44]
+          - img "Slide 3" [ref=e46]
+          - img "Slide 4" [ref=e48]
+          - img "Slide 5" [ref=e50]
+        - generic [ref=e51]:
+          - heading "Virtually Staged with One Click" [level=1] [ref=e52]
+          - paragraph [ref=e53]: Turn empty cold rooms into warm, inviting homes in seconds with our AI.
+        - generic [ref=e54]:
+          - button "Try It For Free" [ref=e55]:
+            - img [ref=e56]
+            - text: Try It For Free
+          - paragraph [ref=e59]: No sign up | No credit card
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - heading "The Magic of Virtual Staging" [level=2] [ref=e63]
+          - paragraph [ref=e64]: See how we turn "potential" into "perfection" instantly.
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - img "After" [ref=e68]
+            - generic [ref=e69]: After
+          - generic [ref=e70]:
+            - img "Before" [ref=e71]
+            - generic [ref=e72]: Before
+          - img [ref=e75]
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - heading "83%" [level=3] [ref=e80]
+            - paragraph [ref=e81]: of agents say staging helps buyers visualize a property as their future home.
+          - generic [ref=e82]:
+            - heading "Sell Faster" [level=3] [ref=e83]
+            - paragraph [ref=e84]: Homes that are staged spend significantly less time on the market.
+          - generic [ref=e85]:
+            - heading "Better Offers" [level=3] [ref=e86]
+            - paragraph [ref=e87]: create an emotional connection that leads to higher selling prices.
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - img [ref=e92]
+            - text: Game changer
+          - heading "See It From Every Angle" [level=2] [ref=e96]
+          - paragraph [ref=e97]: Keep the flow consistent. Our Multi-View Staging ensures that when you stage a room from different angles, the style and furniture match perfectly.
+        - img "Multi-view staging" [ref=e99]
+      - generic [ref=e101]:
+        - generic [ref=e102]:
+          - text: Why Kogflow?
+          - heading "Staging Made Simple" [level=2] [ref=e103]
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - img [ref=e106]
+            - heading "Totally Easy" [level=3] [ref=e109]
+            - paragraph [ref=e110]: Just upload your photo and pick a style. No design skills needed.
+          - generic [ref=e111]:
+            - img [ref=e112]
+            - heading "Lightning Fast" [level=3] [ref=e114]
+            - paragraph [ref=e115]: Don't wait days for manual editors. Get results in about 15 seconds.
+          - generic [ref=e116]:
+            - img [ref=e117]
+            - heading "Unbeatable Value" [level=3] [ref=e119]
+            - paragraph [ref=e120]: Professional staging for a fraction of the cost. Starts at just $16/mo.
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - text: How it works
+          - heading "Three Steps to Sold" [level=2] [ref=e123]
+          - paragraph [ref=e124]: We've stripped away the complexity so you can focus on closing deals.
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - img "Upload" [ref=e128]
+            - generic [ref=e129]:
+              - generic [ref=e130]: "1"
+              - heading "Upload a Photo" [level=3] [ref=e131]
+              - paragraph [ref=e132]: Works with furnished or unfurnished rooms.
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - img [ref=e136]
+              - img "Process" [ref=e139]
+            - generic [ref=e140]:
+              - generic [ref=e141]: "2"
+              - heading "Let AI Do The Work" [level=3] [ref=e142]
+              - paragraph [ref=e143]: Our intelligent system redesigns your space in seconds.
+          - generic [ref=e144]:
+            - img "Download" [ref=e146]
+            - generic [ref=e147]:
+              - generic [ref=e148]: "3"
+              - heading "Download & Share" [level=3] [ref=e149]
+              - paragraph [ref=e150]: Get a high-res image ready for the MLS.
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "Got Questions? We've Got You." [level=2] [ref=e154]
+          - paragraph [ref=e155]: Everything you need to know about staging with AI.
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - heading "How fast is it really?" [level=3] [ref=e158]
+            - paragraph [ref=e159]: Blink and you might miss it. Most renders are done in about 15 seconds. No more waiting days for manual editors.
+          - generic [ref=e160]:
+            - heading "Is the quality good enough for MLS?" [level=3] [ref=e161]
+            - paragraph [ref=e162]: Absolutely. We output high-resolution, photorealistic images that look great on Zillow, Redfin, and the MLS.
+          - generic [ref=e163]:
+            - heading "Can I remove existing furniture?" [level=3] [ref=e164]
+            - paragraph [ref=e165]: Yes! Our 'Object Removal' mode wipes the slate clean, letting you stage messy or dated rooms from scratch.
+          - generic [ref=e166]:
+            - heading "Do I need any design skills?" [level=3] [ref=e167]
+            - paragraph [ref=e168]: None at all. Just upload a photo, pick a style (like Modern or Scandinavian), and let our AI handle the interior design.
+          - generic [ref=e169]:
+            - heading "Is it cheaper than traditional staging?" [level=3] [ref=e170]
+            - paragraph [ref=e171]: Way cheaper. Physical staging can cost thousands. We start at the price of a few coffees.
+      - generic [ref=e173]:
+        - heading "Ready to Transform Your Listings?" [level=2] [ref=e174]
+        - paragraph [ref=e175]: Experience how our quick, friendly AI can help you sell faster and for more money. Don't let your listings blend in—make them pop.
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - img [ref=e178]
+            - text: Low Cost
+          - generic [ref=e181]:
+            - img [ref=e182]
+            - text: Instant Results
+          - generic [ref=e184]:
+            - img [ref=e185]
+            - text: Furniture Removal
+          - generic [ref=e188]:
+            - img [ref=e189]
+            - text: Multi-View Staging
+        - generic [ref=e193]:
+          - button "Start Staging For Free" [ref=e194]:
+            - img [ref=e195]
+            - text: Start Staging For Free
+          - paragraph [ref=e198]: No sign up | No credit card
+    - contentinfo [ref=e199]:
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - img [ref=e204]
+            - generic [ref=e207]: Kogflow
+          - paragraph [ref=e208]: Virtual Staging AI for Real Estate Agents.
+        - generic [ref=e209]:
+          - heading "Quick Links" [level=4] [ref=e210]
+          - list [ref=e211]:
+            - listitem [ref=e212]:
+              - link "Home" [ref=e213] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e214]:
+              - link "Gallery" [ref=e215] [cursor=pointer]:
+                - /url: /history
+            - listitem [ref=e216]:
+              - link "Pricing" [ref=e217] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=e218]:
+              - link "Log in" [ref=e219] [cursor=pointer]:
+                - /url: /login
+        - generic [ref=e220]:
+          - heading "Legal" [level=4] [ref=e221]
+          - list [ref=e222]:
+            - listitem [ref=e223]:
+              - link "Terms of Service" [ref=e224] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e225]:
+              - link "Privacy Policy" [ref=e226] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e227]:
+          - heading "Contact" [level=4] [ref=e228]
+          - list [ref=e229]:
+            - listitem [ref=e230]: contact@kogflow.com
+      - paragraph [ref=e232]: © 2026 Kogflow. All rights reserved.
+  - region "Notifications alt+T"
+  - alert [ref=e233]

@@ -1,0 +1,908 @@
+- generic [active] [ref=e1]:
+  - paragraph [ref=e3]:
+    - text: For better experience using the Drive API, make sure you have installed the
+    - link "OAuth 2.0 Playground Drive app" [ref=e4] [cursor=pointer]:
+      - /url: https://chrome.google.com/webstore/detail/fcjholccjchiplkbibepfimlaapdaiih
+    - text: on the Chrome Webstore.
+    - link "Dismiss" [ref=e5] [cursor=pointer]:
+      - /url: "#"
+  - banner [ref=e8]:
+    - link "Google" [ref=e10] [cursor=pointer]:
+      - /url: /
+      - img "Google" [ref=e11]
+  - generic [ref=e12]:
+    - heading "OAuth 2.0 Playground" [level=2] [ref=e13]:
+      - img
+      - text: OAuth 2.0 Playground
+    - img "Reload" [ref=e16] [cursor=pointer]
+    - generic [ref=e17]:
+      - img "Help" [ref=e20] [cursor=pointer]
+      - img "Options" [ref=e23] [cursor=pointer]
+      - img "Options" [ref=e26] [cursor=pointer]
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Step 1Select & authorize APIs" [level=3] [ref=e30] [cursor=pointer]: Step 1Select & authorize APIs
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: Select the scope for the APIs you would like to access or input your own OAuth scopes below. Then click the "Authorize APIs" button.
+          - list [ref=e35]:
+            - generic [ref=e37]:
+              - listitem [ref=e39] [cursor=pointer]:
+                - img [ref=e41]
+                - text: AI Platform Training & Prediction API v1
+              - listitem [ref=e42] [cursor=pointer]:
+                - img [ref=e44]
+                - text: API Gateway API v1
+              - listitem [ref=e45] [cursor=pointer]:
+                - img [ref=e47]
+                - text: API Keys API v2
+              - listitem [ref=e48] [cursor=pointer]:
+                - img [ref=e50]
+                - text: API Management API v1alpha
+              - listitem [ref=e51] [cursor=pointer]:
+                - img [ref=e53]
+                - text: API hub API v1
+              - listitem [ref=e54] [cursor=pointer]:
+                - img [ref=e56]
+                - text: Access Approval API v1
+              - listitem [ref=e57] [cursor=pointer]:
+                - img [ref=e59]
+                - text: Access Context Manager API v1
+              - listitem [ref=e60] [cursor=pointer]:
+                - img [ref=e62]
+                - text: Ad Exchange Buyer API II v2beta1
+              - listitem [ref=e63] [cursor=pointer]:
+                - img [ref=e65]
+                - text: AdMob API v1
+              - listitem [ref=e66] [cursor=pointer]:
+                - img [ref=e68]
+                - text: AdSense Management API v2
+              - listitem [ref=e69] [cursor=pointer]:
+                - img [ref=e71]
+                - text: AdSense Platform API v1
+              - listitem [ref=e72] [cursor=pointer]:
+                - img [ref=e74]
+                - text: AdWords API
+              - listitem [ref=e75] [cursor=pointer]:
+                - img [ref=e77]
+                - text: Address Validation API v1
+              - listitem [ref=e78] [cursor=pointer]:
+                - img [ref=e80]
+                - text: Admin SDK API datatransfer_v1
+              - listitem [ref=e81] [cursor=pointer]:
+                - img [ref=e83]
+                - text: Admin SDK API directory_v1
+              - listitem [ref=e84] [cursor=pointer]:
+                - img [ref=e86]
+                - text: Admin SDK API reports_v1
+              - listitem [ref=e87] [cursor=pointer]:
+                - img [ref=e89]
+                - text: Advisory Notifications API v1
+              - listitem [ref=e90] [cursor=pointer]:
+                - img [ref=e92]
+                - text: Agent Registry API v1alpha
+              - listitem [ref=e93] [cursor=pointer]:
+                - img [ref=e95]
+                - text: Air Quality API v1
+              - listitem [ref=e96] [cursor=pointer]:
+                - img [ref=e98]
+                - text: AlloyDB API v1
+              - listitem [ref=e99] [cursor=pointer]:
+                - img [ref=e101]
+                - text: Analytics Hub API v1
+              - listitem [ref=e102] [cursor=pointer]:
+                - img [ref=e104]
+                - text: Android Management API v1
+              - listitem [ref=e105] [cursor=pointer]:
+                - img [ref=e107]
+                - text: Apigee API v1
+              - listitem [ref=e108] [cursor=pointer]:
+                - img [ref=e110]
+                - text: Apigee Registry API v1
+              - listitem [ref=e111] [cursor=pointer]:
+                - img [ref=e113]
+                - text: App Engine Admin API v1
+              - listitem [ref=e114] [cursor=pointer]:
+                - img [ref=e116]
+                - text: App Hub API v1
+              - listitem [ref=e117] [cursor=pointer]:
+                - img [ref=e119]
+                - text: App Lifecycle Manager API v1
+              - listitem [ref=e120] [cursor=pointer]:
+                - img [ref=e122]
+                - text: Application Integration API v1
+              - listitem [ref=e123] [cursor=pointer]:
+                - img [ref=e125]
+                - text: Apps Script API v1
+              - listitem [ref=e126] [cursor=pointer]:
+                - img [ref=e128]
+                - text: Artifact Registry API v1
+              - listitem [ref=e129] [cursor=pointer]:
+                - img [ref=e131]
+                - text: Assured Workloads API v1
+              - listitem [ref=e132] [cursor=pointer]:
+                - img [ref=e134]
+                - text: Authorized Buyers Marketplace API v1
+              - listitem [ref=e135] [cursor=pointer]:
+                - img [ref=e137]
+                - text: Backup and DR Service API v1
+              - listitem [ref=e138] [cursor=pointer]:
+                - img [ref=e140]
+                - text: Backup for GKE API v1
+              - listitem [ref=e141] [cursor=pointer]:
+                - img [ref=e143]
+                - text: Bare Metal Solution API v2
+              - listitem [ref=e144] [cursor=pointer]:
+                - img [ref=e146]
+                - text: Batch API v1
+              - listitem [ref=e147] [cursor=pointer]:
+                - img [ref=e149]
+                - text: BeyondCorp API v1
+              - listitem [ref=e150] [cursor=pointer]:
+                - img [ref=e152]
+                - text: BigLake API v1
+              - listitem [ref=e153] [cursor=pointer]:
+                - img [ref=e155]
+                - text: BigQuery API v2
+              - listitem [ref=e156] [cursor=pointer]:
+                - img [ref=e158]
+                - text: BigQuery Connection API v1
+              - listitem [ref=e159] [cursor=pointer]:
+                - img [ref=e161]
+                - text: BigQuery Data Policy API v2
+              - listitem [ref=e162] [cursor=pointer]:
+                - img [ref=e164]
+                - text: BigQuery Data Transfer API v1
+              - listitem [ref=e165] [cursor=pointer]:
+                - img [ref=e167]
+                - text: BigQuery Reservation API v1
+              - listitem [ref=e168] [cursor=pointer]:
+                - img [ref=e170]
+                - text: Binary Authorization API v1
+              - listitem [ref=e171] [cursor=pointer]:
+                - img [ref=e173]
+                - text: Blockchain Node Engine API v1
+              - listitem [ref=e174] [cursor=pointer]:
+                - img [ref=e176]
+                - text: Blogger API v3
+              - listitem [ref=e177] [cursor=pointer]:
+                - img [ref=e179]
+                - text: Books API v1
+              - listitem [ref=e180] [cursor=pointer]:
+                - img [ref=e182]
+                - text: CSS API v1
+              - listitem [ref=e183] [cursor=pointer]:
+                - img [ref=e185]
+                - text: Campaign Manager 360 API v5
+              - listitem [ref=e186] [cursor=pointer]:
+                - img [ref=e188]
+                - text: Certificate Authority API v1
+              - listitem [ref=e189] [cursor=pointer]:
+                - img [ref=e191]
+                - text: Certificate Manager API v1
+              - listitem [ref=e192] [cursor=pointer]:
+                - img [ref=e194]
+                - text: Chrome Management API v1
+              - listitem [ref=e195] [cursor=pointer]:
+                - img [ref=e197]
+                - text: Chrome Policy API v1
+              - listitem [ref=e198] [cursor=pointer]:
+                - img [ref=e200]
+                - text: Chrome Verified Access API v2
+              - listitem [ref=e201] [cursor=pointer]:
+                - img [ref=e203]
+                - text: Chrome Web Store API v2
+              - listitem [ref=e204] [cursor=pointer]:
+                - img [ref=e206]
+                - text: Cloud Asset API v1
+              - listitem [ref=e207] [cursor=pointer]:
+                - img [ref=e209]
+                - text: Cloud Bigtable Admin API v2
+              - listitem [ref=e210] [cursor=pointer]:
+                - img [ref=e212]
+                - text: Cloud Billing API v1
+              - listitem [ref=e213] [cursor=pointer]:
+                - img [ref=e215]
+                - text: Cloud Billing Budget API v1
+              - listitem [ref=e216] [cursor=pointer]:
+                - img [ref=e218]
+                - text: Cloud Build API v2
+              - listitem [ref=e219] [cursor=pointer]:
+                - img [ref=e221]
+                - text: Cloud Channel API v1
+              - listitem [ref=e222] [cursor=pointer]:
+                - img [ref=e224]
+                - text: Cloud Commerce Partner Procurement API v1
+              - listitem [ref=e225] [cursor=pointer]:
+                - img [ref=e227]
+                - text: Cloud Composer API v1
+              - listitem [ref=e228] [cursor=pointer]:
+                - img [ref=e230]
+                - text: Cloud Controls Partner API v1
+              - listitem [ref=e231] [cursor=pointer]:
+                - img [ref=e233]
+                - text: Cloud DNS API v1
+              - listitem [ref=e234] [cursor=pointer]:
+                - img [ref=e236]
+                - text: Cloud Data Fusion API v1
+              - listitem [ref=e237] [cursor=pointer]:
+                - img [ref=e239]
+                - text: Cloud Dataplex API v1
+              - listitem [ref=e240] [cursor=pointer]:
+                - img [ref=e242]
+                - text: Cloud Dataproc API v1
+              - listitem [ref=e243] [cursor=pointer]:
+                - img [ref=e245]
+                - text: Cloud Datastore API v1
+              - listitem [ref=e246] [cursor=pointer]:
+                - img [ref=e248]
+                - text: Cloud Deploy API v1
+              - listitem [ref=e249] [cursor=pointer]:
+                - img [ref=e251]
+                - text: Cloud Deployment Manager V2 API v2
+              - listitem [ref=e252] [cursor=pointer]:
+                - img [ref=e254]
+                - text: Cloud Document AI API v1
+              - listitem [ref=e255] [cursor=pointer]:
+                - img [ref=e257]
+                - text: Cloud Domains API v1
+              - listitem [ref=e258] [cursor=pointer]:
+                - img [ref=e260]
+                - text: Cloud Filestore API v1
+              - listitem [ref=e261] [cursor=pointer]:
+                - img [ref=e263]
+                - text: Cloud Firestore API v1
+              - listitem [ref=e264] [cursor=pointer]:
+                - img [ref=e266]
+                - text: Cloud Functions API v2
+              - listitem [ref=e267] [cursor=pointer]:
+                - img [ref=e269]
+                - text: Cloud Healthcare API v1
+              - listitem [ref=e270] [cursor=pointer]:
+                - img [ref=e272]
+                - text: Cloud IDS API v1
+              - listitem [ref=e273] [cursor=pointer]:
+                - img [ref=e275]
+                - text: Cloud Identity API v1
+              - listitem [ref=e276] [cursor=pointer]:
+                - img [ref=e278]
+                - text: Cloud Identity-Aware Proxy API v1
+              - listitem [ref=e279] [cursor=pointer]:
+                - img [ref=e281]
+                - text: Cloud Key Management Service (KMS) API v1
+              - listitem [ref=e282] [cursor=pointer]:
+                - img [ref=e284]
+                - text: Cloud Location Finder API v1
+              - listitem [ref=e285] [cursor=pointer]:
+                - img [ref=e287]
+                - text: Cloud Logging API v2
+              - listitem [ref=e288] [cursor=pointer]:
+                - img [ref=e290]
+                - text: Cloud Memorystore for Memcached API v1
+              - listitem [ref=e291] [cursor=pointer]:
+                - img [ref=e293]
+                - text: Cloud Monitoring API v3
+              - listitem [ref=e294] [cursor=pointer]:
+                - img [ref=e296]
+                - text: Cloud Natural Language API v2
+              - listitem [ref=e297] [cursor=pointer]:
+                - img [ref=e299]
+                - text: Cloud OS Login API v1
+              - listitem [ref=e300] [cursor=pointer]:
+                - img [ref=e302]
+                - text: Cloud Profiler API v2
+              - listitem [ref=e303] [cursor=pointer]:
+                - img [ref=e305]
+                - text: Cloud Pub/Sub API v1
+              - listitem [ref=e306] [cursor=pointer]:
+                - img [ref=e308]
+                - text: Cloud Resource Manager API v3
+              - listitem [ref=e309] [cursor=pointer]:
+                - img [ref=e311]
+                - text: Cloud Run Admin API v2
+              - listitem [ref=e312] [cursor=pointer]:
+                - img [ref=e314]
+                - text: Cloud Runtime Configuration API v1
+              - listitem [ref=e315] [cursor=pointer]:
+                - img [ref=e317]
+                - text: Cloud SQL Admin API v1
+              - listitem [ref=e318] [cursor=pointer]:
+                - img [ref=e320]
+                - text: Cloud Scheduler API v1
+              - listitem [ref=e321] [cursor=pointer]:
+                - img [ref=e323]
+                - text: Cloud Search API v1
+              - listitem [ref=e324] [cursor=pointer]:
+                - img [ref=e326]
+                - text: Cloud Shell API v1
+              - listitem [ref=e327] [cursor=pointer]:
+                - img [ref=e329]
+                - text: Cloud Spanner API v1
+              - listitem [ref=e330] [cursor=pointer]:
+                - img [ref=e332]
+                - text: Cloud Speech-to-Text API v1
+              - listitem [ref=e333] [cursor=pointer]:
+                - img [ref=e335]
+                - text: Cloud Storage API v1
+              - listitem [ref=e336] [cursor=pointer]:
+                - img [ref=e338]
+                - text: Cloud Storage for Firebase API v1beta
+              - listitem [ref=e339] [cursor=pointer]:
+                - img [ref=e341]
+                - text: Cloud TPU API v2
+              - listitem [ref=e342] [cursor=pointer]:
+                - img [ref=e344]
+                - text: Cloud Talent Solution API v4
+              - listitem [ref=e345] [cursor=pointer]:
+                - img [ref=e347]
+                - text: Cloud Tasks API v2
+              - listitem [ref=e348] [cursor=pointer]:
+                - img [ref=e350]
+                - text: Cloud Testing API v1
+              - listitem [ref=e351] [cursor=pointer]:
+                - img [ref=e353]
+                - text: Cloud Text-to-Speech API v1
+              - listitem [ref=e354] [cursor=pointer]:
+                - img [ref=e356]
+                - text: Cloud Tool Results API v1beta3
+              - listitem [ref=e357] [cursor=pointer]:
+                - img [ref=e359]
+                - text: Cloud Trace API v2
+              - listitem [ref=e360] [cursor=pointer]:
+                - img [ref=e362]
+                - text: Cloud Translation API v3
+              - listitem [ref=e363] [cursor=pointer]:
+                - img [ref=e365]
+                - text: Cloud Video Intelligence API v1
+              - listitem [ref=e366] [cursor=pointer]:
+                - img [ref=e368]
+                - text: Cloud Vision API v1
+              - listitem [ref=e369] [cursor=pointer]:
+                - img [ref=e371]
+                - text: Cloud Workstations API v1
+              - listitem [ref=e372] [cursor=pointer]:
+                - img [ref=e374]
+                - text: Cluster Director API v1
+              - listitem [ref=e375] [cursor=pointer]:
+                - img [ref=e377]
+                - text: Compute Engine API v1
+              - listitem [ref=e378] [cursor=pointer]:
+                - img [ref=e380]
+                - text: Connectors API v2
+              - listitem [ref=e381] [cursor=pointer]:
+                - img [ref=e383]
+                - text: Contact Center AI Insights API v1
+              - listitem [ref=e384] [cursor=pointer]:
+                - img [ref=e386]
+                - text: Contact Center AI Platform API v1alpha1
+              - listitem [ref=e387] [cursor=pointer]:
+                - img [ref=e389]
+                - text: Contacts v3
+              - listitem [ref=e390] [cursor=pointer]:
+                - img [ref=e392]
+                - text: Container Analysis API v1
+              - listitem [ref=e393] [cursor=pointer]:
+                - img [ref=e395]
+                - text: Content API for Shopping v2.1
+              - listitem [ref=e396] [cursor=pointer]:
+                - img [ref=e398]
+                - text: Data Labeling API v1beta1
+              - listitem [ref=e399] [cursor=pointer]:
+                - img [ref=e401]
+                - text: Data Lineage API v1
+              - listitem [ref=e402] [cursor=pointer]:
+                - img [ref=e404]
+                - text: Data Manager API v1
+              - listitem [ref=e405] [cursor=pointer]:
+                - img [ref=e407]
+                - text: Data Portability API v1
+              - listitem [ref=e408] [cursor=pointer]:
+                - img [ref=e410]
+                - text: Data pipelines API v1
+              - listitem [ref=e411] [cursor=pointer]:
+                - img [ref=e413]
+                - text: Database Migration API v1
+              - listitem [ref=e414] [cursor=pointer]:
+                - img [ref=e416]
+                - text: Dataflow API v1b3
+              - listitem [ref=e417] [cursor=pointer]:
+                - img [ref=e419]
+                - text: Dataform API v1
+              - listitem [ref=e420] [cursor=pointer]:
+                - img [ref=e422]
+                - text: Dataproc Metastore API v1
+              - listitem [ref=e423] [cursor=pointer]:
+                - img [ref=e425]
+                - text: Datastream API v1
+              - listitem [ref=e426] [cursor=pointer]:
+                - img [ref=e428]
+                - text: Developer Connect API v1
+              - listitem [ref=e429] [cursor=pointer]:
+                - img [ref=e431]
+                - text: Developer Knowledge API v1alpha
+              - listitem [ref=e432] [cursor=pointer]:
+                - img [ref=e434]
+                - text: Dialogflow API v3
+              - listitem [ref=e435] [cursor=pointer]:
+                - img [ref=e437]
+                - text: Discovery Engine API v1
+              - listitem [ref=e438] [cursor=pointer]:
+                - img [ref=e440]
+                - text: Display & Video 360 API v4
+              - listitem [ref=e441] [cursor=pointer]:
+                - img [ref=e443]
+                - text: Document AI Warehouse API v1
+              - listitem [ref=e444] [cursor=pointer]:
+                - img [ref=e446]
+                - text: DoubleClick Bid Manager API v2
+              - listitem [ref=e447] [cursor=pointer]:
+                - img [ref=e449]
+                - text: Drive API v3
+              - listitem [ref=e450] [cursor=pointer]:
+                - img [ref=e452]
+                - text: Drive Activity API v2
+              - listitem [ref=e453] [cursor=pointer]:
+                - img [ref=e455]
+                - text: Drive Labels API v2
+              - listitem [ref=e456] [cursor=pointer]:
+                - img [ref=e458]
+                - text: Enterprise License Manager API v1
+              - listitem [ref=e459] [cursor=pointer]:
+                - img [ref=e461]
+                - text: Error Reporting API v1beta1
+              - listitem [ref=e462] [cursor=pointer]:
+                - img [ref=e464]
+                - text: Essential Contacts API v1
+              - listitem [ref=e465] [cursor=pointer]:
+                - img [ref=e467]
+                - text: Eventarc API v1
+              - listitem [ref=e468] [cursor=pointer]:
+                - img [ref=e470]
+                - text: Fact Check Tools API v1alpha1
+              - listitem [ref=e471] [cursor=pointer]:
+                - img [ref=e473]
+                - text: Firebase App Check API v1
+              - listitem [ref=e474] [cursor=pointer]:
+                - img [ref=e476]
+                - text: Firebase App Distribution API v1
+              - listitem [ref=e477] [cursor=pointer]:
+                - img [ref=e479]
+                - text: Firebase App Hosting API v1
+              - listitem [ref=e480] [cursor=pointer]:
+                - img [ref=e482]
+                - text: Firebase Cloud Messaging API v1
+              - listitem [ref=e483] [cursor=pointer]:
+                - img [ref=e485]
+                - text: Firebase Cloud Messaging Data API v1beta1
+              - listitem [ref=e486] [cursor=pointer]:
+                - img [ref=e488]
+                - text: Firebase Data Connect API v1
+              - listitem [ref=e489] [cursor=pointer]:
+                - img [ref=e491]
+                - text: Firebase Dynamic Links API v1
+              - listitem [ref=e492] [cursor=pointer]:
+                - img [ref=e494]
+                - text: Firebase Hosting API v1
+              - listitem [ref=e495] [cursor=pointer]:
+                - img [ref=e497]
+                - text: Firebase ML API v1
+              - listitem [ref=e498] [cursor=pointer]:
+                - img [ref=e500]
+                - text: Firebase Management API v1beta1
+              - listitem [ref=e501] [cursor=pointer]:
+                - img [ref=e503]
+                - text: Firebase Realtime Database Management API v1beta
+              - listitem [ref=e504] [cursor=pointer]:
+                - img [ref=e506]
+                - text: Firebase Rules API v1
+              - listitem [ref=e507] [cursor=pointer]:
+                - img [ref=e509]
+                - text: Fitness API v1
+              - listitem [ref=e510] [cursor=pointer]:
+                - img [ref=e512]
+                - text: GKE Hub API v2
+              - listitem [ref=e513] [cursor=pointer]:
+                - img [ref=e515]
+                - text: GKE On-Prem API v1
+              - listitem [ref=e516] [cursor=pointer]:
+                - img [ref=e518]
+                - text: Gemini Enterprise for Customer Experience API v1
+              - listitem [ref=e519] [cursor=pointer]:
+                - img [ref=e521]
+                - text: Gmail API v1
+              - listitem [ref=e522] [cursor=pointer]:
+                - img [ref=e524]
+                - text: Gmail Inbox Feed
+              - listitem [ref=e525] [cursor=pointer]:
+                - img [ref=e527]
+                - text: Gmail Postmaster Tools API v2
+              - listitem [ref=e528] [cursor=pointer]:
+                - img [ref=e530]
+                - text: Google Ad Manager API
+              - listitem [ref=e531] [cursor=pointer]:
+                - img [ref=e533]
+                - text: Google Ads API
+              - listitem [ref=e534] [cursor=pointer]:
+                - img [ref=e536]
+                - text: Google Analytics API v3
+              - listitem [ref=e537] [cursor=pointer]:
+                - img [ref=e539]
+                - text: Google Analytics Admin API v1beta
+              - listitem [ref=e540] [cursor=pointer]:
+                - img [ref=e542]
+                - text: Google Analytics Data API v1beta
+              - listitem [ref=e543] [cursor=pointer]:
+                - img [ref=e545]
+                - text: Google Calendar API v3
+              - listitem [ref=e546] [cursor=pointer]:
+                - img [ref=e548]
+                - text: Google Chat API v1
+              - listitem [ref=e549] [cursor=pointer]:
+                - img [ref=e551]
+                - text: Google Classroom API v1
+              - listitem [ref=e552] [cursor=pointer]:
+                - img [ref=e554]
+                - text: Google Cloud Data Catalog API v1
+              - listitem [ref=e555] [cursor=pointer]:
+                - img [ref=e557]
+                - text: Google Cloud Memorystore for Redis API v1
+              - listitem [ref=e558] [cursor=pointer]:
+                - img [ref=e560]
+                - text: Google Cloud Support API v2
+              - listitem [ref=e561] [cursor=pointer]:
+                - img [ref=e563]
+                - text: Google Docs API v1
+              - listitem [ref=e564] [cursor=pointer]:
+                - img [ref=e566]
+                - text: Google Forms API v1
+              - listitem [ref=e567] [cursor=pointer]:
+                - img [ref=e569]
+                - text: Google Keep API v1
+              - listitem [ref=e570] [cursor=pointer]:
+                - img [ref=e572]
+                - text: Google Marketing Platform Admin API v1alpha
+              - listitem [ref=e573] [cursor=pointer]:
+                - img [ref=e575]
+                - text: Google Meet API v2
+              - listitem [ref=e576] [cursor=pointer]:
+                - img [ref=e578]
+                - text: Google OAuth2 API v2
+              - listitem [ref=e579] [cursor=pointer]:
+                - img [ref=e581]
+                - text: Google Play Android Developer API v3
+              - listitem [ref=e582] [cursor=pointer]:
+                - img [ref=e584]
+                - text: Google Play Custom App Publishing API v1
+              - listitem [ref=e585] [cursor=pointer]:
+                - img [ref=e587]
+                - text: Google Play Developer Reporting API v1beta1
+              - listitem [ref=e588] [cursor=pointer]:
+                - img [ref=e590]
+                - text: Google Play EMM API v1
+              - listitem [ref=e591] [cursor=pointer]:
+                - img [ref=e593]
+                - text: Google Play Games Services API v1
+              - listitem [ref=e594] [cursor=pointer]:
+                - img [ref=e596]
+                - text: Google Play Games Services Management API v1management
+              - listitem [ref=e597] [cursor=pointer]:
+                - img [ref=e599]
+                - text: Google Play Games Services Publishing API v1configuration
+              - listitem [ref=e600] [cursor=pointer]:
+                - img [ref=e602]
+                - text: Google Play Integrity API v1
+              - listitem [ref=e603] [cursor=pointer]:
+                - img [ref=e605]
+                - text: Google Search Console API v1
+              - listitem [ref=e606] [cursor=pointer]:
+                - img [ref=e608]
+                - text: Google Sheets API v4
+              - listitem [ref=e609] [cursor=pointer]:
+                - img [ref=e611]
+                - text: Google Slides API v1
+              - listitem [ref=e612] [cursor=pointer]:
+                - img [ref=e614]
+                - text: Google Tasks API v1
+              - listitem [ref=e615] [cursor=pointer]:
+                - img [ref=e617]
+                - text: Google Vault API v1
+              - listitem [ref=e618] [cursor=pointer]:
+                - img [ref=e620]
+                - text: Google Wallet API v1
+              - listitem [ref=e621] [cursor=pointer]:
+                - img [ref=e623]
+                - text: Google Workspace Alert Center API v1beta1
+              - listitem [ref=e624] [cursor=pointer]:
+                - img [ref=e626]
+                - text: Google Workspace Events API v1
+              - listitem [ref=e627] [cursor=pointer]:
+                - img [ref=e629]
+                - text: Google Workspace Marketplace API v2
+              - listitem [ref=e630] [cursor=pointer]:
+                - img [ref=e632]
+                - text: Google Workspace Reseller API v1
+              - listitem [ref=e633] [cursor=pointer]:
+                - img [ref=e635]
+                - text: Groups Migration API v1
+              - listitem [ref=e636] [cursor=pointer]:
+                - img [ref=e638]
+                - text: Groups Settings API v1
+              - listitem [ref=e639] [cursor=pointer]:
+                - img [ref=e641]
+                - text: HomeGraph API v1
+              - listitem [ref=e642] [cursor=pointer]:
+                - img [ref=e644]
+                - text: IAM Service Account Credentials API v1
+              - listitem [ref=e645] [cursor=pointer]:
+                - img [ref=e647]
+                - text: Identity Toolkit API v3
+              - listitem [ref=e648] [cursor=pointer]:
+                - img [ref=e650]
+                - text: Identity and Access Management (IAM) API v2
+              - listitem [ref=e651] [cursor=pointer]:
+                - img [ref=e653]
+                - text: Infrastructure Manager API v1
+              - listitem [ref=e654] [cursor=pointer]:
+                - img [ref=e656]
+                - text: KMS Inventory API v1
+              - listitem [ref=e657] [cursor=pointer]:
+                - img [ref=e659]
+                - text: Kubernetes Engine API v1
+              - listitem [ref=e660] [cursor=pointer]:
+                - img [ref=e662]
+                - text: Library Agent API v1
+              - listitem [ref=e663] [cursor=pointer]:
+                - img [ref=e665]
+                - text: Local Services API v1
+              - listitem [ref=e666] [cursor=pointer]:
+                - img [ref=e668]
+                - text: Looker (Google Cloud core) API v1
+              - listitem [ref=e669] [cursor=pointer]:
+                - img [ref=e671]
+                - text: Managed Service for Apache Kafka API v1
+              - listitem [ref=e672] [cursor=pointer]:
+                - img [ref=e674]
+                - text: Managed Service for Microsoft Active Directory API v1
+              - listitem [ref=e675] [cursor=pointer]:
+                - img [ref=e677]
+                - text: Manufacturer Center API v1
+              - listitem [ref=e678] [cursor=pointer]:
+                - img [ref=e680]
+                - text: Merchant API reviews_v1beta
+              - listitem [ref=e681] [cursor=pointer]:
+                - img [ref=e683]
+                - text: Migration Center API v1
+              - listitem [ref=e684] [cursor=pointer]:
+                - img [ref=e686]
+                - text: NetApp API v1
+              - listitem [ref=e687] [cursor=pointer]:
+                - img [ref=e689]
+                - text: Network Connectivity API v1
+              - listitem [ref=e690] [cursor=pointer]:
+                - img [ref=e692]
+                - text: Network Management API v1
+              - listitem [ref=e693] [cursor=pointer]:
+                - img [ref=e695]
+                - text: Network Security API v1
+              - listitem [ref=e696] [cursor=pointer]:
+                - img [ref=e698]
+                - text: Network Services API v1
+              - listitem [ref=e699] [cursor=pointer]:
+                - img [ref=e701]
+                - text: Notebooks API v2
+              - listitem [ref=e702] [cursor=pointer]:
+                - img [ref=e704]
+                - text: OS Config API v2
+              - listitem [ref=e705] [cursor=pointer]:
+                - img [ref=e707]
+                - text: Observability API v1
+              - listitem [ref=e708] [cursor=pointer]:
+                - img [ref=e710]
+                - text: On-Demand Scanning API v1
+              - listitem [ref=e711] [cursor=pointer]:
+                - img [ref=e713]
+                - text: Oracle Database@Google Cloud API v1
+              - listitem [ref=e714] [cursor=pointer]:
+                - img [ref=e716]
+                - text: Organization Policy API v2
+              - listitem [ref=e717] [cursor=pointer]:
+                - img [ref=e719]
+                - text: PageSpeed Insights API v5
+              - listitem [ref=e720] [cursor=pointer]:
+                - img [ref=e722]
+                - text: Parallelstore API v1
+              - listitem [ref=e723] [cursor=pointer]:
+                - img [ref=e725]
+                - text: Parameter Manager API v1
+              - listitem [ref=e726] [cursor=pointer]:
+                - img [ref=e728]
+                - text: Payments Reseller Subscription API v1
+              - listitem [ref=e729] [cursor=pointer]:
+                - img [ref=e731]
+                - text: People API v1
+              - listitem [ref=e732] [cursor=pointer]:
+                - img [ref=e734]
+                - text: Picasa Web v2
+              - listitem [ref=e735] [cursor=pointer]:
+                - img [ref=e737]
+                - text: Places API (New) v1
+              - listitem [ref=e738] [cursor=pointer]:
+                - img [ref=e740]
+                - text: Places Aggregate API v1
+              - listitem [ref=e741] [cursor=pointer]:
+                - img [ref=e743]
+                - text: Policy Analyzer API v1
+              - listitem [ref=e744] [cursor=pointer]:
+                - img [ref=e746]
+                - text: Policy Simulator API v1
+              - listitem [ref=e747] [cursor=pointer]:
+                - img [ref=e749]
+                - text: Policy Troubleshooter API v3
+              - listitem [ref=e750] [cursor=pointer]:
+                - img [ref=e752]
+                - text: Pollen API v1
+              - listitem [ref=e753] [cursor=pointer]:
+                - img [ref=e755]
+                - text: Pub/Sub Lite API v1
+              - listitem [ref=e756] [cursor=pointer]:
+                - img [ref=e758]
+                - text: Public Certificate Authority API v1
+              - listitem [ref=e759] [cursor=pointer]:
+                - img [ref=e761]
+                - text: Rapid Migration Assessment API v1
+              - listitem [ref=e762] [cursor=pointer]:
+                - img [ref=e764]
+                - text: Real-time Bidding API v1
+              - listitem [ref=e765] [cursor=pointer]:
+                - img [ref=e767]
+                - text: Recommendations AI (Beta) v1beta1
+              - listitem [ref=e768] [cursor=pointer]:
+                - img [ref=e770]
+                - text: Recommender API v1
+              - listitem [ref=e771] [cursor=pointer]:
+                - img [ref=e773]
+                - text: SAS Portal API (Testing) v1alpha1
+              - listitem [ref=e774] [cursor=pointer]:
+                - img [ref=e776]
+                - text: SAS Portal API v1alpha1
+              - listitem [ref=e777] [cursor=pointer]:
+                - img [ref=e779]
+                - text: SaaS Runtime API v1beta1
+              - listitem [ref=e780] [cursor=pointer]:
+                - img [ref=e782]
+                - text: Search Ads 360 API v2
+              - listitem [ref=e783] [cursor=pointer]:
+                - img [ref=e785]
+                - text: Search Ads 360 Reporting API v0
+              - listitem [ref=e786] [cursor=pointer]:
+                - img [ref=e788]
+                - text: Search Ads 360 Reporting API v23
+              - listitem [ref=e789] [cursor=pointer]:
+                - img [ref=e791]
+                - text: Secret Manager API v1
+              - listitem [ref=e792] [cursor=pointer]:
+                - img [ref=e794]
+                - text: Secure Source Manager API v1
+              - listitem [ref=e795] [cursor=pointer]:
+                - img [ref=e797]
+                - text: Security Command Center API v1
+              - listitem [ref=e798] [cursor=pointer]:
+                - img [ref=e800]
+                - text: Security Posture API v1
+              - listitem [ref=e801] [cursor=pointer]:
+                - img [ref=e803]
+                - text: Sensitive Data Protection (DLP) v2
+              - listitem [ref=e804] [cursor=pointer]:
+                - img [ref=e806]
+                - text: Serverless VPC Access API v1
+              - listitem [ref=e807] [cursor=pointer]:
+                - img [ref=e809]
+                - text: Service Consumer Management API v1
+              - listitem [ref=e810] [cursor=pointer]:
+                - img [ref=e812]
+                - text: Service Control API v2
+              - listitem [ref=e813] [cursor=pointer]:
+                - img [ref=e815]
+                - text: Service Directory API v1
+              - listitem [ref=e816] [cursor=pointer]:
+                - img [ref=e818]
+                - text: Service Management API v1
+              - listitem [ref=e819] [cursor=pointer]:
+                - img [ref=e821]
+                - text: Service Networking API v1
+              - listitem [ref=e822] [cursor=pointer]:
+                - img [ref=e824]
+                - text: Service Usage API v1
+              - listitem [ref=e825] [cursor=pointer]:
+                - img [ref=e827]
+                - text: Site Verification API v1
+              - listitem [ref=e828] [cursor=pointer]:
+                - img [ref=e830]
+                - text: Sites v1.4
+              - listitem [ref=e831] [cursor=pointer]:
+                - img [ref=e833]
+                - text: Smart Device Management API v1
+              - listitem [ref=e834] [cursor=pointer]:
+                - img [ref=e836]
+                - text: Solar API v1
+              - listitem [ref=e837] [cursor=pointer]:
+                - img [ref=e839]
+                - text: Spreadsheets v3
+              - listitem [ref=e840] [cursor=pointer]:
+                - img [ref=e842]
+                - text: Storage Batch Operations API v1
+              - listitem [ref=e843] [cursor=pointer]:
+                - img [ref=e845]
+                - text: Storage Transfer API v1
+              - listitem [ref=e846] [cursor=pointer]:
+                - img [ref=e848]
+                - text: Street View Publish API v1
+              - listitem [ref=e849] [cursor=pointer]:
+                - img [ref=e851]
+                - text: Tag Manager API v2
+              - listitem [ref=e852] [cursor=pointer]:
+                - img [ref=e854]
+                - text: Threat Intelligence API v1beta
+              - listitem [ref=e855] [cursor=pointer]:
+                - img [ref=e857]
+                - text: Traffic Director API v3
+              - listitem [ref=e858] [cursor=pointer]:
+                - img [ref=e860]
+                - text: Transcoder API v1
+              - listitem [ref=e861] [cursor=pointer]:
+                - img [ref=e863]
+                - text: VM Migration API v1
+              - listitem [ref=e864] [cursor=pointer]:
+                - img [ref=e866]
+                - text: VMware Engine API v1
+              - listitem [ref=e867] [cursor=pointer]:
+                - img [ref=e869]
+                - text: Vertex AI API v1
+              - listitem [ref=e870] [cursor=pointer]:
+                - img [ref=e872]
+                - text: Vertex AI Search for commerce API v2
+              - listitem [ref=e873] [cursor=pointer]:
+                - img [ref=e875]
+                - text: Web Risk API v1
+              - listitem [ref=e876] [cursor=pointer]:
+                - img [ref=e878]
+                - text: Web Search Indexing API v3
+              - listitem [ref=e879] [cursor=pointer]:
+                - img [ref=e881]
+                - text: Web Security Scanner API v1
+              - listitem [ref=e882] [cursor=pointer]:
+                - img [ref=e884]
+                - text: Webmaster Tools v2
+              - listitem [ref=e885] [cursor=pointer]:
+                - img [ref=e887]
+                - text: Workflow Executions API v1
+              - listitem [ref=e888] [cursor=pointer]:
+                - img [ref=e890]
+                - text: Workflows API v1
+              - listitem [ref=e891] [cursor=pointer]:
+                - img [ref=e893]
+                - text: Workload Manager API v1
+              - listitem [ref=e894] [cursor=pointer]:
+                - img [ref=e896]
+                - text: YouTube Analytics API v2
+              - listitem [ref=e897] [cursor=pointer]:
+                - img [ref=e899]
+                - text: YouTube Data API v3 v3
+              - listitem [ref=e900] [cursor=pointer]:
+                - img [ref=e902]
+                - text: YouTube Reporting API v1
+              - listitem [ref=e903] [cursor=pointer]:
+                - img [ref=e905]
+                - text: reCAPTCHA Enterprise API v1
+          - generic [ref=e906]:
+            - textbox "Input your own scopes" [ref=e907]
+            - generic [ref=e908]:
+              - button "Authorize APIs"
+      - heading "Step 2Exchange authorization code for tokens" [level=3] [ref=e910] [cursor=pointer]: Step 2Exchange authorization code for tokens
+      - heading "Step 3Configure request to API" [level=3] [ref=e913] [cursor=pointer]: Step 3Configure request to API
+    - generic [ref=e915]:
+      - generic [ref=e916]: Request / Response
+      - generic [ref=e918]: No request.
+      - generic [ref=e919]:
+        - checkbox [ref=e920] [cursor=pointer]
+        - text: Wrap Lines

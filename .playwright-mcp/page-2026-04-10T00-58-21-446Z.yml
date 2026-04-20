@@ -1,0 +1,250 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e8]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e10] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e12]:
+              - img "external, opens new window" [ref=e13]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e16] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e18]:
+              - img "external, opens new window" [ref=e19]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - search "Google Cloud Platform" [ref=e52]:
+          - combobox [expanded] [ref=e53]:
+            - searchbox "Enter query to search for resources, docs, products, and more" [active] [ref=e54]
+            - generic [ref=e398]:
+              - generic [ref=e402]:
+                - generic [ref=e403]:
+                  - img [ref=e405]:
+                    - img [ref=e406]
+                  - text: Popular searches
+                - grid [ref=e409]:
+                  - row "Compute Engine VMs, GPUs, TPUs, disks" [ref=e410]:
+                    - gridcell "Compute Engine VMs, GPUs, TPUs, disks" [ref=e411]:
+                      - generic [ref=e412]:
+                        - img [ref=e416]
+                        - generic [ref=e432]:
+                          - link "Compute Engine" [ref=e433] [cursor=pointer]:
+                            - /url: /compute?referrer=search&project=private-car-buyer
+                          - paragraph [ref=e435]: VMs, GPUs, TPUs, disks
+                  - row "BigQuery Data warehouse/analytics" [ref=e436]:
+                    - gridcell "BigQuery Data warehouse/analytics" [ref=e437]:
+                      - generic [ref=e438]:
+                        - img [ref=e442]
+                        - generic [ref=e448]:
+                          - link "BigQuery" [ref=e449] [cursor=pointer]:
+                            - /url: /bigquery?referrer=search&project=private-car-buyer
+                          - paragraph [ref=e451]: Data warehouse/analytics
+                  - row "IAM & Admin Resource access control" [ref=e452]:
+                    - gridcell "IAM & Admin Resource access control" [ref=e453]:
+                      - generic [ref=e454]:
+                        - img [ref=e458]
+                        - generic [ref=e462]:
+                          - link "IAM & Admin" [ref=e463] [cursor=pointer]:
+                            - /url: /iam-admin?referrer=search&project=private-car-buyer
+                          - paragraph [ref=e465]: Resource access control
+                  - row "Cloud Storage Enterprise-ready object storage" [ref=e466]:
+                    - gridcell "Cloud Storage Enterprise-ready object storage" [ref=e467]:
+                      - generic [ref=e468]:
+                        - img [ref=e472]
+                        - generic [ref=e476]:
+                          - link "Cloud Storage" [ref=e477] [cursor=pointer]:
+                            - /url: /storage?referrer=search&project=private-car-buyer
+                          - paragraph [ref=e479]: Enterprise-ready object storage
+              - generic [ref=e480]:
+                - button "Collapse information panel" [ref=e481] [cursor=pointer]:
+                  - img [ref=e483]
+                - group "Gemini" [ref=e486]:
+                  - generic [ref=e487]:
+                    - img [ref=e489]
+                    - heading "Gemini" [level=5] [ref=e491]
+                  - generic [ref=e493]:
+                    - paragraph [ref=e494]: Chat with an AI companion to get comprehensive answers to any topic related to Google Cloud
+                    - generic [ref=e495]:
+                      - text: "Tip: use"
+                      - img [ref=e497]
+                      - text: Alt G to open and close the chat
+                    - listbox "Suggested Gemini chat prompts" [ref=e499]:
+                      - option "Ask Gemini a question" [ref=e501] [cursor=pointer]:
+                        - generic:
+                          - generic:
+                            - img
+                        - generic [ref=e502]:
+                          - img [ref=e504]
+                          - text: Ask Gemini a question
+                      - option "What is Migration Center?" [ref=e507] [cursor=pointer]:
+                        - generic:
+                          - generic:
+                            - img
+                        - generic [ref=e508]: What is Migration Center?
+                      - option "What is the difference between SSD and HDD?" [ref=e510] [cursor=pointer]:
+                        - generic:
+                          - generic:
+                            - img
+                        - generic [ref=e511]: What is the difference between SSD and HDD?
+                      - option "List my KMS key with recommendations" [ref=e513] [cursor=pointer]:
+                        - generic:
+                          - generic:
+                            - img
+                        - generic [ref=e514]: List my KMS key with recommendations
+                      - option "What is BigQuery?" [ref=e516] [cursor=pointer]:
+                        - generic:
+                          - generic:
+                            - img
+                        - generic [ref=e517]: What is BigQuery?
+          - button "See all search results" [disabled]:
+            - generic:
+              - img
+            - generic: Search
+    - main [ref=e112]:
+      - generic [ref=e132]:
+        - generic [ref=e134]:
+          - generic [ref=e135]:
+            - heading "Google Cloud logo Welcome" [level=1] [ref=e136]:
+              - img "Google Cloud logo" [ref=e137]
+              - text: Welcome
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - text: You're working in
+                - button "You're working in Private Car Buyer. Hit enter to switch projects, folders, or organizations" [ref=e143]:
+                  - list [ref=e148]:
+                    - listitem [ref=e149]:
+                      - generic [ref=e152]: Private Car Buyer
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - text: "Project number:"
+                  - generic [ref=e156]:
+                    - generic [ref=e157]: "775468672212"
+                    - 'button "Copy Project number to clipboard: 775468672212" [ref=e158] [cursor=pointer]':
+                      - img [ref=e160]
+                - generic [ref=e162]:
+                  - text: "Project ID:"
+                  - generic [ref=e164]:
+                    - generic [ref=e165]: private-car-buyer
+                    - 'button "Copy Project ID to clipboard: private-car-buyer" [ref=e166] [cursor=pointer]':
+                      - img [ref=e168]
+            - generic [ref=e172]:
+              - link "Dashboard" [ref=e173] [cursor=pointer]:
+                - /url: /home/dashboard?project=private-car-buyer
+              - link "Cloud Hub" [ref=e174] [cursor=pointer]:
+                - /url: /cloud-hub/home?project=private-car-buyer
+            - generic [ref=e177]:
+              - link "Create a VM" [ref=e178] [cursor=pointer]:
+                - /url: /compute/instancesAdd?project=private-car-buyer
+                - generic [ref=e179]:
+                  - img [ref=e181]:
+                    - img [ref=e182]
+                  - text: Create a VM
+              - link "Run a query in BigQuery" [ref=e184] [cursor=pointer]:
+                - /url: /bigquery?project=private-car-buyer
+                - generic [ref=e185]:
+                  - img [ref=e187]:
+                    - img [ref=e188]
+                  - text: Run a query in BigQuery
+              - link "Deploy an application" [ref=e190] [cursor=pointer]:
+                - /url: /run/overview?project=private-car-buyer
+                - generic [ref=e191]:
+                  - img [ref=e193]:
+                    - img [ref=e194]
+                  - text: Deploy an application
+              - link "Create a storage bucket" [ref=e196] [cursor=pointer]:
+                - /url: /storage/create-bucket?project=private-car-buyer
+                - generic [ref=e197]:
+                  - img [ref=e199]:
+                    - img [ref=e200]
+                  - text: Create a storage bucket
+          - link "Join the Google Developer Program to learn new skills and dev tools at no cost. Join today" [ref=e203] [cursor=pointer]:
+            - /url: http://developers.google.com/program/?utm_source=gcp&utm_medium=welcome-card&utm_campaign=FY25-global-gcp-onboarding-console-gdp-standard-premium&utm_content=gdp&utm_term=gdp
+            - generic [ref=e204]:
+              - generic [ref=e206]: Join the Google Developer Program to learn new skills and dev tools at no cost.
+              - generic [ref=e207]:
+                - generic [ref=e208]: Join today
+                - img [ref=e211]
+        - generic [ref=e213]:
+          - generic [ref=e214]:
+            - heading "Recommended based on your activities" [level=2] [ref=e216]
+            - generic [ref=e221]:
+              - img "Illustration for the suggestion card" [ref=e224]
+              - generic [ref=e227]:
+                - heading "Run your app on a fully managed platform with Cloud Run" [level=3] [ref=e229]:
+                  - generic [ref=e231]: Run your app on a fully managed platform with Cloud Run
+                - generic [ref=e234]: Deploy your code, function, or containers on top of Google's highly scalable infrastructure
+                - generic [ref=e236]:
+                  - link "Deploy your app" [ref=e238] [cursor=pointer]:
+                    - /url: /run/create
+                    - generic [ref=e242]: Deploy your app
+                  - link "Learn about pricing external, opens new window" [ref=e244] [cursor=pointer]:
+                    - /url: https://cloud.google.com/run/pricing
+                    - generic [ref=e247]:
+                      - generic [ref=e249]: Learn about pricing
+                      - img "external, opens new window" [ref=e250]:
+                        - img [ref=e251]
+          - generic [ref=e255]:
+            - heading "Quick access" [level=2] [ref=e257]
+            - generic [ref=e261]:
+              - link "APIs & Services" [ref=e262] [cursor=pointer]:
+                - /url: /apis?project=private-car-buyer
+                - generic [ref=e264]:
+                  - img [ref=e267]
+                  - generic [ref=e271]: APIs & Services
+              - link "IAM & Admin" [ref=e272] [cursor=pointer]:
+                - /url: /iam-admin?project=private-car-buyer
+                - generic [ref=e274]:
+                  - img [ref=e277]
+                  - generic [ref=e281]: IAM & Admin
+              - link "Billing" [ref=e282] [cursor=pointer]:
+                - /url: /billing?project=private-car-buyer
+                - generic [ref=e284]:
+                  - img [ref=e287]
+                  - generic [ref=e298]: Billing
+              - link "Compute Engine" [ref=e299] [cursor=pointer]:
+                - /url: /compute?project=private-car-buyer
+                - generic [ref=e301]:
+                  - img [ref=e304]
+                  - generic [ref=e320]: Compute Engine
+              - link "Cloud Storage" [ref=e321] [cursor=pointer]:
+                - /url: /storage?project=private-car-buyer
+                - generic [ref=e323]:
+                  - img [ref=e326]
+                  - generic [ref=e330]: Cloud Storage
+              - link "BigQuery" [ref=e331] [cursor=pointer]:
+                - /url: /bigquery?project=private-car-buyer
+                - generic [ref=e333]:
+                  - img [ref=e336]
+                  - generic [ref=e342]: BigQuery
+              - link "VPC network" [ref=e343] [cursor=pointer]:
+                - /url: /networking?project=private-car-buyer
+                - generic [ref=e345]:
+                  - img [ref=e348]
+                  - generic [ref=e354]: VPC network
+              - link "Kubernetes Engine" [ref=e355] [cursor=pointer]:
+                - /url: /kubernetes?project=private-car-buyer
+                - generic [ref=e357]:
+                  - img [ref=e360]
+                  - generic [ref=e367]: Kubernetes Engine
+          - link "View all products" [ref=e370] [cursor=pointer]:
+            - /url: /products?project=private-car-buyer
+            - img [ref=e372]
+            - generic [ref=e375]: View all products
+  - iframe [ref=e378]:
+    
+  - iframe [ref=e379]:
+    
+  - iframe [ref=e380]:
+    
+  - paragraph [ref=e518]: 4 search suggestions. Navigate this list with arrow keys.
+  - iframe [ref=e519]:
+    

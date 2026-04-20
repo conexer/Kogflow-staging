@@ -642,7 +642,7 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
         .select('id, address, empty_rooms, listing_url, icp_score')
         .eq('status', 'scraped')
         .eq('empty_rooms', '[]')
-        .gte('icp_score', 25)
+        .gte('icp_score', 5)
         .not('listing_url', 'is', null)
         .order('icp_score', { ascending: false })
         .limit(limit);
@@ -838,7 +838,7 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string, redesig
                 model: 'google/nano-banana-edit',
                 input: {
                     prompt,
-                    image_input: [imageUrl],
+                    image_urls: [imageUrl],
                     aspect_ratio: 'auto',
                 },
             }),
@@ -1346,7 +1346,7 @@ export async function runPipelineSession(config: {
         return bVacant - aVacant || (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0);
     });
 
-    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} vacant/long-DOM leads)`);
+    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} leads with Moondream)`);
 
     for (const listing of toProcess) {
         // Check for stop request every 3rd lead to keep DB calls low
@@ -1368,10 +1368,9 @@ export async function runPipelineSession(config: {
         listing.score = await scoreICP(listing);
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
 
-        const kw = listing.keywords.join(' ').toLowerCase();
-        const looksVacant = vacancyKeywords.some(k => kw.includes(k)) || (listing.daysOnMarket ?? 0) >= 60;
-
-        if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM && looksVacant) {
+        // Run Moondream on all new leads with photos — vacancy keywords help sort order
+        // but are not a gate, since HAR listings rarely include them in keywords
+        if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM) {
             const primaryPhoto = listing.photos[0];
             if (primaryPhoto) {
                 moondreamChecked++;
@@ -1387,8 +1386,6 @@ export async function runPipelineSession(config: {
                     }
                 }
             }
-        } else if (!looksVacant) {
-            // skip silently — furnished listing
         } else if (moondreamChecked >= MAX_MOONDREAM) {
             await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
@@ -1413,7 +1410,7 @@ export async function runPipelineSession(config: {
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if ((listing.score ?? 0) >= 25 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+        } else if ((listing.score ?? 0) >= 5 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
             // High-score furnished lead — redesign any available room photo
             highScoreStaged++;
             const photoUrl = listing.photos[0];

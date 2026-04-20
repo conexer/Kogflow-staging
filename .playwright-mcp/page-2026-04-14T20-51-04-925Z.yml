@@ -1,0 +1,203 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary "Skip links" [ref=e570]:
+        - link "Skip to main content" [ref=e571] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Skip to main content
+        - button "Keyboard shortcuts" [ref=e572]:
+          - generic [ref=e9]: Keyboard shortcuts
+        - link "Accessibility Help external, opens new window" [ref=e573] [cursor=pointer]:
+          - /url: https://cloud.google.com/docs/accessibility?hl=en_US
+          - generic [ref=e11]:
+            - text: Accessibility Help
+            - generic "external, opens new window" [ref=e574]:
+              - img "external, opens new window" [ref=e575]:
+                - img [ref=e14]
+        - link "Accessibility Feedback external, opens new window" [ref=e576] [cursor=pointer]:
+          - /url: https://support.google.com/accessibility/contact/feedback?hl=en_US
+          - generic [ref=e17]:
+            - text: Accessibility Feedback
+            - generic "external, opens new window" [ref=e577]:
+              - img "external, opens new window" [ref=e578]:
+                - img [ref=e20]
+      - banner [ref=e23]:
+        - generic [ref=e24]:
+          - navigation [ref=e27]:
+            - button "Navigation menu (.)" [ref=e579] [cursor=pointer]:
+              - img [ref=e30]
+          - link "Google Cloud Platform Home" [ref=e580] [cursor=pointer]:
+            - /url: /
+            - generic:
+              - img
+          - button "You're currently working in Kogflow. Hit enter to switch projects, folders, or organizations" [ref=e581]:
+            - generic [ref=e270]:
+              - img [ref=e272]
+              - generic [ref=e275]: Kogflow
+        - button "Open search" [ref=e582] [cursor=pointer]:
+          - img [ref=e49]
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - button "Open or close Gemini Cloud Assist chat (Alt G)" [ref=e583] [cursor=pointer]:
+              - img [ref=e281]
+            - button "Activate Cloud Shell (G then S)" [ref=e584] [cursor=pointer]:
+              - img [ref=e285]
+            - button "1 unread notifications. Open notifications" [ref=e585] [cursor=pointer]:
+              - generic [ref=e62]: "1"
+            - button "Settings and utilities" [ref=e586] [cursor=pointer]:
+              - img [ref=e69]
+          - 'button "Account: Minh Do (conexer@gmail.com)" [ref=e587]':
+            - img [ref=e290]
+    - generic [ref=e82]:
+      - navigation "Breadcrumb" [ref=e588]:
+        - link "Google Auth Platform" [ref=e589] [cursor=pointer]:
+          - /url: /auth?project=kogflow
+          - img [ref=e301]
+          - generic [ref=e305]: Google Auth Platform
+        - list [ref=e306]:
+          - listitem [ref=e307]:
+            - generic [ref=e308]: /
+            - link "Audience" [ref=e590] [cursor=pointer]:
+              - /url: /auth/audience?project=kogflow
+              - generic [ref=e313]: Audience
+      - generic [ref=e93]:
+        - navigation "Google Auth Platform" [ref=e591]:
+          - generic [ref=e101]:
+            - list "Overview, 1 of 7 More options Branding, 2 of 7 More options Audience, 3 of 7 More options Clients, 4 of 7 More options Data Access, 5 of 7 More options Verification Center, 6 of 7 More options Settings, 7 of 7 More options" [ref=e592]:
+              - listitem [ref=e116]:
+                - generic [ref=e119]:
+                  - link "Overview, 1 of 7" [ref=e593] [cursor=pointer]:
+                    - /url: /auth/overview
+                    - generic [ref=e121]:
+                      - img [ref=e124]
+                      - generic [ref=e126]: Overview
+                  - button "More options" [ref=e594] [cursor=pointer]:
+                    - img [ref=e130]
+              - listitem [ref=e132]:
+                - generic [ref=e135]:
+                  - link "Branding, 2 of 7" [ref=e595] [cursor=pointer]:
+                    - /url: /auth/branding
+                    - generic [ref=e137]:
+                      - img [ref=e140]
+                      - generic [ref=e146]: Branding
+                  - button "More options" [ref=e596] [cursor=pointer]:
+                    - img [ref=e150]
+              - listitem [ref=e152]:
+                - generic [ref=e155]:
+                  - link "Audience, 3 of 7" [ref=e597] [cursor=pointer]:
+                    - /url: /auth/audience
+                    - generic [ref=e157]:
+                      - img [ref=e160]
+                      - generic [ref=e162]: Audience
+                  - button "More options" [ref=e598] [cursor=pointer]:
+                    - img [ref=e166]
+              - listitem [ref=e168]:
+                - generic [ref=e171]:
+                  - link "Clients, 4 of 7" [ref=e599] [cursor=pointer]:
+                    - /url: /auth/clients
+                    - generic [ref=e173]:
+                      - img [ref=e176]
+                      - generic [ref=e178]: Clients
+                  - button "More options" [ref=e600] [cursor=pointer]:
+                    - img [ref=e182]
+              - listitem [ref=e184]:
+                - generic [ref=e187]:
+                  - link "Data Access, 5 of 7" [ref=e601] [cursor=pointer]:
+                    - /url: /auth/scopes
+                    - generic [ref=e189]:
+                      - img [ref=e192]
+                      - generic [ref=e195]: Data Access
+                  - button "More options" [ref=e602] [cursor=pointer]:
+                    - img [ref=e199]
+              - listitem [ref=e201]:
+                - generic [ref=e204]:
+                  - link "Verification Center, 6 of 7" [ref=e603] [cursor=pointer]:
+                    - /url: /auth/verification?project=kogflow
+                    - generic [ref=e206]:
+                      - img [ref=e209]
+                      - generic [ref=e212]: Verification Center
+                  - button "More options" [ref=e604] [cursor=pointer]:
+                    - img [ref=e216]
+              - listitem [ref=e218]:
+                - generic [ref=e221]:
+                  - link "Settings, 7 of 7" [ref=e605] [cursor=pointer]:
+                    - /url: /auth/settings
+                    - generic [ref=e223]:
+                      - img [ref=e226]
+                      - generic [ref=e228]: Settings
+                  - button "More options" [ref=e606] [cursor=pointer]:
+                    - img [ref=e232]
+            - button "Toggle Google Auth Platform navigation menu" [pressed] [ref=e607] [cursor=pointer]:
+              - img [ref=e239]
+        - main [ref=e242]:
+          - generic [ref=e324]:
+            - heading "Audience" [level=1] [ref=e608]:
+              - generic [ref=e331]: Audience
+            - generic [ref=e333]:
+              - generic [ref=e334]:
+                - generic [ref=e336]:
+                  - text: Publishing status
+                  - button "Help popup" [ref=e609] [cursor=pointer]:
+                    - img [ref=e340]
+                - paragraph [ref=e342]: Testing
+                - button "Publish app" [ref=e610]:
+                  - generic [ref=e345]: Publish app
+              - generic [ref=e346]:
+                - generic [ref=e347]: User type
+                - paragraph [ref=e348]:
+                  - text: External
+                  - button "Help popup" [ref=e611] [cursor=pointer]:
+                    - img [ref=e352]
+                - button "Make internal" [disabled] [ref=e612]:
+                  - generic [ref=e356]: Make internal
+              - generic [ref=e357]:
+                - text: OAuth user cap
+                - button "Help with OAuth user cap" [ref=e613] [cursor=pointer]:
+                  - img [ref=e361]
+              - generic [ref=e364]:
+                - group "Expanded group contents" [ref=e614]:
+                  - generic [ref=e368]:
+                    - paragraph [ref=e369]:
+                      - text: While publishing status is set to "Testing", only test users are able to access the app. Allowed user cap prior to app verification is 100, and is counted over the entire lifetime of the app.
+                      - link "Learn more about user quota restrictions external, opens new window" [ref=e615] [cursor=pointer]:
+                        - /url: https://support.google.com/cloud/answer/7454865
+                        - text: Learn more
+                        - img "external, opens new window" [ref=e616]:
+                          - img [ref=e372]
+                    - generic [ref=e385]: 1 user (1 test, 0 other) / 100 user cap
+                    - button "Help with other user" [ref=e618] [cursor=pointer]:
+                      - img [ref=e389]
+                    - generic [ref=e391]: Test users
+                    - button "Add users" [active] [ref=e619]:
+                      - generic [ref=e393]:
+                        - img [ref=e395]:
+                          - img [ref=e396]
+                        - text: Add users
+                    - generic [ref=e401]:
+                      - img [ref=e403]
+                      - generic [ref=e405]: Filter
+                      - group "Filter" [ref=e620]:
+                        - combobox "Filter" [ref=e621]: Enter property name or value
+                      - button "Help with filtering." [ref=e622] [cursor=pointer]:
+                        - img [ref=e412]
+                    - grid "Test users , Navigate table with arrow keys. Enter key to interact with cell. Tab to navigate inside cell. Escape to exit cell." [ref=e623]:
+                      - rowgroup [ref=e422]:
+                        - row "User information Actions" [ref=e624]:
+                          - columnheader "User information" [ref=e625]:
+                            - generic [ref=e426]: User information
+                          - columnheader "Actions" [ref=e626]
+                      - rowgroup [ref=e429]:
+                        - row "kogflow.media@gmail.com" [ref=e627]:
+                          - gridcell "kogflow.media@gmail.com" [ref=e628]
+                          - gridcell [ref=e629]:
+                            - button [ref=e630] [cursor=pointer]:
+                              - img [ref=e632]:
+                                - img [ref=e633]
+                - button "Show less" [expanded] [ref=e636]:
+                  - generic [ref=e435]:
+                    - img [ref=e437]
+                    - text: Show less
+  - iframe [ref=e266]:
+    
+  - iframe [ref=e268]:
+    

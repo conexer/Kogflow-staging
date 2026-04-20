@@ -1,0 +1,13 @@
+{
+  "taskId": "",
+  "status": "",
+  "errorCode": "1",
+  "errorMessage": "Unknown error, please retry or contact support | 未知错误，请重试或联系支持",
+  "results": null,
+  "clientId": "",
+  "promptTips": "",
+  "failedReason": {},
+  "usage": null,
+  "parentTaskId": null,
+  "taskUsageList": null
+}
