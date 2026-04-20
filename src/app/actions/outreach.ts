@@ -1124,22 +1124,42 @@ export async function getSessionLog(sessionId: string): Promise<{ logs?: string[
 
 export async function getActiveSession(): Promise<{ sessionId?: string; isRunning: boolean }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const since = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // last 20 min
-    const { data } = await supabase
+    const since = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
+    // Try pipeline_session_log first (table may not exist)
+    const { data, error } = await supabase
         .from('pipeline_session_log')
         .select('session_id, message, logged_at')
         .gte('logged_at', since)
         .order('logged_at', { ascending: false })
         .limit(200);
-    if (!data || data.length === 0) return { isRunning: false };
-    // Find the most recently started session
-    const startEntry = data.find(r => r.message === '__SESSION_START__');
-    if (!startEntry) return { isRunning: false };
-    const sid = startEntry.session_id;
-    // If that session already has a complete or stop marker, it's done
-    const isDone = data.some(r => r.session_id === sid && (r.message === '__SESSION_COMPLETE__' || r.message === '__STOP_REQUESTED__'));
-    if (isDone) return { isRunning: false };
-    return { sessionId: sid, isRunning: true };
+
+    if (!error && data && data.length > 0) {
+        const startEntry = data.find(r => r.message === '__SESSION_START__');
+        if (!startEntry) return { isRunning: false };
+        const sid = startEntry.session_id;
+        const isDone = data.some(r => r.session_id === sid && (r.message === '__SESSION_COMPLETE__' || r.message === '__STOP_REQUESTED__'));
+        if (isDone) return { isRunning: false };
+        return { sessionId: sid, isRunning: true };
+    }
+
+    // Fallback: check pipeline_runs for in-progress marker (processed = -1)
+    const since30 = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: pending } = await supabase
+        .from('pipeline_runs')
+        .select('id, errors')
+        .eq('processed', -1)
+        .gte('ran_at', since30)
+        .order('ran_at', { ascending: false })
+        .limit(1);
+
+    if (pending && pending.length > 0) {
+        const logEntry = (pending[0].errors || []).find((e: string) => e.startsWith('LOG:Session '));
+        const sessionId = logEntry?.match(/Session ([a-f0-9-]{36})/)?.[1] || pending[0].id;
+        return { sessionId, isRunning: true };
+    }
+
+    return { isRunning: false };
 }
 
 export async function requestSessionStop(sessionId: string): Promise<void> {

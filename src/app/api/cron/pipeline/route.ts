@@ -23,7 +23,8 @@ export async function GET(request: Request) {
     const { count } = await supabase
         .from('pipeline_runs')
         .select('*', { count: 'exact', head: true })
-        .gte('ran_at', today.toISOString());
+        .gte('ran_at', today.toISOString())
+        .neq('processed', -1); // exclude in-progress runs
 
     if ((count ?? 0) >= config.sessions_per_day) {
         return NextResponse.json({ skipped: true, reason: `Already ran ${count} sessions today (limit: ${config.sessions_per_day})` });

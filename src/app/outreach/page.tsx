@@ -258,52 +258,46 @@ export default function OutreachPage() {
         setLiveLog([]);
         setLastDebug([]);
         setRunningSession(true);
-        toast.loading('Running pipeline session...', { id: 'pipeline' });
-
-        // Poll live log + activity log every 2s while session is running
-        pollRef.current = setInterval(async () => {
-            const [{ logs }, { entries }] = await Promise.all([
-                getSessionLog(sessionId),
-                getRecentActivityLog(),
-            ]);
-            if (logs) {
-                setLiveLog([...logs]);
-                if (liveLogRef.current) liveLogRef.current.scrollTop = liveLogRef.current.scrollHeight;
-            }
-            if (entries) {
-                setActivityLog(entries);
-                if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
-            }
-        }, 2000);
+        toast.loading('Starting pipeline session...', { id: 'pipeline' });
 
         try {
-            const result = await runPipelineSession({ cities: selectedCities, scrapesPerSession, sessionId });
-            // Persist debug log to pipeline_runs so activity log survives page reload
-            await logPipelineRun(result).catch(() => {});
-            toast.dismiss('pipeline');
-            const debugLines = result.debug || [];
-            const allSkipped = debugLines.filter(l => l.includes('already in DB')).length > 0 && result.processed === 0;
+            // Call background API route — returns immediately, pipeline runs server-side
+            // even if you close or refresh the page
+            const res = await fetch('/api/trigger-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start session');
 
-            if (result.processed > 0) {
-                toast.success(`Session complete: ${result.processed} new leads saved`);
-                setActiveTab('leads');
-            } else if (allSkipped) {
-                toast.info('All scraped listings already in DB — showing existing leads');
-                setActiveTab('leads');
-            } else {
-                toast.error('0 leads found — check live log');
-            }
-            if (result.errors.length > 0) toast.error(`${result.errors[0]}`);
-            setLastDebug(debugLines);
-            setLiveLog([...debugLines]);
-            await loadData();
+            toast.dismiss('pipeline');
+            toast.success('Pipeline running in background — safe to close or refresh');
+
+            // Poll activity log + running state every 5s until session completes
+            pollRef.current = setInterval(async () => {
+                const [activityRes, activeRes] = await Promise.all([
+                    getRecentActivityLog(),
+                    getActiveSession(),
+                ]);
+                if (activityRes.entries) {
+                    setActivityLog(activityRes.entries);
+                    if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
+                }
+                if (!activeRes.isRunning) {
+                    clearInterval(pollRef.current!);
+                    pollRef.current = null;
+                    setRunningSession(false);
+                    setActiveSessionId(null);
+                    toast.success('Session complete');
+                    await loadData();
+                }
+            }, 5000);
         } catch (e: any) {
             toast.dismiss('pipeline');
-            toast.error(e.message || 'Session failed');
+            toast.error(e.message || 'Session failed to start');
+            setRunningSession(false);
         }
-
-        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-        setRunningSession(false);
     };
 
     const handleSaveConfig = async () => {
