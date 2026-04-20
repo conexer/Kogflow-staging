@@ -723,35 +723,37 @@ async function uploadStagedImage(tempUrl: string, leadId: string): Promise<strin
 }
 
 // Poll all staged leads, save the generated image URL, then send outreach email
-export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[] }> {
+export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data, error } = await supabase
         .from('outreach_leads')
         .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
         .eq('status', 'staged')
-        .not('staging_task_id', 'is', null);
+        .not('staging_task_id', 'is', null)
+        .limit(limit);
 
-    if (error) return { emailed: 0, stillProcessing: 0, failed: 0, errors: [error.message] };
+    if (error) return { emailed: 0, stillProcessing: 0, failed: 0, errors: [error.message], debug: [] };
 
     let emailed = 0;
     let stillProcessing = 0;
     let failed = 0;
     const errors: string[] = [];
+    const debug: string[] = [];
 
-    for (const lead of (data || [])) {
+    const leads = data || [];
+    debug.push(`Poll & email: checking ${leads.length} staged lead(s)`);
+
+    for (const lead of leads) {
         const result = await checkStagingResult(lead.staging_task_id);
 
         if (result.status === 'success' && result.url) {
-            // Upload staged image to permanent Supabase storage (Kie.ai URLs expire)
             const permanentUrl = await uploadStagedImage(result.url, lead.id);
 
-            // Save permanent URL into empty_rooms[0].stagedUrl
             const updatedRooms = [...(lead.empty_rooms || [])];
             if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
             await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
 
-            // Send outreach email if agent has an email
             if (lead.agent_email) {
                 const emailResult = await sendOutreachEmail({
                     agentName: lead.agent_name,
@@ -763,26 +765,29 @@ export async function pollAndEmailStagedLeads(): Promise<{ emailed: number; stil
                 if (emailResult.success) {
                     await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
                     emailed++;
+                    debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
                 } else {
                     errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+                    debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
                     failed++;
                 }
             } else {
-                // No email — still mark progress
                 await updateLeadStatus(lead.id, 'form_filled');
-                errors.push(`No email for ${lead.address} — staged image saved`);
+                debug.push(`No email address for ${lead.address} — staged image saved`);
             }
         } else if (result.status === 'processing') {
             stillProcessing++;
+            debug.push(`⏳ Still generating: ${lead.address}`);
         } else {
-            // failed or error — reset to scraped so it can be retried
             await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
             failed++;
             errors.push(`Generation failed ${lead.address}: ${result.error}`);
+            debug.push(`✗ Generation failed ${lead.address}: ${result.error}`);
         }
     }
 
-    return { emailed, stillProcessing, failed, errors };
+    debug.push(`Poll complete: ${emailed} emailed, ${stillProcessing} still generating, ${failed} failed`);
+    return { emailed, stillProcessing, failed, errors, debug };
 }
 
 export async function getLeadStats(since?: string) {

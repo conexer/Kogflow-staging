@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { after } from 'next/server';
-import { runPipelineSession } from '@/app/actions/outreach';
+import { runPipelineSession, pollAndEmailStagedLeads } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
 // Vercel Pro max serverless duration — pipeline must complete within 5 min
@@ -34,7 +34,13 @@ export async function POST(request: Request) {
     // after() runs AFTER the response is sent — survives page refresh/close
     after(async () => {
         try {
+            // Step 1: Email any leads that were staged in a prior session
+            const emailResult = await pollAndEmailStagedLeads(10);
+
+            // Step 2: Scrape + stage new leads
             const result = await runPipelineSession({ cities, scrapesPerSession, sessionId });
+
+            const allDebug = [...emailResult.debug, ...result.debug];
 
             if (runId) {
                 await supabase
@@ -43,7 +49,7 @@ export async function POST(request: Request) {
                         processed: result.processed,
                         errors: [
                             ...(result.errors || []),
-                            ...(result.debug || []).map((d: string) => `LOG:${d}`),
+                            ...allDebug.map((d: string) => `LOG:${d}`),
                         ],
                     })
                     .eq('id', runId);
