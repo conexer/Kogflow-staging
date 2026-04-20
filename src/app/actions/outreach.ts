@@ -1241,7 +1241,7 @@ export async function runPipelineSession(config: {
     }
 
     // Write sentinel so UI can detect active session on page reload (table may not exist — non-fatal)
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' }).catch(() => {});
+    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' }).then(null, () => {});
 
     await log(`Session ${sessionId} started`);
     await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
@@ -1354,7 +1354,7 @@ export async function runPipelineSession(config: {
             if ((stopData?.length ?? 0) > 0) {
                 await log(`Session stopped by user after ${processed} leads`);
                 await flushLog();
-                await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).catch(() => {});
+                await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
                 return { processed, errors, debug, sessionId };
             }
         }
@@ -1431,7 +1431,7 @@ export async function runPipelineSession(config: {
     }
     await log(`Session complete: ${processed} saved, ${emptyRoomsFound}/${minEmptyRooms} empty rooms found`);
     await flushLog();
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).catch(() => {});
+    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
     return { processed, errors, debug, sessionId };
 }
 
