@@ -1179,9 +1179,10 @@ export async function getRecentActivityLog(limit = 300): Promise<{ entries?: { l
         .select('logged_at, session_id, message')
         .order('logged_at', { ascending: false })
         .limit(limit);
-    if (!error) return { entries: (data || []).reverse() };
+    // Only use session_log if it has actual entries; otherwise fall through to pipeline_runs
+    if (!error && data && data.length > 0) return { entries: data.reverse() };
 
-    // Table missing — fall back to pipeline_runs (debug lines stored with LOG: prefix)
+    // Table missing OR empty — fall back to pipeline_runs (debug lines stored with LOG: prefix)
     const { data: runs, error: runsErr } = await supabase
         .from('pipeline_runs')
         .select('id, ran_at, processed, errors')

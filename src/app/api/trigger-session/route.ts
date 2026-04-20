@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { after } from 'next/server';
-import { runPipelineSession, pollAndEmailStagedLeads } from '@/app/actions/outreach';
+import { runPipelineSession, pollAndEmailStagedLeads, submitStagingBatch } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
 // Vercel Pro max serverless duration — pipeline must complete within 5 min
@@ -34,7 +34,10 @@ export async function POST(request: Request) {
     // after() runs AFTER the response is sent — survives page refresh/close
     after(async () => {
         try {
-            // Step 1: Email any leads that were staged in a prior session
+            // Step 1: Submit any queued leads (empty rooms found) to Kie.ai
+            await submitStagingBatch(5);
+
+            // Step 2: Email leads whose Kie.ai images are ready from prior sessions
             const emailResult = await pollAndEmailStagedLeads(10);
 
             // Step 2: Scrape + stage new leads

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads } from '@/app/actions/outreach';
+import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch } from '@/app/actions/outreach';
 
 export const maxDuration = 300; // Vercel Pro max
 
@@ -20,8 +20,12 @@ export async function GET(request: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Step 1: Poll Kie.ai + send emails for leads staged in the previous session.
-    // This always runs regardless of sessions_per_day limit.
+    // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
+    // Runs before poll so staged leads appear in step 2 on the NEXT cron call.
+    await submitStagingBatch(5);
+
+    // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
+    // Always runs regardless of sessions_per_day limit.
     const emailResult = await pollAndEmailStagedLeads(10);
 
     // Step 2: Check if we've already hit today's scrape session limit.
