@@ -3,8 +3,8 @@ import { after } from 'next/server';
 import { runPipelineSession } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
-// Allow up to 13 min for the background pipeline run (Vercel Pro max)
-export const maxDuration = 800;
+// Vercel Pro max serverless duration — pipeline must complete within 5 min
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
     const { cities, scrapesPerSession, sessionId } = await request.json();

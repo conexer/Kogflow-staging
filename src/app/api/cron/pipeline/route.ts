@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { loadPipelineConfig, runPipelineSession, logPipelineRun } from '@/app/actions/outreach';
 
+export const maxDuration = 300; // Vercel Pro max
+
 // 10 cron entries fire hourly 13–22 UTC (8am–5pm CDT Houston).
 // Each trigger runs one session, but skips if today's run count already reached sessions_per_day.
 export async function GET(request: Request) {
