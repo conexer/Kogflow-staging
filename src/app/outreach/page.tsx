@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -278,6 +278,8 @@ export default function OutreachPage() {
 
         try {
             const result = await runPipelineSession({ cities: selectedCities, scrapesPerSession, sessionId });
+            // Persist debug log to pipeline_runs so activity log survives page reload
+            await logPipelineRun(result).catch(() => {});
             toast.dismiss('pipeline');
             const debugLines = result.debug || [];
             const allSkipped = debugLines.filter(l => l.includes('already in DB')).length > 0 && result.processed === 0;

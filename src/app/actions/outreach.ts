@@ -1154,8 +1154,31 @@ export async function getRecentActivityLog(limit = 300): Promise<{ entries?: { l
         .select('logged_at, session_id, message')
         .order('logged_at', { ascending: false })
         .limit(limit);
-    if (error) return { error: error.message };
-    return { entries: (data || []).reverse() };
+    if (!error) return { entries: (data || []).reverse() };
+
+    // Table missing — fall back to pipeline_runs (debug lines stored with LOG: prefix)
+    const { data: runs, error: runsErr } = await supabase
+        .from('pipeline_runs')
+        .select('id, ran_at, processed, errors')
+        .order('ran_at', { ascending: false })
+        .limit(20);
+    if (runsErr) return { error: runsErr.message };
+
+    const entries: { logged_at: string; session_id: string; message: string }[] = [];
+    for (const run of (runs || []).reverse()) {
+        const logLines = (run.errors || [])
+            .filter((e: string) => e.startsWith('LOG:'))
+            .map((e: string) => e.slice(4));
+        if (logLines.length > 0) {
+            entries.push({ logged_at: run.ran_at, session_id: run.id, message: `--- Session ${new Date(run.ran_at).toLocaleTimeString()} ---` });
+            for (const line of logLines) {
+                entries.push({ logged_at: run.ran_at, session_id: run.id, message: line });
+            }
+        } else {
+            entries.push({ logged_at: run.ran_at, session_id: run.id, message: `Session complete: ${run.processed} leads processed` });
+        }
+    }
+    return { entries: entries.slice(-limit) };
 }
 
 export async function runPipelineSession(config: {
@@ -1197,8 +1220,8 @@ export async function runPipelineSession(config: {
         }
     }
 
-    // Write sentinel so UI can detect active session on page reload
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' });
+    // Write sentinel so UI can detect active session on page reload (table may not exist — non-fatal)
+    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' }).catch(() => {});
 
     await log(`Session ${sessionId} started`);
     await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
@@ -1311,7 +1334,7 @@ export async function runPipelineSession(config: {
             if ((stopData?.length ?? 0) > 0) {
                 await log(`Session stopped by user after ${processed} leads`);
                 await flushLog();
-                await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' });
+                await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).catch(() => {});
                 return { processed, errors, debug, sessionId };
             }
         }
@@ -1388,8 +1411,7 @@ export async function runPipelineSession(config: {
     }
     await log(`Session complete: ${processed} saved, ${emptyRoomsFound}/${minEmptyRooms} empty rooms found`);
     await flushLog();
-    // Write sentinel so UI knows session has ended
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' });
+    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).catch(() => {});
     return { processed, errors, debug, sessionId };
 }
 
@@ -1428,12 +1450,12 @@ export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; e
 // 10. PIPELINE RUNS — Log cron executions
 // ─────────────────────────────────────────────
 
-export async function logPipelineRun(result: { processed: number; errors: string[] }): Promise<void> {
+export async function logPipelineRun(result: { processed: number; errors: string[]; debug?: string[] }): Promise<void> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     await supabase.from('pipeline_runs').insert({
         ran_at: new Date().toISOString(),
         processed: result.processed,
-        errors: result.errors,
+        errors: [...(result.errors || []), ...(result.debug || []).map(d => `LOG:${d}`)],
     });
 }
 
