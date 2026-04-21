@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -91,12 +91,19 @@ CREATE TABLE IF NOT EXISTS public.pipeline_runs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   ran_at TIMESTAMPTZ DEFAULT NOW(),
   processed INTEGER NOT NULL DEFAULT 0,
-  errors TEXT[] NOT NULL DEFAULT '{}'
+  errors TEXT[] NOT NULL DEFAULT '{}',
+  trigger TEXT DEFAULT 'cron'
 );
 
 ALTER TABLE public.pipeline_runs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role full access" ON public.pipeline_runs
   USING (TRUE) WITH CHECK (TRUE);
+
+-- Add trigger column to existing pipeline_runs (idempotent)
+ALTER TABLE public.pipeline_runs ADD COLUMN IF NOT EXISTS trigger TEXT DEFAULT 'cron';
+
+-- Add cron_enabled to pipeline_config (idempotent)
+ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS cron_enabled BOOLEAN DEFAULT TRUE;
 
 -- Site scrape log (one row per site per pipeline run)
 CREATE TABLE IF NOT EXISTS public.site_scrape_log (
@@ -154,6 +161,14 @@ export default function OutreachPage() {
     const [runningSession, setRunningSession] = useState(false);
     const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'config' | 'email' | 'setup'>('dashboard');
 
+    // Cron schedule status
+    const [cronStatus, setCronStatus] = useState<{
+        cron_enabled: boolean; sessions_per_day: number; today_cron_runs: number;
+        last_cron_run: string | null; next_scheduled_utc: string; expected_so_far: number; schedule: string;
+    } | null>(null);
+    const [cronRunning, setCronRunning] = useState(false);
+    const [togglingCron, setTogglingCron] = useState(false);
+
     // Config save state
     const [savingConfig, setSavingConfig] = useState(false);
     const [recentRuns, setRecentRuns] = useState<any[]>([]);
@@ -191,9 +206,10 @@ export default function OutreachPage() {
         setLoadingData(true);
         try {
             const resetAt = typeof window !== 'undefined' ? (localStorage.getItem('stats_reset_at') ?? undefined) : undefined;
-            const [statsRes, leadsRes, configRes, runsRes, siteStatsRes, activityRes, activeSessionRes] = await Promise.all([
-                getLeadStats(resetAt), getLeads(), loadPipelineConfig(), getRecentRuns(), getSiteStats(), getRecentActivityLog(), getActiveSession(),
+            const [statsRes, leadsRes, configRes, runsRes, siteStatsRes, activityRes, activeSessionRes, cronStatusRes] = await Promise.all([
+                getLeadStats(resetAt), getLeads(), loadPipelineConfig(), getRecentRuns(), getSiteStats(), getRecentActivityLog(), getActiveSession(), getCronStatus(),
             ]);
+            setCronStatus(cronStatusRes);
             if ('error' in statsRes && statsRes.error?.includes('outreach_leads')) {
                 setDbReady(false);
                 setActiveTab('setup');
@@ -306,6 +322,7 @@ export default function OutreachPage() {
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
             cities: selectedCities,
+            cron_enabled: cronStatus?.cron_enabled ?? true,
         });
         setSavingConfig(false);
         if (result.error) toast.error(`Save failed: ${result.error}`);
@@ -427,6 +444,53 @@ export default function OutreachPage() {
         toast.success('Stats reset — counting from now forward');
         await loadData();
         setResettingStats(false);
+    };
+
+    const handleRunCronNow = async () => {
+        if (selectedCities.length === 0) { toast.error('Select at least one city first'); return; }
+        setCronRunning(true);
+        toast.loading('Triggering cron session...', { id: 'cron-now' });
+        try {
+            const sessionId = crypto.randomUUID();
+            const res = await fetch('/api/trigger-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
+            });
+            const data = await res.json();
+            toast.dismiss('cron-now');
+            if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start');
+            toast.success('Cron session running in background');
+            setRunningSession(true);
+            setActiveSessionId(sessionId);
+            if (!pollRef.current) {
+                pollRef.current = setInterval(async () => {
+                    const [activityRes, activeRes] = await Promise.all([getRecentActivityLog(), getActiveSession()]);
+                    if (activityRes.entries) { setActivityLog(activityRes.entries); if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight; }
+                    if (!activeRes.isRunning) { clearInterval(pollRef.current!); pollRef.current = null; setRunningSession(false); setActiveSessionId(null); setCronRunning(false); await loadData(); }
+                }, 5000);
+            }
+        } catch (e: any) {
+            toast.dismiss('cron-now');
+            toast.error(e.message || 'Failed to trigger session');
+            setCronRunning(false);
+        }
+    };
+
+    const handleToggleCron = async () => {
+        if (!cronStatus) return;
+        setTogglingCron(true);
+        const newEnabled = !cronStatus.cron_enabled;
+        const result = await savePipelineConfig({
+            sessions_per_day: sessionsPerDay,
+            scrapes_per_session: scrapesPerSession,
+            cities: selectedCities,
+            cron_enabled: newEnabled,
+        });
+        setTogglingCron(false);
+        if (result.error) { toast.error(`Failed: ${result.error}`); return; }
+        setCronStatus(prev => prev ? { ...prev, cron_enabled: newEnabled } : prev);
+        toast.success(newEnabled ? 'Schedule resumed — cron will run next hour' : 'Schedule paused — cron will skip until resumed');
     };
 
     const handleTestMoondream = async () => {
@@ -628,6 +692,62 @@ export default function OutreachPage() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Schedule Status */}
+                        {cronStatus && (
+                            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="font-bold text-lg flex items-center gap-2">
+                                        <Clock className="w-5 h-5 text-primary" />
+                                        Schedule Status
+                                        <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", cronStatus.cron_enabled ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400')}>
+                                            {cronStatus.cron_enabled ? 'Active' : 'Paused'}
+                                        </span>
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleRunCronNow}
+                                            disabled={cronRunning || runningSession}
+                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50 transition-colors"
+                                        >
+                                            {cronRunning ? <><div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> Running...</> : <><Play className="w-3.5 h-3.5" /> Run Now</>}
+                                        </button>
+                                        <button
+                                            onClick={handleToggleCron}
+                                            disabled={togglingCron}
+                                            className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50", cronStatus.cron_enabled ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20')}
+                                        >
+                                            {togglingCron ? <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : null}
+                                            {cronStatus.cron_enabled ? 'Pause Schedule' : 'Resume Schedule'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                    <div className="bg-muted/30 rounded-lg p-3 space-y-1">
+                                        <div className="text-xs text-muted-foreground">Schedule</div>
+                                        <div className="font-medium text-xs">{cronStatus.schedule}</div>
+                                    </div>
+                                    <div className="bg-muted/30 rounded-lg p-3 space-y-1">
+                                        <div className="text-xs text-muted-foreground">Today's Cron Runs</div>
+                                        <div className="font-bold">{cronStatus.today_cron_runs} <span className="text-muted-foreground font-normal text-xs">/ {cronStatus.sessions_per_day} limit</span></div>
+                                    </div>
+                                    <div className="bg-muted/30 rounded-lg p-3 space-y-1">
+                                        <div className="text-xs text-muted-foreground">Last Cron Run</div>
+                                        <div className="font-medium text-xs">{cronStatus.last_cron_run ? new Date(cronStatus.last_cron_run).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}</div>
+                                    </div>
+                                    <div className="bg-muted/30 rounded-lg p-3 space-y-1">
+                                        <div className="text-xs text-muted-foreground">Next Scheduled</div>
+                                        <div className="font-medium text-xs">{new Date(cronStatus.next_scheduled_utc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                    </div>
+                                </div>
+                                {cronStatus.today_cron_runs < cronStatus.expected_so_far && (
+                                    <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        Expected {cronStatus.expected_so_far} cron run{cronStatus.expected_so_far !== 1 ? 's' : ''} by now, got {cronStatus.today_cron_runs}. Manual sessions don't count toward this limit.
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Activity Log — always visible, shows all pipeline activity */}
                         <div className="bg-card border border-border rounded-xl p-6 space-y-3">

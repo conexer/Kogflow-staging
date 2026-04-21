@@ -1505,51 +1505,151 @@ export interface PipelineConfig {
     sessions_per_day: number;
     scrapes_per_session: number;
     cities: string[];
+    cron_enabled: boolean;
 }
 
 export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { error } = await supabase
-        .from('pipeline_config')
-        .upsert({ id: 1, ...config, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-    if (error) return { error: error.message };
+    // cron_enabled column may not exist yet — upsert without it if insert fails
+    const row = { id: 1, ...config, updated_at: new Date().toISOString() };
+    const { error } = await supabase.from('pipeline_config').upsert(row, { onConflict: 'id' });
+    if (error?.message?.includes('cron_enabled')) {
+        const { cron_enabled: _ce, ...rowWithout } = row;
+        await supabase.from('pipeline_config').upsert(rowWithout, { onConflict: 'id' });
+    } else if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data, error } = await supabase
-        .from('pipeline_config')
-        .select('*')
-        .eq('id', 1)
-        .single();
-    // HAR.com covers Houston metro area + Texas cities — defaults target these reliably
-    if (error || !data) return { config: { sessions_per_day: 3, scrapes_per_session: 10, cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'] } };
-    return { config: { sessions_per_day: data.sessions_per_day, scrapes_per_session: data.scrapes_per_session, cities: data.cities } };
+    const { data, error } = await supabase.from('pipeline_config').select('*').eq('id', 1).single();
+    const defaults: PipelineConfig = { sessions_per_day: 3, scrapes_per_session: 10, cron_enabled: true, cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'] };
+    if (error || !data) return { config: defaults };
+    return { config: { sessions_per_day: data.sessions_per_day, scrapes_per_session: data.scrapes_per_session, cities: data.cities, cron_enabled: data.cron_enabled ?? true } };
 }
 
 // ─────────────────────────────────────────────
 // 10. PIPELINE RUNS — Log cron executions
 // ─────────────────────────────────────────────
 
-export async function logPipelineRun(result: { processed: number; errors: string[]; debug?: string[] }): Promise<void> {
+// trigger: 'cron' for scheduled runs, 'manual' for UI-triggered runs.
+// Only cron runs count toward sessions_per_day so manual runs don't consume the budget.
+export async function logPipelineRun(result: { processed: number; errors: string[]; debug?: string[]; trigger?: 'cron' | 'manual' }): Promise<void> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    await supabase.from('pipeline_runs').insert({
+    const row: any = {
         ran_at: new Date().toISOString(),
         processed: result.processed,
         errors: [...(result.errors || []), ...(result.debug || []).map(d => `LOG:${d}`)],
-    });
+        trigger: result.trigger ?? 'cron',
+    };
+    const { error } = await supabase.from('pipeline_runs').insert(row);
+    if (error?.message?.includes('trigger')) {
+        // trigger column not yet added — insert without it
+        const { trigger: _t, ...rowWithout } = row;
+        await supabase.from('pipeline_runs').insert(rowWithout);
+    }
 }
 
-export async function countTodayRuns(): Promise<number> {
+// Count cron-only runs today (manual UI runs don't count toward the daily limit).
+export async function countTodayCronRuns(): Promise<number> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const { count } = await supabase
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    // Try to filter by trigger='cron'; fall back to all runs if column missing
+    const { count, error } = await supabase
         .from('pipeline_runs')
         .select('*', { count: 'exact', head: true })
-        .gte('ran_at', todayStart.toISOString());
+        .gte('ran_at', today.toISOString())
+        .neq('processed', -1)
+        .eq('trigger', 'cron');
+    if (error?.message?.includes('trigger')) {
+        // Column doesn't exist yet — count all completed runs
+        const { count: all } = await supabase
+            .from('pipeline_runs')
+            .select('*', { count: 'exact', head: true })
+            .gte('ran_at', today.toISOString())
+            .neq('processed', -1);
+        return all ?? 0;
+    }
     return count ?? 0;
+}
+
+// Returns cron schedule health info for the dashboard.
+// Cron fires hourly 13–22 UTC (8am–5pm CDT). Slots expected so far today = hours elapsed in that window.
+export async function getCronStatus(): Promise<{
+    cron_enabled: boolean;
+    sessions_per_day: number;
+    today_cron_runs: number;
+    last_cron_run: string | null;
+    next_scheduled_utc: string;
+    expected_so_far: number;
+    schedule: string;
+}> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { config } = await loadPipelineConfig();
+
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    // Cron schedule: 13–22 UTC inclusive (10 slots/day)
+    const CRON_HOURS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+    const passedHours = CRON_HOURS.filter(h => h <= utcHour);
+    const expected_so_far = passedHours.length;
+
+    // Next scheduled UTC time
+    const nextHour = CRON_HOURS.find(h => h > utcHour);
+    let next_scheduled_utc: string;
+    if (nextHour !== undefined) {
+        const next = new Date(now);
+        next.setUTCHours(nextHour, 0, 0, 0);
+        next_scheduled_utc = next.toISOString();
+    } else {
+        // Tomorrow at 13 UTC
+        const next = new Date(now);
+        next.setUTCDate(next.getUTCDate() + 1);
+        next.setUTCHours(13, 0, 0, 0);
+        next_scheduled_utc = next.toISOString();
+    }
+
+    // Last cron run — try to filter by trigger='cron', fall back to any run
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const { data: cronRuns, error } = await supabase
+        .from('pipeline_runs')
+        .select('ran_at, processed')
+        .gte('ran_at', today.toISOString())
+        .neq('processed', -1)
+        .eq('trigger', 'cron')
+        .order('ran_at', { ascending: false })
+        .limit(20);
+
+    let today_cron_runs = 0;
+    let last_cron_run: string | null = null;
+
+    if (error?.message?.includes('trigger')) {
+        // Column missing — show all runs (will overcount manual runs, but gives signal)
+        const { data: allRuns } = await supabase
+            .from('pipeline_runs')
+            .select('ran_at')
+            .gte('ran_at', today.toISOString())
+            .neq('processed', -1)
+            .order('ran_at', { ascending: false })
+            .limit(1);
+        last_cron_run = allRuns?.[0]?.ran_at ?? null;
+        today_cron_runs = 0;
+    } else {
+        today_cron_runs = cronRuns?.length ?? 0;
+        last_cron_run = cronRuns?.[0]?.ran_at ?? null;
+    }
+
+    return {
+        cron_enabled: config?.cron_enabled ?? true,
+        sessions_per_day: config?.sessions_per_day ?? 3,
+        today_cron_runs,
+        last_cron_run,
+        next_scheduled_utc,
+        expected_so_far,
+        schedule: 'Hourly 8am–5pm CDT (13–22 UTC)',
+    };
 }
 
 export async function getRecentRuns(limit = 20): Promise<{ runs?: any[]; error?: string }> {

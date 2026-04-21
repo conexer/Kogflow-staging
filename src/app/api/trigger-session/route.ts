@@ -24,6 +24,7 @@ export async function POST(request: Request) {
         .insert({
             ran_at: new Date().toISOString(),
             processed: -1,
+            trigger: 'manual',
             errors: [`LOG:Session ${sessionId} starting...`],
         })
         .select()
