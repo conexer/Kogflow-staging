@@ -422,9 +422,10 @@ export async function detectRoom(imageUrl: string): Promise<{
     isEmpty: boolean;
     confidence: number;
     roomType: string;
+    isExterior: boolean;
     error?: string;
 }> {
-    if (!MOONDREAM_API_KEY) return { isEmpty: false, confidence: 0, roomType: 'unknown', error: 'MOONDREAM_API_KEY not configured' };
+    if (!MOONDREAM_API_KEY) return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: 'MOONDREAM_API_KEY not configured' };
 
     try {
         // Moondream requires base64 — fetch the image with browser-like headers to bypass hotlink protection
@@ -438,7 +439,7 @@ export async function detectRoom(imageUrl: string): Promise<{
                 'Cache-Control': 'no-cache',
             },
         });
-        if (!imgRes.ok) return { isEmpty: false, confidence: 0, roomType: 'unknown', error: `Image fetch failed: ${imgRes.status}` };
+        if (!imgRes.ok) return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: `Image fetch failed: ${imgRes.status}` };
 
         const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
         const arrayBuffer = await imgRes.arrayBuffer();
@@ -460,7 +461,7 @@ export async function detectRoom(imageUrl: string): Promise<{
 
         if (!res.ok) {
             const err = await res.text();
-            return { isEmpty: false, confidence: 0, roomType: 'unknown', error: `Moondream error ${res.status}: ${err}` };
+            return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: `Moondream error ${res.status}: ${err}` };
         }
 
         const data = await res.json();
@@ -486,8 +487,17 @@ export async function detectRoom(imageUrl: string): Promise<{
         const hasFurniture = FURNITURE_KEYWORDS.some(kw => answer.includes(kw));
         const confirmsEmpty = EMPTY_KEYWORDS.some(kw => answer.includes(kw));
 
+        // Keywords that indicate this is an exterior photo (front of house, yard, etc.)
+        const EXTERIOR_KEYWORDS = [
+            'exterior', 'outside', 'yard', 'lawn', 'grass', 'driveway', 'garage',
+            'roof', 'sidewalk', 'street', 'outdoor', 'porch', 'deck', 'patio',
+            'front of', 'back of', 'side of', 'curb', 'landscape', 'garden',
+            'fence', 'aerial', 'parking', 'trees', 'tree',
+        ];
+        const isExterior = EXTERIOR_KEYWORDS.some(kw => answer.includes(kw));
+
         // Room must have NO furniture keywords AND at least one empty-confirming phrase
-        const isEmpty = !hasFurniture && confirmsEmpty;
+        const isEmpty = !isExterior && !hasFurniture && confirmsEmpty;
         const confidence = isEmpty ? 90 : hasFurniture ? 0 : 0;
 
         // Guess room type from description
@@ -498,10 +508,10 @@ export async function detectRoom(imageUrl: string): Promise<{
             : answer.includes('bathroom') || answer.includes('bath') ? 'bathroom'
             : 'room';
 
-        return { isEmpty, confidence, roomType };
+        return { isEmpty, confidence, roomType, isExterior };
 
     } catch (error: any) {
-        return { isEmpty: false, confidence: 0, roomType: 'unknown', error: error.message };
+        return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: error.message };
     }
 }
 
@@ -668,12 +678,10 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
             roomType = lead.empty_rooms[0].roomType || 'room';
             redesign = false;
         } else {
-            // Fetch interior photo from HAR detail page
-            // HAR photo order: [0]=front exterior, [1]=street/exterior, [2+]=interior rooms
-            const photos = await getHarListingPhotos(lead.listing_url, 8);
-            const interiorPhoto = photos[2] || photos[1] || photos[0]; // skip first 2 (exterior)
+            // Fetch and verify an interior photo — Moondream rejects exterior shots
+            const interiorPhoto = await findInteriorPhoto(lead.listing_url);
             if (!interiorPhoto) {
-                errors.push(`${lead.address}: no photos found`);
+                errors.push(`${lead.address}: no interior photo found`);
                 failed++;
                 continue;
             }
@@ -729,7 +737,7 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
 
     const { data, error } = await supabase
         .from('outreach_leads')
-        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id')
         .eq('status', 'staged')
         .not('staging_task_id', 'is', null)
         .limit(limit);
@@ -749,6 +757,33 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
         const result = await checkStagingResult(lead.staging_task_id);
 
         if (result.status === 'success' && result.url) {
+            // Verify the stored "before" photo is actually an interior room.
+            // Leads staged before the interior-photo fix may have exterior shots stored.
+            const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+            if (storedBeforeUrl) {
+                const { isExterior } = await detectRoom(storedBeforeUrl);
+                if (isExterior) {
+                    // Re-stage with a confirmed interior photo — email on next poll cycle
+                    const interiorPhoto = await findInteriorPhoto(lead.listing_url);
+                    if (interiorPhoto) {
+                        const { taskId } = await stageEmptyRoom(interiorPhoto, 'room', true);
+                        if (taskId) {
+                            const updatedRooms = [{ roomType: 'room', imageUrl: interiorPhoto, redesign: true }];
+                            await supabase.from('outreach_leads')
+                                .update({ empty_rooms: updatedRooms, staging_task_id: taskId })
+                                .eq('id', lead.id);
+                            stillProcessing++;
+                            debug.push(`⟳ Re-staging with interior photo: ${lead.address}`);
+                            continue;
+                        }
+                    }
+                    // Could not find interior photo — skip this lead entirely
+                    debug.push(`✗ Skipped (no interior photo): ${lead.address}`);
+                    failed++;
+                    continue;
+                }
+            }
+
             const permanentUrl = await uploadStagedImage(result.url, lead.id);
 
             const updatedRooms = [...(lead.empty_rooms || [])];
@@ -761,7 +796,7 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
                     agentEmail: lead.agent_email,
                     address: lead.address,
                     stagedImageUrl: permanentUrl,
-                    beforeImageUrl: lead.empty_rooms?.[0]?.imageUrl,
+                    beforeImageUrl: storedBeforeUrl,
                 });
                 if (emailResult.success) {
                     await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
@@ -1058,6 +1093,19 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     } catch {
         return [];
     }
+}
+
+// Scans photos from a HAR detail page and returns the first confirmed interior photo.
+// Uses Moondream to reject exterior shots (front of house, yard, aerial, etc.).
+// HAR photo order is typically [0]=exterior, then mixed — this guarantees interior.
+async function findInteriorPhoto(listingUrl: string): Promise<string | null> {
+    const photos = await getHarListingPhotos(listingUrl, 10);
+    // Always skip index 0 (HAR primary photo = exterior front-of-house listing shot)
+    for (const photo of photos.slice(1, 8)) {
+        const { isExterior, error } = await detectRoom(photo);
+        if (!error && !isExterior) return photo;
+    }
+    return null; // no interior found — do not fall back to exterior
 }
 
 // Scan top leads for empty rooms by fetching HAR detail pages (separate from main pipeline)
@@ -1372,24 +1420,27 @@ export async function runPipelineSession(config: {
         // Run Moondream on all new leads with photos — vacancy keywords help sort order
         // but are not a gate, since HAR listings rarely include them in keywords
         if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM) {
-            // HAR search thumbnails are always exterior. Fetch detail page to get interior photos.
-            // Photo order on HAR: [0]=front exterior, [1]=street/exterior, [2+]=interior rooms.
-            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 6);
-            const photoToCheck = detailPhotos[2] || detailPhotos[1] || detailPhotos[0] || listing.photos[0];
-            if (photoToCheck) {
+            // HAR primary photo (index 0) is always the exterior front-of-house shot.
+            // Scan from index 1 onward, skipping any exterior photos, until we find interior.
+            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 8);
+            let checkedInterior = false;
+            for (const photo of detailPhotos.slice(1, 6)) {
+                if (moondreamChecked >= MAX_MOONDREAM) break;
                 moondreamChecked++;
-                const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoToCheck);
-                if (roomErr) {
-                    await log(`  [${listing.address}] Moondream error: ${roomErr}`);
-                } else {
-                    await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
-                    if (isEmpty && confidence >= 80) {
-                        emptyRooms.push({ roomType, imageUrl: photoToCheck });
-                        emptyRoomsFound++;
-                        await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
-                    }
+                const { isEmpty, confidence, roomType, isExterior, error: roomErr } = await detectRoom(photo);
+                if (roomErr) { await log(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
+                if (isExterior) { await log(`  [${listing.address}] Skipping exterior photo`); continue; }
+                // First confirmed interior photo — check for empty room, then stop scanning
+                checkedInterior = true;
+                await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
+                if (isEmpty && confidence >= 80) {
+                    emptyRooms.push({ roomType, imageUrl: photo });
+                    emptyRoomsFound++;
+                    await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
                 }
+                break;
             }
+            if (!checkedInterior) await log(`  [${listing.address}] No interior photo found`);
         } else if (moondreamChecked >= MAX_MOONDREAM) {
             await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
@@ -1415,12 +1466,13 @@ export async function runPipelineSession(config: {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
         } else if ((listing.score ?? 0) >= 5 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // High-score furnished lead — redesign an interior room photo
+            // High-score furnished lead — redesign a confirmed interior room photo
+            const photoUrl = await findInteriorPhoto(listing.listingUrl);
+            if (!photoUrl) {
+                await log(`  [${listing.address}] No interior photo — skipping stage`);
+                continue;
+            }
             highScoreStaged++;
-            // Detail page photos: [0]=exterior, [1]=exterior, [2+]=interior. Skip first two.
-            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 6);
-            const photoUrl = detailPhotos[2] || detailPhotos[1] || detailPhotos[0] || listing.photos[0];
-            if (!photoUrl) continue;
             const roomEntry = { roomType: 'room', imageUrl: photoUrl, redesign: true };
             await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', leadId);
             const { taskId, error: stageErr } = await stageEmptyRoom(photoUrl, 'room', true);
