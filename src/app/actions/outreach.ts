@@ -669,8 +669,9 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
             redesign = false;
         } else {
             // Fetch interior photo from HAR detail page
-            const photos = await getHarListingPhotos(lead.listing_url, 5);
-            const interiorPhoto = photos[1] || photos[0]; // skip exterior (index 0) if possible
+            // HAR photo order: [0]=front exterior, [1]=street/exterior, [2+]=interior rooms
+            const photos = await getHarListingPhotos(lead.listing_url, 8);
+            const interiorPhoto = photos[2] || photos[1] || photos[0]; // skip first 2 (exterior)
             if (!interiorPhoto) {
                 errors.push(`${lead.address}: no photos found`);
                 failed++;
@@ -1371,16 +1372,19 @@ export async function runPipelineSession(config: {
         // Run Moondream on all new leads with photos — vacancy keywords help sort order
         // but are not a gate, since HAR listings rarely include them in keywords
         if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM) {
-            const primaryPhoto = listing.photos[0];
-            if (primaryPhoto) {
+            // HAR search thumbnails are always exterior. Fetch detail page to get interior photos.
+            // Photo order on HAR: [0]=front exterior, [1]=street/exterior, [2+]=interior rooms.
+            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 6);
+            const photoToCheck = detailPhotos[2] || detailPhotos[1] || detailPhotos[0] || listing.photos[0];
+            if (photoToCheck) {
                 moondreamChecked++;
-                const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(primaryPhoto);
+                const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoToCheck);
                 if (roomErr) {
                     await log(`  [${listing.address}] Moondream error: ${roomErr}`);
                 } else {
                     await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
                     if (isEmpty && confidence >= 80) {
-                        emptyRooms.push({ roomType, imageUrl: primaryPhoto });
+                        emptyRooms.push({ roomType, imageUrl: photoToCheck });
                         emptyRoomsFound++;
                         await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
                     }
@@ -1410,10 +1414,13 @@ export async function runPipelineSession(config: {
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if ((listing.score ?? 0) >= 5 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // High-score furnished lead — redesign any available room photo
+        } else if ((listing.score ?? 0) >= 5 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+            // High-score furnished lead — redesign an interior room photo
             highScoreStaged++;
-            const photoUrl = listing.photos[0];
+            // Detail page photos: [0]=exterior, [1]=exterior, [2+]=interior. Skip first two.
+            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 6);
+            const photoUrl = detailPhotos[2] || detailPhotos[1] || detailPhotos[0] || listing.photos[0];
+            if (!photoUrl) continue;
             const roomEntry = { roomType: 'room', imageUrl: photoUrl, redesign: true };
             await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', leadId);
             const { taskId, error: stageErr } = await stageEmptyRoom(photoUrl, 'room', true);
