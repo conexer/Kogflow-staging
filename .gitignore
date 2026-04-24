@@ -42,3 +42,16 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# playwright MCP session files — contain captured secrets/tokens, never commit
+.playwright-mcp/
+
+# one-off test/debug HTML and script files
+test-*.html
+test-*.mjs
+test-*.js
+*.mjs
+check-*.js
+audit-*.js
+confirm-*.js
+verify-*.js
