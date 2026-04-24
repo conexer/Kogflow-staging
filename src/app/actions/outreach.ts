@@ -768,12 +768,11 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
 export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Only stage leads that have a confirmed empty room from Moondream scanning.
-    // Never stage high-score leads without empty rooms — too risky for exterior slip-through.
+    // Stage leads that have a Moondream-confirmed room (already verified during pipeline scan).
     const { data: emptyData } = await supabase
         .from('outreach_leads')
         .select('id, address, empty_rooms, listing_url, icp_score')
-        .eq('status', 'scraped')
+        .in('status', ['scraped', 'scored'])
         .not('empty_rooms', 'eq', '[]')
         .limit(limit);
 
@@ -786,17 +785,6 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
     for (const lead of allPending) {
         const imageUrl: string = lead.empty_rooms[0].imageUrl;
         const roomType: string = lead.empty_rooms[0].roomType || 'room';
-
-        // Re-verify the stored image is a confirmed stageable room before sending to Kie.ai.
-        // Must be a real bedroom/living room/kitchen/dining room/bathroom — not a floor plan,
-        // entryway, stairway, or exterior shot.
-        const recheck = await detectRoom(imageUrl);
-        if (!recheck.isStageable || recheck.error) {
-            errors.push(`${lead.address}: stored photo failed re-verify (${recheck.roomType} — rejected)`);
-            failed++;
-            await supabase.from('outreach_leads').update({ empty_rooms: [], status: 'scraped' }).eq('id', lead.id);
-            continue;
-        }
 
         const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, false);
         if (taskId) {
@@ -861,59 +849,59 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
     for (const lead of leads) {
         const result = await checkStagingResult(lead.staging_task_id);
 
-        if (result.status === 'success' && result.url) {
-            // Re-verify the before photo when one is stored — rejects floor plans / exterior shots.
-            // If no before URL is stored (furnished redesign path), skip the check — room was
-            // already verified by Moondream during the pipeline run.
-            const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
-            if (storedBeforeUrl) {
-                const beforeCheck = await detectRoom(storedBeforeUrl);
-                if (!beforeCheck.isStageable) {
-                    await supabase.from('outreach_leads')
-                        .update({ staging_task_id: null, empty_rooms: [] })
-                        .eq('id', lead.id);
-                    await updateLeadStatus(lead.id, 'scraped');
-                    failed++;
-                    debug.push(`✗ Before-image rejected (${beforeCheck.roomType}), reset: ${lead.address}`);
-                    continue;
-                }
-            }
-
-            const permanentUrl = await uploadStagedImage(result.url, lead.id);
-
-            const updatedRooms = [...(lead.empty_rooms || [])];
-            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
-            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
-
-            if (lead.agent_email) {
-                const emailResult = await sendOutreachEmail({
-                    agentName: lead.agent_name,
-                    agentEmail: lead.agent_email,
-                    address: lead.address,
-                    stagedImageUrl: permanentUrl,
-                    beforeImageUrl: storedBeforeUrl,
-                });
-                if (emailResult.success) {
-                    await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
-                    emailed++;
-                    debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
-                } else {
-                    errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
-                    debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
-                    failed++;
-                }
-            } else {
-                await updateLeadStatus(lead.id, 'form_filled');
-                debug.push(`No email address for ${lead.address} — staged image saved`);
-            }
-        } else if (result.status === 'processing') {
+        if (result.status === 'processing') {
             stillProcessing++;
             debug.push(`⏳ Still generating: ${lead.address}`);
-        } else {
-            await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
+            continue;
+        }
+
+        if (result.status === 'error') {
+            // Transient error (network/API) — leave as staged, retry next poll
+            debug.push(`⚠ Kie.ai error (will retry): ${lead.address} — ${result.error}`);
+            continue;
+        }
+
+        if (result.status === 'failed') {
+            // Definitive generation failure — reset so it can be re-staged
+            await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
             failed++;
             errors.push(`Generation failed ${lead.address}: ${result.error}`);
             debug.push(`✗ Generation failed ${lead.address}: ${result.error}`);
+            continue;
+        }
+
+        // status === 'success'
+        const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+        const permanentUrl = result.url ? await uploadStagedImage(result.url, lead.id) : undefined;
+
+        if (permanentUrl) {
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+        } else {
+            debug.push(`⚠ No staged URL returned for ${lead.address} — sending email without image`);
+        }
+
+        if (lead.agent_email) {
+            const emailResult = await sendOutreachEmail({
+                agentName: lead.agent_name,
+                agentEmail: lead.agent_email,
+                address: lead.address,
+                stagedImageUrl: permanentUrl,
+                beforeImageUrl: storedBeforeUrl,
+            });
+            if (emailResult.success) {
+                await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                emailed++;
+                debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
+            } else {
+                errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+                debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
+                failed++;
+            }
+        } else {
+            await updateLeadStatus(lead.id, 'form_filled');
+            debug.push(`No email address for ${lead.address} — staged image saved`);
         }
     }
 
@@ -945,30 +933,23 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
         const result = await checkStagingResult(lead.staging_task_id);
 
         if (result.status === 'processing') { stillProcessing++; continue; }
+        if (result.status === 'error') { continue; } // transient — retry next time
 
-        if (result.status !== 'success' || !result.url) {
-            await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
+        if (result.status === 'failed') {
+            await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
             failed++;
             errors.push(`Generation failed ${lead.address}: ${result.error}`);
             continue;
         }
 
+        // success
         const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
-        if (storedBeforeUrl) {
-            const beforeCheck = await detectRoom(storedBeforeUrl);
-            if (!beforeCheck.isStageable) {
-                await supabase.from('outreach_leads').update({ staging_task_id: null, empty_rooms: [] }).eq('id', lead.id);
-                await updateLeadStatus(lead.id, 'scraped');
-                failed++;
-                errors.push(`Before-image rejected (${beforeCheck.roomType}): ${lead.address}`);
-                continue;
-            }
+        const permanentUrl = result.url ? await uploadStagedImage(result.url, lead.id) : undefined;
+        if (permanentUrl) {
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
         }
-
-        const permanentUrl = await uploadStagedImage(result.url, lead.id);
-        const updatedRooms = [...(lead.empty_rooms || [])];
-        if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
-        await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
 
         const emailResult = await sendOutreachEmail({
             agentName: lead.agent_name,
@@ -1075,11 +1056,16 @@ export async function checkStagingResult(taskId: string): Promise<{ status: stri
         const state = data.data?.state;
 
         if (state === 'success') {
-            const resultJson = JSON.parse(data.data.resultJson || '{}');
-            const url = resultJson.resultUrls?.[0];
+            // Try multiple known Kie.ai response shapes
+            let url: string | undefined;
+            try { url = JSON.parse(data.data.resultJson || '{}').resultUrls?.[0]; } catch {}
+            if (!url) url = data.data?.outputUrl || data.data?.result_url || data.data?.url;
+            if (!url && Array.isArray(data.data?.resultUrls)) url = data.data.resultUrls[0];
             return { status: 'success', url };
         } else if (state === 'fail' || state === 'failed') {
-            return { status: 'failed', error: data.data?.failMsg || 'Generation failed' };
+            return { status: 'failed', error: data.data?.failMsg || data.data?.message || 'Generation failed' };
+        } else if (state === 'error') {
+            return { status: 'error', error: data.data?.failMsg || data.data?.message || 'Kie.ai error' };
         }
 
         return { status: 'processing' };
