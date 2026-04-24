@@ -716,6 +716,55 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
 }
 
 // Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
+// Re-scans existing score>=35 leads that were scraped without a room photo (empty_rooms=[]).
+// Fetches their HAR photos, runs Moondream on each, stages the first stageable room found.
+// These leads were scraped before the furnished-redesign logic existed and have no staging_task_id.
+export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged: number; skipped: number; failed: number; total: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, listing_url, icp_score, agent_email')
+        .in('status', ['scraped', 'scored'])
+        .gte('icp_score', 35)
+        .eq('empty_rooms', '[]')
+        .not('listing_url', 'is', null)
+        .order('icp_score', { ascending: false })
+        .limit(limit);
+
+    if (error) return { staged: 0, skipped: 0, failed: 0, total: 0, errors: [error.message] };
+
+    const leads = data || [];
+    let staged = 0, skipped = 0, failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of leads) {
+        const photos = await getHarListingPhotos(lead.listing_url, 8);
+        if (photos.length < 2) { skipped++; continue; } // no interior photos
+
+        let stagedThisLead = false;
+        for (const photo of photos.slice(1, 7)) {
+            const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photo);
+            if (roomErr || !isStageable) continue;
+
+            // Stage it — empty rooms get furniture added, furnished rooms get redesigned
+            const { taskId, error: stageErr } = await stageEmptyRoom(photo, roomType, !isEmpty);
+            if (!taskId) { errors.push(`${lead.address}: ${stageErr}`); failed++; break; }
+
+            await supabase.from('outreach_leads')
+                .update({ empty_rooms: [{ roomType, imageUrl: photo }] })
+                .eq('id', lead.id);
+            await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
+            staged++;
+            stagedThisLead = true;
+            break;
+        }
+        if (!stagedThisLead && !errors.find(e => e.startsWith(lead.address))) skipped++;
+    }
+
+    return { staged, skipped, failed, total: leads.length, errors };
+}
+
 export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 

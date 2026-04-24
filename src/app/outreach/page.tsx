@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -427,6 +427,28 @@ export default function OutreachPage() {
         setTestingEmail(false);
     };
 
+    const [stagingHighScore, setStagingHighScore] = useState(false);
+    const handleStageHighScore = async () => {
+        setStagingHighScore(true);
+        toast.loading('Scanning score 35+ leads for rooms & staging...', { id: 'highscore' });
+        try {
+            const result = await scanAndStageHighScoreBacklog(20);
+            toast.dismiss('highscore');
+            const parts = [];
+            if (result.staged > 0) parts.push(`${result.staged} staged`);
+            if (result.skipped > 0) parts.push(`${result.skipped} skipped (no room found)`);
+            if (result.failed > 0) parts.push(`${result.failed} failed`);
+            if (result.total === 0) toast.info('No score 35+ leads without rooms found');
+            else if (result.staged > 0) toast.success(`${parts.join(' · ')} — run "Send Backlog Emails" once Kie.ai finishes (~2 min)`);
+            else toast.info(parts.join(' · ') || 'No rooms found in any of these leads');
+            if (result.staged > 0) loadData();
+        } catch (e: any) {
+            toast.dismiss('highscore');
+            toast.error(e.message || 'Scan failed');
+        }
+        setStagingHighScore(false);
+    };
+
     const [drainingBacklog, setDrainingBacklog] = useState(false);
     const handleDrainBacklog = async () => {
         setDrainingBacklog(true);
@@ -712,6 +734,13 @@ export default function OutreachPage() {
                                         className="flex-1 text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
                                     >
                                         Poll &amp; Email
+                                    </button>
+                                    <button
+                                        onClick={handleStageHighScore}
+                                        disabled={stagingHighScore}
+                                        className="w-full text-xs px-2 py-1.5 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                        {stagingHighScore ? <><div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> Scanning...</> : <><Zap className="w-3 h-3" /> Stage Score 35+ Backlog</>}
                                     </button>
                                     <button
                                         onClick={handleDrainBacklog}
