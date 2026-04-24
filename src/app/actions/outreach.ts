@@ -161,8 +161,8 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
 export async function scrapeHarCity(city: string, maxListings: number = 40, pages: number = 2): Promise<{ listings?: ScrapedListing[]; rawHtmlSnippet?: string; error?: string }> {
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
 
-    // dom=60: 60+ days on market → more likely to be vacant/distressed
-    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=600000&status=A&city=${encodeURIComponent(city)}&dom=60`;
+    // No dom filter — scrape ALL active listings so we don't exhaust the pool
+    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`;
 
     // Helper: parse a single HAR page HTML into listing rows
     function parseHarHtml(html: string): any[] {
@@ -726,7 +726,7 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
         .from('outreach_leads')
         .select('id, address, listing_url, icp_score, agent_email')
         .in('status', ['scraped', 'scored'])
-        .gte('icp_score', 35)
+        .gte('icp_score', 25)
         .eq('empty_rooms', '[]')
         .not('listing_url', 'is', null)
         .order('icp_score', { ascending: false })
@@ -1583,12 +1583,12 @@ export async function runPipelineSession(config: {
     // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
     // "vacant", "unfurnished", "empty", "needs staging" → high likelihood of empty rooms
     // Fallback: check any listing with DOM >= 60 (motivated seller, may be vacant)
-    // Limit: 15 Moondream calls max to stay within time budget (~2 min)
+    // Limit: 20 Moondream calls max to stay within time budget (~2 min)
     let emptyRoomsFound = 0;
     let moondreamChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 15;
-    const MAX_HIGH_SCORE_STAGE = 5; // max redesigns per session to control Kie.ai credits
+    const MAX_MOONDREAM = 20;
+    const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
     const vacancyKeywords = ['vacant', 'unfurnished', 'empty', 'needs staging', 'unoccupied', 'immediate occupancy', 'no furnit'];
@@ -1625,9 +1625,9 @@ export async function runPipelineSession(config: {
 
         // Run Moondream when:
         //   (a) still looking for empty rooms, OR
-        //   (b) listing scores 35+ — qualifies for furnished redesign even if empty target is met
+        //   (b) listing scores 25+ — qualifies for furnished redesign even if empty target is met
         const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM &&
-            (emptyRoomsFound < minEmptyRooms || listing.score >= 35);
+            (emptyRoomsFound < minEmptyRooms || listing.score >= 25);
 
         if (shouldRunMoondream) {
             moondreamChecked++;
@@ -1653,7 +1653,7 @@ export async function runPipelineSession(config: {
         } else if (moondreamChecked >= MAX_MOONDREAM) {
             await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
-            await log(`  [${listing.address}] Skipping Moondream (empty target met, score ${listing.score} < 35)`);
+            await log(`  [${listing.address}] Skipping Moondream (empty target met, score ${listing.score} < 25)`);
         }
 
         const saveResult = await saveLead({ ...listing, emptyRooms });
@@ -1675,8 +1675,8 @@ export async function runPipelineSession(config: {
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if (furnishedRoom && listing.score >= 35 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // Furnished room + score 35+ — redesign existing staging
+        } else if (furnishedRoom && listing.score >= 25 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+            // Furnished room + score 25+ — redesign existing staging
             highScoreStaged++;
             const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
             if (taskId) {
