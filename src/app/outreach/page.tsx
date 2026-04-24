@@ -991,6 +991,7 @@ export default function OutreachPage() {
                                             <th className="text-center px-3 py-2.5 font-medium">DOM</th>
                                             <th className="text-center px-3 py-2.5 font-medium">↓Price</th>
                                             <th className="text-center px-3 py-2.5 font-medium">Photos</th>
+                                            <th className="text-left px-3 py-2.5 font-medium">Scraped</th>
                                             <th className="text-center px-3 py-2.5 font-medium">Actions</th>
                                         </tr>
                                     </thead>
@@ -1071,6 +1072,17 @@ export default function OutreachPage() {
                                                 {/* Photo Count */}
                                                 <td className="px-3 py-2.5 text-center">
                                                     <span className="text-xs text-muted-foreground tabular-nums">{lead.photo_count}</span>
+                                                </td>
+                                                {/* Scraped At */}
+                                                <td className="px-3 py-2.5">
+                                                    <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                                                        {lead.created_at ? (() => {
+                                                            const d = new Date(lead.created_at);
+                                                            const date = d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                                                            const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                                                            return `${date} / ${time}`;
+                                                        })() : '—'}
+                                                    </span>
                                                 </td>
                                                 {/* Actions */}
                                                 <td className="px-3 py-2.5">
