@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const ZYTE_API_KEY = process.env.ZYTE_API_KEY!;
-const MOONDREAM_API_KEY = process.env.MOONDREAM_API_KEY!;
+const MOONDREAM_API_KEY = (process.env.MOONDREAM_API_KEY || '').trim();
 const CAPMONSTER_API_KEY = process.env.CAPMONSTER_API_KEY!;
 const KIE_API_KEY = process.env.KIE_AI_API_KEY!;
 
@@ -161,7 +161,8 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
 export async function scrapeHarCity(city: string, maxListings: number = 40, pages: number = 2): Promise<{ listings?: ScrapedListing[]; rawHtmlSnippet?: string; error?: string }> {
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
 
-    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=150000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`;
+    // No dom filter — scrape ALL active listings so we don't exhaust the pool
+    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`;
 
     // Helper: parse a single HAR page HTML into listing rows
     function parseHarHtml(html: string): any[] {
@@ -420,14 +421,18 @@ export async function extractListingDetails(listingUrl: string): Promise<{ data?
 
 export async function detectRoom(imageUrl: string): Promise<{
     isEmpty: boolean;
+    isStageable: boolean;
+    isInterior: boolean;
     confidence: number;
     roomType: string;
+    isExterior: boolean;
     error?: string;
 }> {
-    if (!MOONDREAM_API_KEY) return { isEmpty: false, confidence: 0, roomType: 'unknown', error: 'MOONDREAM_API_KEY not configured' };
+    const REJECT = { isEmpty: false, isStageable: false, isInterior: false, confidence: 0, roomType: 'unknown', isExterior: true };
+    if (!MOONDREAM_API_KEY) return { ...REJECT, error: 'MOONDREAM_API_KEY not configured' };
 
     try {
-        // Moondream requires base64 — fetch the image with browser-like headers to bypass hotlink protection
+        // Moondream requires base64 — fetch with browser-like headers to bypass hotlink protection
         const imageOrigin = new URL(imageUrl).origin;
         const imgRes = await fetch(imageUrl, {
             headers: {
@@ -438,70 +443,156 @@ export async function detectRoom(imageUrl: string): Promise<{
                 'Cache-Control': 'no-cache',
             },
         });
-        if (!imgRes.ok) return { isEmpty: false, confidence: 0, roomType: 'unknown', error: `Image fetch failed: ${imgRes.status}` };
+        if (!imgRes.ok) return { ...REJECT, error: `Image fetch failed: ${imgRes.status}` };
 
         const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
         const arrayBuffer = await imgRes.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
         const imageData = `data:${contentType};base64,${base64}`;
 
-        const res = await fetch('https://api.moondream.ai/v1/query', {
+        const moonHeaders = {
+            'X-Moondream-Auth': MOONDREAM_API_KEY,
+            'Content-Type': 'application/json',
+        };
+
+        // ── Q1: Interior check (positive gate) ───────────────────────────────────
+        // Ask positively "is this interior?" — more reliable than asking "is this NOT exterior?"
+        // Exterior photos (yard, facade, driveway) should answer "no" to this.
+        const interiorRes = await fetch('https://api.moondream.ai/v1/query', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${MOONDREAM_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
+            headers: moonHeaders,
             body: JSON.stringify({
-                image: imageData,
-                question: 'What furniture and objects do you see in this room? Be specific and list every item you can see.',
+                image_url: imageData,
+                question: 'Is this photo taken inside a building, showing an indoor room with walls, floor, and ceiling visible? Answer only "yes" or "no".',
                 stream: false,
             }),
         });
+        if (!interiorRes.ok) {
+            const err = await interiorRes.text();
+            return { ...REJECT, error: `Moondream interior check error ${interiorRes.status}: ${err}` };
+        }
+        const interiorData = await interiorRes.json();
+        const interiorAnswer: string = (interiorData.answer || interiorData.result || '').toLowerCase().trim();
+        if (!interiorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true }; // exterior — reject immediately
 
-        if (!res.ok) {
-            const err = await res.text();
-            return { isEmpty: false, confidence: 0, roomType: 'unknown', error: `Moondream error ${res.status}: ${err}` };
+        // ── Q1b: Explicit Exterior Negative Check ──────────────────────────────
+        // Ask negatively to catch yards, pools, facades that pass the interior check
+        await new Promise(r => setTimeout(r, 400));
+        const exteriorRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this photo show a backyard, swimming pool, front yard, garden, driveway, or the outside of a house? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (exteriorRes.ok) {
+            const exteriorData = await exteriorRes.json();
+            const exteriorAnswer: string = (exteriorData.answer || exteriorData.result || '').toLowerCase().trim();
+            if (exteriorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true };
         }
 
-        const data = await res.json();
-        const answer: string = (data.answer || data.result || '').toLowerCase();
+        // ── Q2: Empty room check ───────────────────────────────────────────────
+        // Now that we know it's interior, check if it's empty/unfurnished
+        await new Promise(r => setTimeout(r, 400));
+        const emptyRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Are there any objects, furniture, appliances, personal items, decorations, or belongings visible in this room? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (!emptyRes.ok) {
+            const err = await emptyRes.text();
+            return { ...REJECT, error: `Moondream empty check error ${emptyRes.status}: ${err}` };
+        }
+        const emptyData = await emptyRes.json();
+        const emptyAnswer: string = (emptyData.answer || emptyData.result || '').toLowerCase().trim();
+        // Question asks "is there furniture?" — "yes" = furnished (not empty), "no" = empty
+        const hasFurniture = emptyAnswer.startsWith('yes');
+        const isEmpty = !hasFurniture;
 
-        // Keywords that indicate furniture/furnishings — if any match, room is NOT empty
-        const FURNITURE_KEYWORDS = [
-            'sofa', 'couch', 'chair', 'table', 'bed', 'desk', 'dresser', 'cabinet',
-            'shelf', 'bookshelf', 'bookcase', 'wardrobe', 'television', 'tv', 'lamp',
-            'rug', 'carpet', 'curtain', 'blinds', 'artwork', 'picture', 'mirror',
-            'stove', 'refrigerator', 'fridge', 'dishwasher', 'sink', 'toilet', 'bathtub',
-            'shower', 'vanity', 'counter', 'island', 'appliance', 'fireplace', 'ceiling fan',
-        ];
+        // Has furniture → not stageable (but is interior, so not a hard reject)
+        if (!isEmpty) return { ...REJECT, isEmpty: false, isExterior: false, isInterior: true };
 
-        // Phrases that confirm the room is empty
-        const EMPTY_KEYWORDS = [
-            'empty room', 'no furniture', 'bare', 'unfurnished', 'vacant',
-            'nothing in', 'no objects', 'no items', 'does not contain any',
-            'there is nothing', 'i don\'t see any furniture', 'i do not see any furniture',
-            'no visible furniture', 'appears to be empty', 'room is empty',
-        ];
+        // ── Q3: Floor plan rejection ───────────────────────────────────────────
+        // Floor plans have no furniture so they pass Q2. Explicitly reject them.
+        await new Promise(r => setTimeout(r, 400));
+        const planRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this image show a 2D floor plan, architectural blueprint, or room diagram with labels or dimension lines? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (planRes.ok) {
+            const planData = await planRes.json();
+            const planAnswer: string = (planData.answer || planData.result || '').toLowerCase().trim();
+            if (planAnswer.startsWith('yes')) return { ...REJECT }; // floor plan — reject
+        }
 
-        const hasFurniture = FURNITURE_KEYWORDS.some(kw => answer.includes(kw));
-        const confirmsEmpty = EMPTY_KEYWORDS.some(kw => answer.includes(kw));
+        // ── Q4: Foyer/stairway/hallway rejection ───────────────────────────────
+        // Entryways and staircases are not stageable rooms even when empty.
+        await new Promise(r => setTimeout(r, 400));
+        const foyerRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this image show a staircase, hallway, entryway, foyer, or corridor? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (foyerRes.ok) {
+            const foyerData = await foyerRes.json();
+            const foyerAnswer: string = (foyerData.answer || foyerData.result || '').toLowerCase().trim();
+            if (foyerAnswer.startsWith('yes')) return { ...REJECT }; // not a stageable room — reject
+        }
 
-        // Room must have NO furniture keywords AND at least one empty-confirming phrase
-        const isEmpty = !hasFurniture && confirmsEmpty;
-        const confidence = isEmpty ? 90 : hasFurniture ? 0 : 0;
+        // ── Q5: Room type (only for confirmed interior, empty rooms) ─────────
+        await new Promise(r => setTimeout(r, 400));
+        const typeRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, dining room, or bathroom.',
+                stream: false,
+            }),
+        });
+        let roomType = 'room';
+        if (typeRes.ok) {
+            const typeData = await typeRes.json();
+            const typeAnswer: string = (typeData.answer || typeData.result || '').toLowerCase().trim();
+            roomType = typeAnswer.includes('bedroom') ? 'bedroom'
+                : typeAnswer.includes('living') ? 'living room'
+                : typeAnswer.includes('kitchen') ? 'kitchen'
+                : typeAnswer.includes('dining') ? 'dining room'
+                : typeAnswer.includes('bathroom') || typeAnswer.includes('bath') ? 'bathroom'
+                : 'room';
+        }
 
-        // Guess room type from description
-        const roomType = answer.includes('bedroom') || answer.includes('bed') ? 'bedroom'
-            : answer.includes('living') ? 'living room'
-            : answer.includes('kitchen') ? 'kitchen'
-            : answer.includes('dining') ? 'dining room'
-            : answer.includes('bathroom') || answer.includes('bath') ? 'bathroom'
-            : 'room';
+        // Final Check: Must have identified a SPECIFIC room type to be stageable.
+        // Ambiguous "room" or "unknown" is not high-enough quality for automated outreach.
+        const VALID_ROOM_TYPES = ['bedroom', 'living room', 'kitchen', 'dining room', 'bathroom'];
+        const isKnownRoom = VALID_ROOM_TYPES.includes(roomType);
 
-        return { isEmpty, confidence, roomType };
+        return {
+            isEmpty: isEmpty,
+            isStageable: isKnownRoom, // Stricter gate
+            isInterior: true,
+            confidence: 90,
+            roomType,
+            isExterior: false
+        };
 
     } catch (error: any) {
-        return { isEmpty: false, confidence: 0, roomType: 'unknown', error: error.message };
+        return { ...REJECT, error: error.message };
     }
 }
 
@@ -569,7 +660,46 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
         .eq('address', listing.address)
         .single();
 
-    if (existing) return { skipped: true, reason: 'Already in database' };
+    if (existing) {
+        const duplicateUpdates: {
+            city: string;
+            price: number;
+            days_on_market: number;
+            price_reduced: boolean;
+            photo_count: number;
+            agent_name: string;
+            agent_phone?: string;
+            agent_email?: string;
+            listing_url: string;
+            keywords: string[];
+            icp_score: number;
+            empty_rooms?: { roomType: string; imageUrl: string; stagedUrl?: string }[];
+        } = {
+            city: listing.city,
+            price: listing.price,
+            days_on_market: listing.daysOnMarket,
+            price_reduced: listing.priceReduced,
+            photo_count: listing.photoCount,
+            agent_name: listing.agentName,
+            agent_phone: listing.agentPhone,
+            agent_email: listing.agentEmail,
+            listing_url: listing.listingUrl,
+            keywords: listing.keywords,
+            icp_score: listing.score || 0,
+        };
+
+        if (listing.emptyRooms && listing.emptyRooms.length > 0) {
+            duplicateUpdates.empty_rooms = listing.emptyRooms;
+        }
+
+        const { error: updateError } = await supabase
+            .from('outreach_leads')
+            .update(duplicateUpdates)
+            .eq('id', existing.id);
+
+        if (updateError) return { error: updateError.message };
+        return { skipped: true, reason: 'Already in database', lead: existing };
+    }
 
     const { data, error } = await supabase
         .from('outreach_leads')
@@ -596,7 +726,7 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
     return { success: true, lead: data };
 }
 
-export async function getLeads(status?: string, limit = 50) {
+export async function getLeads(status?: string, limit = 500) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let query = supabase
@@ -624,68 +754,81 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
     return { success: true };
 }
 
-// Submit a batch to Kie.ai — empty rooms first, then high-score (≥25) furnished leads
-export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
+// Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
+// Re-scans existing score>=35 leads that were scraped without a room photo (empty_rooms=[]).
+// Fetches their HAR photos, runs Moondream on each, stages the first stageable room found.
+// These leads were scraped before the furnished-redesign logic existed and have no staging_task_id.
+export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged: number; skipped: number; failed: number; total: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Priority 1: leads with detected empty rooms
-    const { data: emptyData } = await supabase
+    const { data, error } = await supabase
         .from('outreach_leads')
-        .select('id, address, empty_rooms, listing_url, icp_score')
-        .eq('status', 'scraped')
-        .not('empty_rooms', 'eq', '[]')
-        .limit(limit);
-
-    // Priority 2: high-score leads without empty rooms (will redesign any room)
-    const { data: highScoreData } = await supabase
-        .from('outreach_leads')
-        .select('id, address, empty_rooms, listing_url, icp_score')
-        .eq('status', 'scraped')
-        .eq('empty_rooms', '[]')
+        .select('id, address, listing_url, icp_score, agent_email')
+        .in('status', ['scraped', 'scored'])
         .gte('icp_score', 25)
+        .eq('empty_rooms', '[]')
         .not('listing_url', 'is', null)
         .order('icp_score', { ascending: false })
         .limit(limit);
 
-    const emptyLeads = (emptyData || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
-    const highScoreLeads = (highScoreData || []);
+    if (error) return { staged: 0, skipped: 0, failed: 0, total: 0, errors: [error.message] };
 
-    // Combine: empty rooms first, fill remaining slots with high-score
-    const allPending = [...emptyLeads, ...highScoreLeads].slice(0, limit);
+    const leads = data || [];
+    let staged = 0, skipped = 0, failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of leads) {
+        const photos = await getHarListingPhotos(lead.listing_url, 8);
+        if (photos.length < 2) { skipped++; continue; } // no interior photos
+
+        let stagedThisLead = false;
+        for (const photo of photos.slice(1, 7)) {
+            const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photo);
+            if (roomErr || !isStageable) continue;
+
+            // Stage it — empty rooms get furniture added, furnished rooms get redesigned
+            const { taskId, error: stageErr } = await stageEmptyRoom(photo, roomType, !isEmpty);
+            if (!taskId) { errors.push(`${lead.address}: ${stageErr}`); failed++; break; }
+
+            await supabase.from('outreach_leads')
+                .update({ empty_rooms: [{ roomType, imageUrl: photo }] })
+                .eq('id', lead.id);
+            await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
+            staged++;
+            stagedThisLead = true;
+            break;
+        }
+        if (!stagedThisLead && !errors.find(e => e.startsWith(lead.address))) skipped++;
+    }
+
+    return { staged, skipped, failed, total: leads.length, errors };
+}
+
+export async function submitStagingBatch(limit?: number): Promise<{ submitted: number; failed: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Stage leads that have a Moondream-confirmed room (already verified during pipeline scan).
+    let query = supabase
+        .from('outreach_leads')
+        .select('id, address, empty_rooms, listing_url, icp_score')
+        .in('status', ['scraped', 'scored'])
+        .not('empty_rooms', 'eq', '[]');
+
+    if (typeof limit === 'number') query = query.limit(limit);
+
+    const { data: emptyData } = await query;
+
+    const allPending = (emptyData || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
 
     let submitted = 0;
     let failed = 0;
     const errors: string[] = [];
 
     for (const lead of allPending) {
-        const hasEmptyRoom = Array.isArray(lead.empty_rooms) && lead.empty_rooms.length > 0;
-        let imageUrl: string | null = null;
-        let roomType = 'room';
-        let redesign = false;
+        const imageUrl: string = lead.empty_rooms[0].imageUrl;
+        const roomType: string = lead.empty_rooms[0].roomType || 'room';
 
-        if (hasEmptyRoom) {
-            imageUrl = lead.empty_rooms[0].imageUrl;
-            roomType = lead.empty_rooms[0].roomType || 'room';
-            redesign = false;
-        } else {
-            // Fetch interior photo from HAR detail page
-            const photos = await getHarListingPhotos(lead.listing_url, 5);
-            const interiorPhoto = photos[1] || photos[0]; // skip exterior (index 0) if possible
-            if (!interiorPhoto) {
-                errors.push(`${lead.address}: no photos found`);
-                failed++;
-                continue;
-            }
-            imageUrl = interiorPhoto;
-            roomType = 'room';
-            redesign = true;
-            // Store in empty_rooms so the downstream poll/email pipeline works
-            await supabase.from('outreach_leads').update({
-                empty_rooms: [{ roomType, imageUrl, redesign: true }],
-            }).eq('id', lead.id);
-        }
-
-        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl!, roomType, redesign);
+        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, false);
         if (taskId) {
             await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
             submitted++;
@@ -693,6 +836,7 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
             failed++;
             errors.push(`${lead.address}: ${stageErr}`);
         }
+
         if (allPending.indexOf(lead) < allPending.length - 1) {
             await new Promise(r => setTimeout(r, 5000));
         }
@@ -723,15 +867,18 @@ async function uploadStagedImage(tempUrl: string, leadId: string): Promise<strin
 }
 
 // Poll all staged leads, save the generated image URL, then send outreach email
-export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
+export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('outreach_leads')
-        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
         .eq('status', 'staged')
-        .not('staging_task_id', 'is', null)
-        .limit(limit);
+        .not('staging_task_id', 'is', null);
+
+    if (typeof limit === 'number') query = query.limit(limit);
+
+    const { data, error } = await query;
 
     if (error) return { emailed: 0, stillProcessing: 0, failed: 0, errors: [error.message], debug: [] };
 
@@ -747,42 +894,67 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
     for (const lead of leads) {
         const result = await checkStagingResult(lead.staging_task_id);
 
-        if (result.status === 'success' && result.url) {
-            const permanentUrl = await uploadStagedImage(result.url, lead.id);
-
-            const updatedRooms = [...(lead.empty_rooms || [])];
-            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
-            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
-
-            if (lead.agent_email) {
-                const emailResult = await sendOutreachEmail({
-                    agentName: lead.agent_name,
-                    agentEmail: lead.agent_email,
-                    address: lead.address,
-                    stagedImageUrl: permanentUrl,
-                    beforeImageUrl: lead.empty_rooms?.[0]?.imageUrl,
-                });
-                if (emailResult.success) {
-                    await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
-                    emailed++;
-                    debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
-                } else {
-                    errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
-                    debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
-                    failed++;
-                }
-            } else {
-                await updateLeadStatus(lead.id, 'form_filled');
-                debug.push(`No email address for ${lead.address} — staged image saved`);
-            }
-        } else if (result.status === 'processing') {
+        if (result.status === 'processing') {
             stillProcessing++;
             debug.push(`⏳ Still generating: ${lead.address}`);
-        } else {
-            await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
+            continue;
+        }
+
+        if (result.status === 'error') {
+            // Transient error (network/API) — leave as staged, retry next poll
+            debug.push(`⚠ Kie.ai error (will retry): ${lead.address} — ${result.error}`);
+            continue;
+        }
+
+        if (result.status === 'failed') {
+            // Definitive generation failure — reset so it can be re-staged
+            await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
             failed++;
             errors.push(`Generation failed ${lead.address}: ${result.error}`);
             debug.push(`✗ Generation failed ${lead.address}: ${result.error}`);
+            continue;
+        }
+
+        // status === 'success'
+        const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+        const permanentUrl = result.url ? await uploadStagedImage(result.url, lead.id) : undefined;
+
+        if (permanentUrl) {
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+        } else {
+            debug.push(`⚠ No staged URL returned for ${lead.address} — sending email without image`);
+        }
+
+        if (lead.agent_email) {
+            const emailResult = await sendOutreachEmail({
+                agentName: lead.agent_name,
+                agentEmail: lead.agent_email,
+                address: lead.address,
+                stagedImageUrl: permanentUrl,
+                beforeImageUrl: storedBeforeUrl,
+                city: lead.city,
+                price: lead.price,
+                daysOnMarket: lead.days_on_market,
+                priceReduced: lead.price_reduced,
+                photoCount: lead.photo_count,
+                keywords: lead.keywords,
+                roomType: lead.empty_rooms?.[0]?.roomType,
+                listingUrl: lead.listing_url,
+            });
+            if (emailResult.success) {
+                await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                emailed++;
+                debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
+            } else {
+                errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+                debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
+                failed++;
+            }
+        } else {
+            await updateLeadStatus(lead.id, 'form_filled');
+            debug.push(`No email address for ${lead.address} — staged image saved`);
         }
     }
 
@@ -790,27 +962,131 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
     return { emailed, stillProcessing, failed, errors, debug };
 }
 
-export async function getLeadStats(since?: string) {
+// Finds all staged leads that were never emailed and sends slowly with a delay between each.
+// Handles both: Kie.ai task still pending (polls first) and task already completed.
+export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: number; skipped: number; stillProcessing: number; failed: number; total: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let query = supabase.from('outreach_leads').select('status, icp_score, photo_count, empty_rooms');
-    if (since) query = query.gte('created_at', since);
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
+        .eq('status', 'staged')
+        .not('staging_task_id', 'is', null)
+        .order('created_at', { ascending: true });
 
-    const { data, error } = await query;
+    if (error) return { emailed: 0, skipped: 0, stillProcessing: 0, failed: 0, total: 0, errors: [error.message] };
 
-    if (error) return { error: error.message };
+    const leads = data || [];
+    let emailed = 0, skipped = 0, stillProcessing = 0, failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of leads) {
+        if (!lead.agent_email) { skipped++; continue; }
+
+        const result = await checkStagingResult(lead.staging_task_id);
+
+        if (result.status === 'processing') { stillProcessing++; continue; }
+        if (result.status === 'error') { continue; } // transient — retry next time
+
+        if (result.status === 'failed') {
+            await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
+            failed++;
+            errors.push(`Generation failed ${lead.address}: ${result.error}`);
+            continue;
+        }
+
+        // success
+        const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+        const permanentUrl = result.url ? await uploadStagedImage(result.url, lead.id) : undefined;
+        if (permanentUrl) {
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+        }
+
+        const emailResult = await sendOutreachEmail({
+            agentName: lead.agent_name,
+            agentEmail: lead.agent_email,
+            address: lead.address,
+            stagedImageUrl: permanentUrl,
+            beforeImageUrl: storedBeforeUrl,
+            city: lead.city,
+            price: lead.price,
+            daysOnMarket: lead.days_on_market,
+            priceReduced: lead.price_reduced,
+            photoCount: lead.photo_count,
+            keywords: lead.keywords,
+            roomType: lead.empty_rooms?.[0]?.roomType,
+            listingUrl: lead.listing_url,
+        });
+
+        if (emailResult.success) {
+            await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+            emailed++;
+        } else {
+            failed++;
+            errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+        }
+
+        // Delay between sends to avoid triggering spam filters
+        if (emailed + failed < leads.length) await new Promise(r => setTimeout(r, delayMs));
+    }
+
+    return { emailed, skipped, stillProcessing, failed, total: leads.length, errors };
+}
+
+export async function getLeadStats(since?: string) {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const pageSize = 1000;
+    const leads: {
+        status: string;
+        icp_score: number | null;
+        photo_count: number | null;
+        empty_rooms: { roomType?: string; imageUrl?: string; stagedUrl?: string }[] | null;
+        staging_task_id: string | null;
+        email_sent_at: string | null;
+    }[] = [];
+
+    for (let from = 0; ; from += pageSize) {
+        let query = supabase
+            .from('outreach_leads')
+            .select('status, icp_score, photo_count, empty_rooms, staging_task_id, email_sent_at')
+            .range(from, from + pageSize - 1);
+
+        if (since) query = query.gte('created_at', since);
+
+        const { data, error } = await query;
+        if (error) return { error: error.message };
+
+        const batch = data || [];
+        leads.push(...batch);
+        if (batch.length < pageSize) break;
+    }
+
+    const currentStaged = leads.filter(l => l.status === 'staged').length;
+    const stagedEver = leads.filter(l =>
+        !!l.staging_task_id ||
+        (Array.isArray(l.empty_rooms) && l.empty_rooms.some(room => room?.stagedUrl))
+    ).length;
+    const stagedQueue = leads.filter(l =>
+        ['scraped', 'scored'].includes(l.status) &&
+        !l.staging_task_id &&
+        Array.isArray(l.empty_rooms) &&
+        l.empty_rooms.length > 0
+    ).length;
 
     const stats = {
-        total: data?.length || 0,
-        scraped: data?.filter(l => l.status === 'scraped').length || 0,
-        scored: data?.filter(l => l.status === 'scored').length || 0,
-        staged: data?.filter(l => l.status === 'staged').length || 0,
-        form_filled: data?.filter(l => l.status === 'form_filled').length || 0,
-        emailed: data?.filter(l => l.status === 'emailed').length || 0,
-        avgScore: data?.length ? Math.round(data.reduce((s, l) => s + (l.icp_score || 0), 0) / data.length) : 0,
-        totalPhotos: data?.reduce((s, l) => s + (l.photo_count || 0), 0) || 0,
-        leadsWithPhotos: data?.filter(l => (l.photo_count || 0) > 0).length || 0,
-        emptyRoomsFound: data?.filter(l => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0).length || 0,
+        total: leads.length,
+        scraped: leads.filter(l => l.status === 'scraped').length,
+        scored: leads.filter(l => l.status === 'scored').length,
+        staged: currentStaged,
+        stagedEver,
+        form_filled: leads.filter(l => l.status === 'form_filled').length,
+        emailed: leads.filter(l => l.status === 'emailed' || !!l.email_sent_at).length,
+        avgScore: leads.length ? Math.round(leads.reduce((s, l) => s + (l.icp_score || 0), 0) / leads.length) : 0,
+        totalPhotos: leads.reduce((s, l) => s + (l.photo_count || 0), 0),
+        leadsWithPhotos: leads.filter(l => (l.photo_count || 0) > 0).length,
+        emptyRoomsFound: stagedQueue,
     };
 
     return { stats };
@@ -838,7 +1114,7 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string, redesig
                 model: 'google/nano-banana-edit',
                 input: {
                     prompt,
-                    image_input: [imageUrl],
+                    image_urls: [imageUrl],
                     aspect_ratio: 'auto',
                 },
             }),
@@ -872,11 +1148,16 @@ export async function checkStagingResult(taskId: string): Promise<{ status: stri
         const state = data.data?.state;
 
         if (state === 'success') {
-            const resultJson = JSON.parse(data.data.resultJson || '{}');
-            const url = resultJson.resultUrls?.[0];
+            // Try multiple known Kie.ai response shapes
+            let url: string | undefined;
+            try { url = JSON.parse(data.data.resultJson || '{}').resultUrls?.[0]; } catch {}
+            if (!url) url = data.data?.outputUrl || data.data?.result_url || data.data?.url;
+            if (!url && Array.isArray(data.data?.resultUrls)) url = data.data.resultUrls[0];
             return { status: 'success', url };
-        } else if (state === 'failed') {
-            return { status: 'failed', error: data.data?.failMsg || 'Generation failed' };
+        } else if (state === 'fail' || state === 'failed') {
+            return { status: 'failed', error: data.data?.failMsg || data.data?.message || 'Generation failed' };
+        } else if (state === 'error') {
+            return { status: 'error', error: data.data?.failMsg || data.data?.message || 'Kie.ai error' };
         }
 
         return { status: 'processing' };
@@ -912,6 +1193,14 @@ export async function sendOutreachEmail(lead: {
     address: string;
     stagedImageUrl?: string;
     beforeImageUrl?: string;
+    city?: string;
+    price?: number;
+    daysOnMarket?: number;
+    priceReduced?: boolean;
+    photoCount?: number;
+    keywords?: string[];
+    roomType?: string;
+    listingUrl?: string;
 }): Promise<{ success?: boolean; error?: string }> {
     if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
         return { error: 'Gmail OAuth credentials not configured' };
@@ -921,8 +1210,123 @@ export async function sendOutreachEmail(lead: {
     try {
         const accessToken = await getGmailAccessToken();
 
-        // ASCII-only subject — avoid non-ASCII chars (em dashes etc.) that cause garbled encoding in some clients
-        const subject = `Free virtual staging sample for your listing at ${lead.address}`;
+        // Randomized subject lines — varied phrasing to avoid spam pattern detection
+        const firstName = lead.agentName?.split(' ')[0] ?? 'there';
+        const prop = lead.address;
+        const subjectTemplates = [
+            // --- "regarding your property at" core pattern ---
+            `${firstName}, regarding your property at ${prop}, I put together something for you`,
+            `${firstName}, regarding your property at ${prop}, I mocked up a new look`,
+            `${firstName}, regarding your property at ${prop}, I made this after seeing the listing`,
+            `${firstName}, regarding your property at ${prop}, I created something you may want to see`,
+            `${firstName}, regarding your property at ${prop}, I wanted your take on this version`,
+            `${firstName}, regarding your property at ${prop}, I put together a visual idea`,
+            `${firstName}, regarding your property at ${prop}, I drafted a cleaner presentation`,
+            `${firstName}, regarding your property at ${prop}, I had an idea for the photos`,
+            `${firstName}, regarding your property at ${prop}, I made a quick preview`,
+            `${firstName}, regarding your property at ${prop}, I created a staged version`,
+            `${firstName}, regarding your property at ${prop}, I tried a different look`,
+            `${firstName}, regarding your property at ${prop}, I reworked one of the rooms`,
+            `${firstName}, regarding your property at ${prop}, I built a quick staging concept`,
+            `${firstName}, regarding your property at ${prop}, I pulled together a simple preview`,
+            `${firstName}, regarding your property at ${prop}, I put together a fresh angle`,
+            `${firstName}, regarding your property at ${prop}, I prepared a staged sample`,
+            `${firstName}, regarding your property at ${prop}, I made a visual update`,
+            `${firstName}, regarding your property at ${prop}, I tested a new presentation`,
+            `${firstName}, regarding your property at ${prop}, I put together a room concept`,
+            `${firstName}, regarding your property at ${prop}, I gave the listing a fresh treatment`,
+            `${firstName}, regarding your property at ${prop}, I created a first-pass staging idea`,
+            `${firstName}, regarding your property at ${prop}, I wanted to share this concept`,
+            `${firstName}, regarding your property at ${prop}, I made a sample image set`,
+            `${firstName}, regarding your property at ${prop}, I sketched out a presentation idea`,
+            `${firstName}, regarding your property at ${prop}, I made a quick before-and-after concept`,
+            `${firstName}, regarding your property at ${prop}, I created a photo concept for you`,
+            `${firstName}, regarding your property at ${prop}, I worked up a quick visual`,
+            `${firstName}, regarding your property at ${prop}, I created a mockup you might like`,
+            `${firstName}, regarding your property at ${prop}, I put a room idea together`,
+            `${firstName}, regarding your property at ${prop}, I staged one of the photos for you`,
+            `${firstName}, regarding your property at ${prop}, I redesigned one of the rooms`,
+            `${firstName}, regarding your property at ${prop}, I made something worth a look`,
+            `${firstName}, regarding your property at ${prop}, I created a version with furniture`,
+            `${firstName}, regarding your property at ${prop}, I put together a quick visual concept`,
+            `${firstName}, regarding your property at ${prop}, I updated the look on one room`,
+            `${firstName}, regarding your property at ${prop}, I put furniture in the space`,
+            `${firstName}, regarding your property at ${prop}, I gave one room a new look`,
+            `${firstName}, regarding your property at ${prop}, I created an interior concept for it`,
+            `${firstName}, regarding your property at ${prop}, I put together a listing presentation idea`,
+            `${firstName}, regarding your property at ${prop}, I made a furnished version for you`,
+            `${firstName}, regarding your property at ${prop}, I created a staged photo for the listing`,
+            `${firstName}, regarding your property at ${prop}, I made something for the photos`,
+            `${firstName}, regarding your property at ${prop}, I staged the space digitally`,
+            `${firstName}, regarding your property at ${prop}, I created a concept worth sharing`,
+            `${firstName}, regarding your property at ${prop}, I put a staged photo together for you`,
+            `${firstName}, regarding your property at ${prop}, I came up with a visual concept`,
+            `${firstName}, regarding your property at ${prop}, I staged a room photo for you`,
+            `${firstName}, regarding your property at ${prop}, I applied a new look to one of the photos`,
+            `${firstName}, regarding your property at ${prop}, I made a before-and-after for you`,
+            `${firstName}, regarding your property at ${prop}, I created a styled version of the space`,
+            // --- "I saw your listing" variants ---
+            `${firstName}, I saw your listing at ${prop} and put something together`,
+            `${firstName}, I saw your listing at ${prop} and created this for you`,
+            `${firstName}, I saw your listing at ${prop} and staged it for you`,
+            `${firstName}, I saw your listing at ${prop} and wanted to share an idea`,
+            `${firstName}, I saw your listing at ${prop} and made a quick concept`,
+            `${firstName}, I saw your listing at ${prop} and built a staged version`,
+            `${firstName}, I saw your listing at ${prop} and created a photo idea`,
+            `${firstName}, I saw your listing at ${prop} and drafted a new look`,
+            `${firstName}, I saw your listing at ${prop} and made a visual for it`,
+            `${firstName}, I saw your listing at ${prop} and put together a room concept`,
+            `${firstName}, I saw your listing at ${prop} and came up with a staged idea`,
+            `${firstName}, I saw your listing at ${prop} and tried a different angle`,
+            `${firstName}, I saw your listing at ${prop} and created something for you`,
+            `${firstName}, I saw your listing at ${prop} and wanted your take on this`,
+            // --- "I noticed your property" variants ---
+            `${firstName}, I noticed your property at ${prop} and made a quick concept`,
+            `${firstName}, I noticed your property at ${prop} and staged a room for you`,
+            `${firstName}, I noticed your property at ${prop} and put together a visual idea`,
+            `${firstName}, I noticed your property at ${prop} and created something you may like`,
+            `${firstName}, I noticed your property at ${prop} and worked up a staged photo`,
+            `${firstName}, I noticed your property at ${prop} and made a before-and-after`,
+            `${firstName}, I noticed your property at ${prop} and drafted a presentation idea`,
+            `${firstName}, I noticed your property at ${prop} and created a new look for it`,
+            `${firstName}, I noticed your property at ${prop} and wanted to show you something`,
+            `${firstName}, I noticed your property at ${prop} and put together a quick mockup`,
+            // --- short address-only subject lines ---
+            `${firstName}, a staging idea for ${prop}`,
+            `${firstName}, a fresh look for ${prop}`,
+            `${firstName}, a staged version of ${prop}`,
+            `${firstName}, one idea for ${prop}`,
+            `${firstName}, a new look for ${prop}`,
+            `${firstName}, a sharper first impression for ${prop}`,
+            `${firstName}, a presentation concept for ${prop}`,
+            `${firstName}, a room concept for ${prop}`,
+            `${firstName}, a visual idea for ${prop}`,
+            `${firstName}, a quick mockup for ${prop}`,
+            `${firstName}, a furnished version of ${prop}`,
+            `${firstName}, a styled photo for ${prop}`,
+            `${firstName}, a before-and-after for ${prop}`,
+            `${firstName}, a listing photo idea for ${prop}`,
+            `${firstName}, a cleaner presentation for ${prop}`,
+            `${firstName}, an interior concept for ${prop}`,
+            `${firstName}, a staged photo for ${prop}`,
+            `${firstName}, a quick visual for ${prop}`,
+            // --- curiosity / soft hook variants ---
+            `${firstName}, thought you might want to see this for ${prop}`,
+            `${firstName}, had an idea for ${prop}`,
+            `${firstName}, made something for ${prop}`,
+            `${firstName}, created something for ${prop}`,
+            `${firstName}, wanted to show you something about ${prop}`,
+            `${firstName}, wanted to share an idea for ${prop}`,
+            `${firstName}, put something together for ${prop}`,
+            `${firstName}, worked up a concept for ${prop}`,
+            `${firstName}, came across ${prop} and made this`,
+            `${firstName}, came across your listing at ${prop} and created something for you`,
+            `${firstName}, saw ${prop} and put a concept together`,
+            `${firstName}, saw ${prop} and made a quick visual`,
+            `${firstName}, saw ${prop} and created a staged version`,
+            `${firstName}, saw ${prop} and wanted to show you this`,
+        ];
+        const subject = subjectTemplates[Math.floor(Math.random() * subjectTemplates.length)];
 
         const imagesHtml = lead.stagedImageUrl ? `
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
@@ -940,6 +1344,298 @@ export async function sendOutreachEmail(lead: {
           </tr>
         </table>` : '';
 
+        // Build context-aware personalized body copy
+        const room = lead.roomType || 'room';
+        const dom = lead.daysOnMarket ?? 0;
+        const cityLabel = lead.city ?? '';
+        const neighborhood = lead.keywords?.find(k => k && k.length > 2 && !/^\d/.test(k)) ?? '';
+        const addr = `<strong>${lead.address}</strong>`;
+        const cityStr = cityLabel ? `${cityLabel} ` : '';
+        const nbhStr = neighborhood ? ` in ${neighborhood}` : '';
+        const nbhAreaStr = neighborhood ? ` in the ${neighborhood} area` : '';
+        const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+        // Derive a human-readable source label from listing_url
+        const sourceLabel = (() => {
+            const url = lead.listingUrl ?? '';
+            if (url.includes('har.com')) return 'HAR.com';
+            if (url.includes('homes.com')) return 'homes.com';
+            return null;
+        })();
+        // Randomized source phrases — only injected when sourceLabel is known
+        const sourcePhrases = sourceLabel ? pick([
+            `I found your listing on ${sourceLabel}`,
+            `I came across your listing on ${sourceLabel}`,
+            `I saw your listing on ${sourceLabel}`,
+            `I spotted your listing on ${sourceLabel}`,
+            `I noticed your listing on ${sourceLabel}`,
+            `I was browsing ${sourceLabel} and found your listing`,
+            `I came across your property on ${sourceLabel}`,
+            `I found your property on ${sourceLabel}`,
+        ]) : null;
+
+        // ── Opening lines (25+ per bucket, source-aware variants mixed in) ──
+        const openingLine = pick(lead.priceReduced ? [
+            // source-aware variants (only non-null when sourceLabel is known)
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} — noticed the price adjustment, so I staged the ${room} to give it a fresh angle that might re-spark buyer interest.`,
+                `${sourcePhrases} — saw the recent price change on ${addr} and staged the ${room} for you. Fresh photos after a reduction tend to pull buyers back in.`,
+                `${sourcePhrases} and noticed ${addr} had a price update, so I took the liberty of staging the ${room}.`,
+                `${sourcePhrases} — ${addr} had a recent price adjustment so I staged the ${room} to give buyers something new to look at.`,
+                `${sourcePhrases} at ${addr}. Noticed the price change and staged the ${room} — a new photo right after a reduction can make a real difference.`,
+                `${sourcePhrases} — caught the price update on ${addr} and staged the ${room} so the listing has a fresh visual to go with the new price.`,
+                `${sourcePhrases} and saw ${addr} went through a price adjustment. Staged the ${room} in case a new photo helps bring buyers back.`,
+                `${sourcePhrases} — noticed the price drop on ${addr} and staged the ${room} for you. Buyers who passed on it before often come back when they see something new.`,
+            ] : []),
+            `I noticed your listing at ${addr} went through a price adjustment recently, so I staged the ${room} to give the photos a fresh angle that might re-spark buyer interest.`,
+            `Saw that ${addr} had a price update — I took the liberty of staging the ${room} to see if a new look helps it get more attention.`,
+            `I came across ${addr} after the price change and staged the ${room} for you — sometimes a fresh photo set is all it takes to get buyers clicking again.`,
+            `I saw the recent price adjustment on ${addr} and wanted to help — staged the ${room} so the listing has something new to show buyers.`,
+            `Noticed ${addr} went through a price reduction, so I staged the ${room}. A fresh photo after a price drop can re-engage buyers who passed on it before.`,
+            `I spotted the price change on ${addr} and thought this might be useful — staged the ${room} to give the listing a new visual angle.`,
+            `Saw that ${addr} had a recent price update and put together a staged version of the ${room} — might help get some renewed interest from buyers.`,
+            `I came across your ${cityStr}listing at ${addr} after the price adjustment and staged the ${room}. Fresh photos after a price drop tend to pull buyers back in.`,
+            `Noticed the price change on ${addr} — I staged the ${room} so you have something new to lead with in the photos.`,
+            `I saw ${addr} had a price adjustment and took the liberty of staging the ${room} for you. A new look can make a real difference after a reduction.`,
+            `Caught the price update on ${addr} and wanted to do something useful with it — staged the ${room} so the photos feel fresh again.`,
+            `I noticed ${addr} had a recent price change. I staged the ${room} — buyers who scrolled past it might stop when they see a furnished version.`,
+            `Saw the reduction on ${addr} and thought a staged ${room} photo could help give it a second life in buyers' searches.`,
+            `I came across the price change on ${addr} and staged the ${room} — worth showing buyers a new side of the property at the new price point.`,
+            `Noticed the recent price update on ${addr} so I staged the ${room} for you. Sometimes a visual refresh is what moves a listing forward.`,
+            `I spotted ${addr} after the price adjustment and staged the ${room}. A new photo angle right after a reduction can re-activate buyer interest.`,
+            `Saw the price drop on ${addr} and put together a staged ${room} photo — might help it stand out to buyers browsing at that price range now.`,
+            `I came across ${addr} after the recent price change and took the liberty of virtually staging the ${room}. Happy to share it in case it's useful.`,
+            `Noticed the price adjustment on ${addr} — staged the ${room} so the listing has something new to offer buyers who are browsing fresh.`,
+            `I saw the price update on ${addr} and created a staged version of the ${room}. A fresh photo set can do a lot right after a reduction.`,
+            `Caught the price change on ${addr} and wanted to put something together for you — staged the ${room} in case it helps attract a new round of buyers.`,
+            `I noticed ${addr} had a recent price reduction. I staged the ${room} — a furnished photo can completely change how buyers perceive the value.`,
+            `Saw the listing at ${addr} go through a price adjustment and staged the ${room} for you. Buyers often re-engage when they see something new.`,
+            `I came across the price update on ${addr} and staged the ${room} to help it show better at the new price point.`,
+            `Noticed the recent price change on ${addr} and staged the ${room}. Sometimes a new photo is all it takes to move a listing that has plateaued.`,
+        ] : dom >= 45 ? [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} and noticed it has been on the market for a little while — staged the ${room} to see if a furnished version helps it get more traction.`,
+                `${sourcePhrases} — ${addr} has been active for a bit, so I staged the ${room} to give it a fresh angle.`,
+                `${sourcePhrases} and came across ${addr}${nbhAreaStr}. It has been listed for a while so I staged the ${room} — a new photo can bring in a fresh wave of buyers.`,
+                `${sourcePhrases} at ${addr}. Noticed the listing has been active for some time, so I staged the ${room} for you.`,
+                `${sourcePhrases} — saw ${addr} has been on the market and staged the ${room}. Sometimes one new photo is all it takes to start getting calls again.`,
+                `${sourcePhrases} and noticed ${addr}${nbhAreaStr} has been sitting for a while. Staged the ${room} in case a visual refresh helps move it forward.`,
+                `${sourcePhrases} — ${addr} has been active for a bit. Staged the ${room} so you have something new to share with buyers.`,
+                `${sourcePhrases} at ${addr} and staged the ${room} — listings that get a visual refresh after some market time often see renewed interest.`,
+            ] : []),
+            `I came across your ${cityStr}listing at ${addr} and noticed it has been on the market for a while, so I staged the ${room} to see if a furnished version helps it stand out.`,
+            `I was browsing ${cityStr}listings and found ${addr} — it has been active for a bit, so I staged the ${room} to give it a fresh angle.`,
+            `I came across ${addr}${nbhAreaStr} and noticed the days on market. I staged the ${room} — a furnished photo can bring in a new wave of buyers.`,
+            `Saw your listing at ${addr} and thought a staged ${room} photo might help it get more traction. Sometimes a new visual is all a listing needs.`,
+            `I noticed ${addr} has been sitting for a while and wanted to help — staged the ${room} so you have something new to share with buyers.`,
+            `I came across ${addr}${nbhAreaStr} and took the liberty of staging the ${room}. Listings that get a visual refresh often see renewed interest.`,
+            `I found ${addr} while browsing${nbhAreaStr} and staged the ${room} for you — thought a furnished version might help it get more saves and showings.`,
+            `I noticed ${addr} has been on the market and staged the ${room}. A furnished photo at this stage can re-engage buyers who saw it before.`,
+            `I came across your ${cityStr}listing at ${addr} — it has been active for a while so I staged the ${room} to give buyers something new to look at.`,
+            `I found ${addr} and noticed the listing age. I staged the ${room} — a new photo can be exactly what brings a dormant listing back to life.`,
+            `I was looking at ${cityStr}listings and came across ${addr}. Staged the ${room} in case a fresh photo helps it get more attention.`,
+            `I came across ${addr}${nbhAreaStr} and staged the ${room} for you. At this point in the listing cycle, a visual refresh can make a real impact.`,
+            `I noticed your listing at ${addr} has been active for some time — staged the ${room} so you have a new angle to show buyers.`,
+            `I found ${addr} while browsing and took the liberty of staging the ${room}. A furnished photo can bring buyers back who already dismissed it once.`,
+            `I came across ${addr} and noticed it has been on the market. Staged the ${room} — sometimes one new image is all it takes to start getting calls again.`,
+            `I was browsing active listings${nbhAreaStr} and came across ${addr}. Staged the ${room} for you — a new look can change how buyers perceive the whole property.`,
+            `I noticed ${addr} has been listed for a while and wanted to do something useful. Staged the ${room} in case a fresh photo set helps move it forward.`,
+            `I came across your listing at ${addr} — has been active for a bit. Staged the ${room} to give buyers a better sense of what the space could look like.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Listings that have been sitting often just need one strong photo to turn things around.`,
+            `I noticed ${addr} has been on the market and staged the ${room}. Buyers scrolling past an empty room will often stop at a furnished version.`,
+            `I came across ${addr} while looking at ${cityStr}listings. It has been active for a while so I staged the ${room} — thought it might help.`,
+            `I saw ${addr} and noticed it has been listed for some time. Took the liberty of staging the ${room} so there is something new to share with buyers.`,
+            `I found your listing at ${addr} and staged the ${room} — a fresh photo can re-activate buyer interest even after a listing has been sitting.`,
+            `I came across ${addr}${nbhAreaStr} and noticed the listing has been active for a while. Staged the ${room} to give buyers a new reason to look.`,
+            `I noticed your ${cityStr}listing at ${addr} has some market time on it. Staged the ${room} in case a new visual helps it get more traction.`,
+        ] : dom <= 7 ? [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} — saw ${addr}${nbhStr} just went live and staged the ${room} to show buyers what it could look like furnished.`,
+                `${sourcePhrases} and noticed ${addr} just hit the market. Staged the ${room} — great timing to get a strong photo in front of buyers right away.`,
+                `${sourcePhrases} — ${addr}${nbhStr} just came on the market so I staged the ${room} to help it make a strong first impression.`,
+                `${sourcePhrases} at ${addr} right after it went live. Staged the ${room} — the first week is when photos matter most.`,
+                `${sourcePhrases} — saw your new ${cityStr}listing at ${addr} and staged the ${room}. Now is the best window to get buyers excited about the space.`,
+                `${sourcePhrases} and caught ${addr}${nbhStr} just as it went live. Staged the ${room} so buyers browsing fresh listings see it at its best.`,
+                `${sourcePhrases} — ${addr} just listed${nbhStr}. Staged the ${room} so you have a polished photo to lead with from day one.`,
+                `${sourcePhrases} at ${addr} right after launch. Staged the ${room} — buyers making fast decisions on new listings respond well to furnished photos.`,
+            ] : []),
+            `Saw your new listing at ${addr}${nbhStr} — staged the ${room} to show buyers what it could look like furnished.`,
+            `I came across your new listing at ${addr} and staged the ${room}. Now is a great time to make the photos pop while buyers are seeing it fresh.`,
+            `Noticed ${addr} just went live${nbhStr} — I staged the ${room} to help it make a strong first impression.`,
+            `I saw ${addr} just hit the market and took the liberty of staging the ${room} for you.`,
+            `I came across your new listing at ${addr}${nbhStr} and staged the ${room} — great timing to get staged photos in front of buyers right away.`,
+            `Saw the new listing at ${addr} and staged the ${room}. Listings that launch with furnished photos tend to get more attention in the first week.`,
+            `I noticed ${addr} just came on the market${nbhStr} — staged the ${room} so you have a polished photo to lead with.`,
+            `I came across ${addr} right after it went live and staged the ${room}. The first few days on market are when photos matter most.`,
+            `Saw ${addr} just listed${nbhStr} — staged the ${room} so buyers browsing fresh listings see the space at its best.`,
+            `I noticed your new ${cityStr}listing at ${addr} and staged the ${room}. A furnished photo in the first week can set the tone for the whole campaign.`,
+            `I came across ${addr}${nbhStr} just as it went live — staged the ${room} to help it stand out while it's getting fresh buyer traffic.`,
+            `Saw the new listing at ${addr} and staged the ${room} for you. Now is the best window to get buyers excited about the space.`,
+            `I noticed ${addr} just came on the market and staged the ${room} — thought a furnished photo could help it make a great first impression.`,
+            `I came across your listing at ${addr} right after launch${nbhStr} and staged the ${room}. Happy to share it in case it helps.`,
+            `Saw ${addr} go live${nbhStr} — staged the ${room} to show buyers the potential of the space while the listing is still brand new.`,
+            `I noticed ${addr} just hit the market and took the liberty of staging the ${room}. The first week is prime time for buyer interest.`,
+            `I came across your new listing at ${addr}${nbhStr} and staged the ${room} so you have a polished photo to work with right from the start.`,
+            `Saw ${addr} just listed and staged the ${room} for you — buyers browsing new listings will get a much better sense of the space with a furnished version.`,
+            `I noticed ${addr} just came on the market${nbhStr}. Staged the ${room} — a great first photo impression can drive more showings in the opening days.`,
+            `I came across ${addr} right after it launched and staged the ${room}. Now is the ideal time to put a strong visual in front of buyers.`,
+            `Saw your new ${cityStr}listing at ${addr} and staged the ${room}. Buyers making quick decisions early in a listing's life respond well to furnished photos.`,
+            `I noticed ${addr}${nbhStr} just went live — staged the ${room} for you so the listing has a strong visual from day one.`,
+            `I came across your listing at ${addr} right after launch. Staged the ${room} — this is exactly the right moment to have great photos working for you.`,
+            `Saw ${addr} just hit the market and staged the ${room}. A furnished photo can be the difference between a scroll-past and a showing request.`,
+            `I noticed ${addr} just came on the market${nbhStr} and staged the ${room}. Great timing to put a polished version in front of buyers early.`,
+        ] : [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} and took the liberty of staging the ${room} — thought it might be worth a look.`,
+                `${sourcePhrases} — found ${addr}${nbhAreaStr} and staged the ${room} for you.`,
+                `${sourcePhrases} and came across ${addr}${nbhAreaStr}. Staged the ${room} and thought you might want to see it.`,
+                `${sourcePhrases} at ${addr}${nbhAreaStr} and staged the ${room}. Wanted to share it in case it helps.`,
+                `${sourcePhrases} — noticed ${addr}${nbhAreaStr} and took the liberty of staging the ${room} for you.`,
+                `${sourcePhrases} and found ${addr}${nbhAreaStr}. Staged the ${room} — thought a furnished version might help buyers connect with the space.`,
+                `${sourcePhrases} at ${addr} and staged the ${room}. Wanted to pass it along in case it gives the listing a boost.`,
+                `${sourcePhrases} — came across ${addr}${nbhAreaStr} and staged the ${room}. Sometimes one good photo changes how buyers feel about a property.`,
+            ] : []),
+            `I came across your listing at ${addr}${nbhAreaStr} and took the liberty of staging the ${room} — thought it might be worth a look.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Wanted to share it in case it's helpful.`,
+            `I was browsing ${cityStr}listings and came across ${addr} — staged the ${room} and thought you might want to see it.`,
+            `I noticed your listing at ${addr}${nbhAreaStr} and staged the ${room}. A furnished photo can make a real difference in how buyers perceive the space.`,
+            `I came across ${addr} and staged the ${room} for you — thought a furnished version might help buyers connect with the space.`,
+            `I found your ${cityStr}listing at ${addr} and took the liberty of staging the ${room}. Wanted to share it in case it's useful.`,
+            `I came across ${addr}${nbhAreaStr} and staged the ${room}. Buyers often need help visualizing a space — this gives them that.`,
+            `I noticed ${addr} and staged the ${room} for you — a furnished photo can get buyers to spend more time looking at a listing.`,
+            `I was browsing listings${nbhAreaStr} and came across ${addr}. Staged the ${room} and wanted to pass it along.`,
+            `I found ${addr} and staged the ${room} — thought it could help buyers see the full potential of the space.`,
+            `I came across your listing at ${addr}${nbhAreaStr} and took the liberty of staging the ${room} for you.`,
+            `I noticed ${addr}${nbhAreaStr} and staged the ${room}. Wanted to share in case a furnished photo helps the listing get more traction.`,
+            `I came across ${addr} and staged the ${room} — buyers who see an empty room often have a harder time picturing themselves in it.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Staged listings tend to generate more saves and showing requests.`,
+            `I was looking at ${cityStr}listings and came across ${addr} — staged the ${room} and thought it was worth sharing.`,
+            `I noticed your ${cityStr}listing at ${addr} and staged the ${room}. A furnished photo can make a strong impression on buyers comparing multiple listings.`,
+            `I came across ${addr}${nbhAreaStr} and created a staged version of the ${room} for you — thought it might be useful.`,
+            `I found ${addr} and staged the ${room}. Buyers browsing listings stop longer on photos that show a furnished space.`,
+            `I came across your listing at ${addr} and staged the ${room}${nbhAreaStr} — wanted to share it in case it helps.`,
+            `I noticed ${addr} and took the liberty of staging the ${room} for you. Happy to pass it along in case it's useful.`,
+            `I came across ${addr}${nbhAreaStr} while browsing listings and staged the ${room} — thought a furnished version could help it stand out.`,
+            `I found your listing at ${addr} and staged the ${room}. Sometimes one good photo changes how buyers feel about an entire property.`,
+            `I noticed ${addr}${nbhAreaStr} and staged the ${room} for you — buyers often make snap decisions based on the first few photos.`,
+            `I came across ${addr} and took the liberty of staging the ${room}. Wanted to share it in case it gives the listing a boost.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} — a furnished version of the space can help buyers picture living there.`,
+        ]);
+
+        // ── Value lines (15+ per bucket) ────────────────────────────────────
+        const valueLine = pick(lead.priceReduced ? [
+            `A fresh set of staged photos right after a price adjustment can re-engage buyers who scrolled past it the first time. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — takes a few clicks and it's free to try if you want to do more rooms yourself.`,
+            `Buyers who dismissed the listing at the old price often come back when they see new photos. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> to create this in about 30 seconds — it's free to try and very easy to use.`,
+            `A new photo after a price drop can completely change how a listing performs. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per room, free to try, and works on any listing photo.`,
+            `Staged photos after a price reduction tend to bring in a fresh wave of interest. This took about a minute on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — happy to do more rooms for free, or you can try it yourself at no cost.`,
+            `A visual refresh pairs really well with a price adjustment. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's a simple web app, free to try, and you can stage a whole listing in a few minutes.`,
+            `Price drops get noticed more when they come with new photos. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few clicks, super easy to use, and free to start.`,
+            `Buyers who saw the listing before are more likely to act when there's something new to look at. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
+            `A new staged photo after a price change can re-activate buyers who had the listing saved but never moved on it. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try if you want to stage more rooms yourself.`,
+            `Staged photos at a new price point often get buyers back on the phone. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's affordable, free to start, and honestly very simple to use.`,
+            `A visual update after a price drop can make a real difference in buyer perception. This was done on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per photo, free to try, no technical skill needed.`,
+            `Buyers browsing at the new price point respond better to a furnished photo. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — easy to use, free to try, and works on any room photo.`,
+            `A fresh photo set can be the nudge buyers who are on the fence need. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> did this in a few clicks — free to start if you want to try it on a few more rooms.`,
+            `Staged photos help buyers see value — especially after a price change. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's extremely easy to use and free to try.`,
+            `Buyers often reconsider a listing when the price drops and new photos appear. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a simple web app that takes a few clicks and is free to start.`,
+            `A new visual at a new price point can completely shift buyer perception. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try and takes about 30 seconds per room.`,
+        ] : dom >= 45 ? [
+            `Listings with staged photos tend to get more saves and scheduled showings. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
+            `Buyers often scroll past an empty room but stop at a furnished version. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to try and takes about 30 seconds per photo.`,
+            `A visual refresh at this point in the listing cycle can bring in a new wave of buyer interest. This was done on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — super simple to use, affordable, and free to start.`,
+            `Staged photos give buyers something to react to — and listings with furnished photos get more inquiries. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — a few clicks, free to try, no experience needed.`,
+            `Buyers who saw the listing before might reconsider when they see new photos. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to start and honestly takes no time at all.`,
+            `Sometimes a listing just needs one strong photo to start getting traction again. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — easy web app, a few clicks, free to try.`,
+            `A furnished room photo can completely change how buyers feel about a space. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try and takes about a minute for a whole room.`,
+            `Listings that get a visual refresh after some market time often see renewed showing activity. This was built on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple, affordable, and free to start.`,
+            `Buyers spend more time on listings with staged photos. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
+            `At this point in the listing, something new in the photos can re-ignite buyer interest. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try and extremely easy to use.`,
+            `Staged photos help buyers picture themselves in the space. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a simple web app that takes a few clicks and is free to start.`,
+            `A fresh visual can be exactly what moves a listing that has been sitting. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to try now.`,
+            `Buyers who passed on the listing before often come back when they see new photos. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and free to start.`,
+            `A furnished photo at this stage can re-engage buyers who had the listing saved but never acted. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time.`,
+            `Listings that show furnished rooms tend to get more second looks. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — easy to use, affordable, and free to try.`,
+        ] : dom <= 7 ? [
+            `Now is a great time to make the photos pop while the listing is getting fresh traffic. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to try, and takes about 30 seconds per room.`,
+            `The first week on market is when listings get the most attention — a strong photo set now sets the tone for the whole campaign. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — free to try and super easy to use.`,
+            `Buyers make fast decisions on new listings. A furnished photo right now can be the difference between a scroll-past and a showing request. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to start, a few clicks per room.`,
+            `Great timing to have staged photos working while the listing is fresh. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's free to try and honestly takes no time at all.`,
+            `New listings get the most views in the first few days — a furnished photo right now can really move the needle. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — easy to use and free to start.`,
+            `Buyers browsing new listings respond well to furnished photos — it helps them make faster decisions. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
+            `The opening days of a listing are prime time for buyer interest. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a simple web app, affordable, and free to start.`,
+            `Buyers comparing multiple new listings spend more time on the one with furnished photos. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per room and free to try.`,
+            `A strong first impression in the first week can set the pace for the whole listing. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to start.`,
+            `New listings get the most organic traffic — a furnished photo while it's fresh can drive real showing activity. This was made on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try, takes about 30 seconds.`,
+            `Buyers making quick decisions on new listings stop longer on furnished photos. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple, affordable, and free to start.`,
+            `The first few days on market are when photos matter most. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, extremely easy to use, and free to try.`,
+            `Staged photos help new listings make a strong first impression and get more saves. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — free to try and takes no time at all.`,
+            `Now is exactly the right time to have great photos working for you. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to start, works on any listing photo.`,
+            `A furnished photo right at launch can significantly improve how many buyers save the listing. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to try now.`,
+        ] : [
+            `Staged photos help buyers picture themselves in the space and tend to lead to more saves and showings. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
+            `Buyers often scroll past empty rooms but stop at furnished ones. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to start and takes about 30 seconds per photo.`,
+            `A furnished photo can make buyers feel more connected to the space right away. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — simple web app, a few clicks, and free to try now.`,
+            `Staged listings tend to get more saves, more clicks, and more showing requests. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — extremely easy to use, affordable, and free to start.`,
+            `Buyers spend more time on listings with furnished photos — and more time usually means more interest. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
+            `A furnished version of a room gives buyers something to respond to emotionally. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, very easy to use, free to start.`,
+            `Staged photos tend to lead to faster offers and stronger interest. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple to use, affordable, and free to try now.`,
+            `Buyers who can picture themselves in a space are more likely to schedule a showing. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and completely free to try.`,
+            `A good staged photo can be the thing that makes a buyer pick up the phone. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's an easy web app, free to start, and works on any listing photo.`,
+            `Listings with furnished photos tend to generate more inquiries. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few clicks and is free to try.`,
+            `Buyers make faster decisions when they can visualize a furnished space. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in about 30 seconds — free to try if you want to do more rooms yourself.`,
+            `A staged photo helps buyers see past an empty room and focus on the space itself. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to start.`,
+            `Staged listings get more saves and showings on average. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a simple web app that takes a few clicks and is free to try now.`,
+            `Buyers browsing multiple listings stop longer on furnished photos. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try, extremely easy to use, and works on any room.`,
+            `A furnished photo gives buyers a reason to imagine living there. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks, free to start, no technical skill needed.`,
+        ]);
+
+        // ── Video walkthrough lines (12 variations) ─────────────────────────
+        const videoLine = pick([
+            `The same app also generates <strong>virtual video walkthroughs</strong> — buyers can take an immersive tour of the property from their phone before ever visiting.`,
+            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> also does <strong>virtual video walkthroughs</strong> in a few clicks — buyers get a full tour experience without setting foot in the property.`,
+            `Beyond photos, the same web app can turn any staged room into a <strong>virtual video walkthrough</strong> — great for out-of-town buyers who want to explore before committing to a showing.`,
+            `It also generates <strong>virtual video walkthroughs</strong> from any staged photo — same app, same few clicks, and buyers get an immersive tour from their phone.`,
+            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> can also create a <strong>virtual video walkthrough</strong> from the staged image — a useful tool for buyers doing research before scheduling a visit.`,
+            `The app also does <strong>virtual video walkthroughs</strong> — buyers can move through the space remotely, which tends to drive higher-quality showing requests.`,
+            `You can also generate a <strong>virtual video walkthrough</strong> right from the same app — buyers get a full property tour from wherever they are before deciding to visit.`,
+            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> also produces <strong>virtual video walkthroughs</strong> from staged photos — an immersive experience that helps out-of-town buyers make faster decisions.`,
+            `Same app also builds <strong>virtual video walkthroughs</strong> in a few clicks — buyers can explore the staged property remotely before committing to a showing.`,
+            `Beyond the staged photo, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> can generate a <strong>virtual video walkthrough</strong> — gives buyers who haven't visited yet a real feel for the space.`,
+            `It also creates <strong>virtual video walkthroughs</strong> — same simple process, a few more clicks, and buyers get a full tour experience from their phone.`,
+            `The same tool also does <strong>virtual video walkthroughs</strong> from any staged room — useful for listings that attract a lot of remote or out-of-state buyer interest.`,
+        ]);
+
+        // ── Closing lines (12 variations) ────────────────────────────────────
+        const closingLine = pick([
+            `It's free to try at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> — no credit card needed. Or just let me know if you want me to do a few more rooms first.`,
+            `You can try it free at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few minutes to stage a whole listing. Happy to do more rooms for you at no charge in the meantime.`,
+            `Free to start at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> if you want to explore it — or just reply and I'll put together more rooms for you.`,
+            `Happy to stage more rooms for free — or feel free to try it yourself at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>. No credit card, no commitment.`,
+            `No strings attached — if you want more rooms done, just let me know. And if you want to try it yourself, it's free to start at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>.`,
+            `I can do more rooms for free — or if you want to try it yourself, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> is free to start and takes a few clicks.`,
+            `Either way, happy to help — just reply if you want more rooms done. You can also try it free at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> anytime.`,
+            `Free to try at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> — no commitment needed. Happy to do more rooms for you first if you'd like to see a few more before you try it.`,
+            `Just let me know if you want more rooms — happy to do them for free. The app itself is also free to try at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> if you want to take it for a spin.`,
+            `No obligation — happy to stage more rooms for you at no charge. You can also start free at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> whenever you're ready.`,
+            `I'm happy to do more rooms for free — no pitch, no pressure. If you ever want to try it yourself, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> is free to start.`,
+            `Happy to keep going with more rooms at no cost — just reply. And when you're ready to try it yourself, it's free to start at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>.`,
+        ]);
+
+        // ── Sign-offs (8 variations) ─────────────────────────────────────────
+        const signoff = pick([
+            `– Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Best,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Thanks,<br>Minh @ Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `– Minh at Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `Talk soon,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Cheers,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `– Minh<br>Kogflow — AI Virtual Staging<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `Best regards,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+        ]);
+
         const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -955,19 +1651,19 @@ export async function sendOutreachEmail(lead: {
         </tr>
         <tr>
           <td style="padding:32px;">
-            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${lead.agentName || 'there'},</p>
+            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${firstName},</p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-              I noticed your listing at <strong>${lead.address}</strong> and created a free professional staging upgrade to show what it could look like with premium virtual staging.
+              ${openingLine}
             </p>
             ${imagesHtml}
-            <p style="margin:16px 0;font-size:15px;color:#374151;line-height:1.6;">
-              Virtual staging helps buyers visualize the space and typically leads to faster sales and stronger offers. We generate results like this in seconds at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>.
+            <p style="margin:16px 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+              ${valueLine}
             </p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-              We can also turn these virtually staged rooms into <strong>virtual video walkthroughs</strong> -- giving buyers an immersive tour experience without ever stepping foot in the property.
+              ${videoLine}
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-              Happy to send a few more free samples for this listing if you're interested.
+              ${closingLine}
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
               <tr>
@@ -976,12 +1672,12 @@ export async function sendOutreachEmail(lead: {
                 </td>
               </tr>
             </table>
-            <p style="margin:0;font-size:15px;color:#374151;">Best,<br><strong>Minh</strong><br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a></p>
+            <p style="margin:0;font-size:15px;color:#374151;">${signoff}</p>
           </td>
         </tr>
         <tr>
           <td style="background:#f3f4f6;padding:16px 32px;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because your listing at ${lead.address} is publicly listed. To unsubscribe reply with "unsubscribe".</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because your listing at ${lead.address} is publicly listed. Reply "unsubscribe" to opt out.</p>
           </td>
         </tr>
       </table>
@@ -1024,6 +1720,42 @@ export async function sendOutreachEmail(lead: {
     }
 }
 
+// Sends a test email to the given address and returns the raw result.
+// Use this to confirm Gmail OAuth is wired up correctly before relying on the pipeline.
+export async function sendTestEmail(toEmail: string): Promise<{ success?: boolean; error?: string; detail?: string }> {
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
+        return {
+            error: 'Gmail credentials missing',
+            detail: `CLIENT_ID=${GMAIL_CLIENT_ID ? 'set' : 'EMPTY'} SECRET=${GMAIL_CLIENT_SECRET ? 'set' : 'EMPTY'} REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN ? 'set' : 'EMPTY'}`,
+        };
+    }
+    try {
+        const accessToken = await getGmailAccessToken();
+        const message = [
+            `From: Kogflow <kogflow.media@gmail.com>`,
+            `To: ${toEmail}`,
+            `Subject: Kogflow email test`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset=utf-8`,
+            ``,
+            `<p>This is a test email from the Kogflow outreach pipeline. If you see this, Gmail OAuth is working correctly.</p>`,
+        ].join('\r\n');
+        const encoded = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const sendRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raw: encoded }),
+        });
+        if (!sendRes.ok) {
+            const err = await sendRes.text();
+            return { error: `Gmail API ${sendRes.status}`, detail: err };
+        }
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
 // ─────────────────────────────────────────────
 // 7b. LISTING PHOTO FETCHER — Get all room photos from HAR detail page
 // ─────────────────────────────────────────────
@@ -1036,16 +1768,12 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     const fullUrl = propertyUrl.startsWith('http') ? propertyUrl : `https://www.har.com${propertyUrl}`;
 
     try {
-        // Direct fetch — HAR.com allows it and returns in ~700ms vs Zyte's 10-15s
-        const res = await fetch(fullUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml',
-                'Accept-Language': 'en-US,en;q=0.9',
-            },
-        });
-        if (!res.ok) return [];
-        const html = await res.text();
+        // Must use Zyte — HAR.com blocks Vercel datacenter IPs for direct fetch
+        const { html, error } = await zyteGet(fullUrl);
+        if (error || !html) {
+            console.warn(`[getHarListingPhotos] Zyte error for ${fullUrl}: ${error}`);
+            return [];
+        }
 
         const urls = [
             ...new Set(
@@ -1054,9 +1782,23 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
             ),
         ];
         return urls.slice(0, maxPhotos);
-    } catch {
+    } catch (err: any) {
+        console.warn(`[getHarListingPhotos] error for ${fullUrl}: ${err.message}`);
         return [];
     }
+}
+
+// Scans photos from a HAR detail page and returns the first confirmed interior photo.
+// Uses Moondream to reject exterior shots (front of house, yard, aerial, etc.).
+// HAR photo order is typically [0]=exterior, then mixed — this guarantees interior.
+async function findInteriorPhoto(listingUrl: string): Promise<string | null> {
+    const photos = await getHarListingPhotos(listingUrl, 10);
+    // Skip photo[0] — HAR always puts the exterior facade shot first
+    for (const photo of photos.slice(1, 8)) {
+        const { isStageable, error } = await detectRoom(photo);
+        if (!error && isStageable) return photo;
+    }
+    return null; // no stageable room found — do not fall back to exterior/other
 }
 
 // Scan top leads for empty rooms by fetching HAR detail pages (separate from main pipeline)
@@ -1084,15 +1826,15 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
 
     for (const lead of (data || [])) {
         scanned++;
-        // Fetch up to 4 photos total, skip first (exterior), check photos[1..3] (interior)
-        const photos = await getHarListingPhotos(lead.listing_url, 4);
-        const interiorPhotos = photos.slice(1, 4);
+        const photos = await getHarListingPhotos(lead.listing_url, 5);
+        const interiorPhotos = photos.slice(1, 5); // Skip photo[0] — always exterior facade on HAR
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
 
         for (const photoUrl of interiorPhotos) {
-            const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoUrl);
+            const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photoUrl);
             if (roomErr) { errors.push(`${lead.address}: ${roomErr}`); continue; }
-            if (isEmpty && confidence >= 80) {
+            // Must be a confirmed stageable room (bedroom/living/kitchen/dining/bath) AND empty
+            if (isStageable && isEmpty) {
                 emptyRooms.push({ roomType, imageUrl: photoUrl });
                 break;
             }
@@ -1101,11 +1843,16 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
         if (emptyRooms.length > 0) {
             await supabase.from('outreach_leads').update({ empty_rooms: emptyRooms }).eq('id', lead.id);
             found++;
-        } else if ((lead.icp_score ?? 0) >= 25 && interiorPhotos[0]) {
-            // No empty room detected — but high ICP score, so queue any interior room for redesign staging
-            const roomEntry = { roomType: 'room', imageUrl: interiorPhotos[0], redesign: true };
-            await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', lead.id);
-            found++;
+        } else if ((lead.icp_score ?? 0) >= 40 && interiorPhotos[0]) {
+            // High ICP score (stricter 40+ threshold) but no empty room found.
+            // Check the first interior photo for REDESIGN staging.
+            const { isStageable: s2, roomType: rt2, isExterior: ex2 } = await detectRoom(interiorPhotos[0]);
+            // ONLY proceed if it's confirmed stageable AND NOT exterior.
+            if (s2 && !ex2) {
+                const roomEntry = { roomType: rt2, imageUrl: interiorPhotos[0], redesign: true };
+                await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', lead.id);
+                found++;
+            }
         }
     }
 
@@ -1160,7 +1907,7 @@ export async function getActiveSession(): Promise<{ sessionId?: string; isRunnin
 
     if (pending && pending.length > 0) {
         const logEntry = (pending[0].errors || []).find((e: string) => e.startsWith('LOG:Session '));
-        const sessionId = logEntry?.match(/Session ([a-f0-9-]{36})/)?.[1] || pending[0].id;
+        const sessionId = logEntry?.match(/Session (.+) starting\.\.\./)?.[1] || pending[0].id;
         return { sessionId, isRunning: true };
     }
 
@@ -1169,7 +1916,27 @@ export async function getActiveSession(): Promise<{ sessionId?: string; isRunnin
 
 export async function requestSessionStop(sessionId: string): Promise<void> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__STOP_REQUESTED__' });
+    const { error } = await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__STOP_REQUESTED__' });
+    if (!error) return;
+
+    const { data: pending } = await supabase
+        .from('pipeline_runs')
+        .select('id, errors')
+        .eq('processed', -1)
+        .order('ran_at', { ascending: false })
+        .limit(20);
+
+    const matchingRun = (pending || []).find((run: { id: string; errors?: string[] }) =>
+        (run.errors || []).some((entry: string) => entry === `LOG:Session ${sessionId} starting...`)
+    );
+
+    if (!matchingRun) return;
+
+    const nextErrors = [...(matchingRun.errors || [])];
+    if (!nextErrors.includes('LOG:__STOP_REQUESTED__')) {
+        nextErrors.push('LOG:__STOP_REQUESTED__');
+        await supabase.from('pipeline_runs').update({ errors: nextErrors }).eq('id', matchingRun.id);
+    }
 }
 
 export async function getRecentActivityLog(limit = 300): Promise<{ entries?: { logged_at: string; session_id: string; message: string }[]; error?: string }> {
@@ -1220,10 +1987,13 @@ export async function runPipelineSession(config: {
     const debug: string[] = [];
     let processed = 0;
     const minEmptyRooms = config.minEmptyRooms ?? 5;
-    // Scrape 4x the target per city across 4 pages so we find enough new listings
-    // even when many are already in DB (e.g. 700+ existing leads)
-    const batchSize = config.scrapesPerSession * 4;
-    const harPages = 4;
+    // Scrape enough inventory to fill the session target without overfetching every city.
+    // Large sessions used to scrape 4x the session target PER city, which could exceed
+    // Vercel's 5-minute function limit. We now distribute the fetch budget across cities.
+    const cityCount = Math.max(config.cities.length, 1);
+    const bufferMultiplier = cityCount <= 2 ? 4 : cityCount <= 5 ? 3 : 2;
+    const batchSize = Math.max(20, Math.ceil((config.scrapesPerSession * bufferMultiplier) / cityCount));
+    const harPages = Math.min(2, Math.max(1, Math.ceil(batchSize / 50)));
 
     // Buffer log writes — flush to DB every 5 lines to keep Supabase calls low
     let logBuffer: string[] = [];
@@ -1329,12 +2099,12 @@ export async function runPipelineSession(config: {
     // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
     // "vacant", "unfurnished", "empty", "needs staging" → high likelihood of empty rooms
     // Fallback: check any listing with DOM >= 60 (motivated seller, may be vacant)
-    // Limit: 15 Moondream calls max to stay within time budget (~2 min)
+    // Limit: 20 Moondream calls max to stay within time budget (~2 min)
     let emptyRoomsFound = 0;
     let moondreamChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 15;
-    const MAX_HIGH_SCORE_STAGE = 5; // max redesigns per session to control Kie.ai credits
+    const MAX_MOONDREAM = 20;
+    const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
     const vacancyKeywords = ['vacant', 'unfurnished', 'empty', 'needs staging', 'unoccupied', 'immediate occupancy', 'no furnit'];
@@ -1346,18 +2116,37 @@ export async function runPipelineSession(config: {
         return bVacant - aVacant || (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0);
     });
 
-    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} vacant/long-DOM leads)`);
+    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} leads with Moondream)`);
 
     for (const listing of toProcess) {
         // Check for stop request every 3rd lead to keep DB calls low
         if (processed > 0 && processed % 3 === 0) {
-            const { data: stopData } = await supabase
+            let stopRequested = false;
+
+            const { data: stopData, error: stopError } = await supabase
                 .from('pipeline_session_log')
                 .select('id')
                 .eq('session_id', sessionId)
                 .eq('message', '__STOP_REQUESTED__')
                 .limit(1);
-            if ((stopData?.length ?? 0) > 0) {
+
+            if (!stopError) {
+                stopRequested = (stopData?.length ?? 0) > 0;
+            } else {
+                const { data: pendingRuns } = await supabase
+                    .from('pipeline_runs')
+                    .select('id, errors')
+                    .eq('processed', -1)
+                    .order('ran_at', { ascending: false })
+                    .limit(20);
+
+                stopRequested = (pendingRuns || []).some((run: { errors?: string[] }) =>
+                    (run.errors || []).includes(`LOG:Session ${sessionId} starting...`) &&
+                    (run.errors || []).includes('LOG:__STOP_REQUESTED__')
+                );
+            }
+
+            if (stopRequested) {
                 await log(`Session stopped by user after ${processed} leads`);
                 await flushLog();
                 await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
@@ -1367,32 +2156,39 @@ export async function runPipelineSession(config: {
 
         listing.score = await scoreICP(listing);
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
+        let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
 
-        const kw = listing.keywords.join(' ').toLowerCase();
-        const looksVacant = vacancyKeywords.some(k => kw.includes(k)) || (listing.daysOnMarket ?? 0) >= 60;
+        // Run Moondream when:
+        //   (a) still looking for empty rooms, OR
+        //   (b) listing scores 25+ — qualifies for furnished redesign even if empty target is met
+        const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM &&
+            (emptyRoomsFound < minEmptyRooms || listing.score >= 25);
 
-        if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM && looksVacant) {
-            const primaryPhoto = listing.photos[0];
-            if (primaryPhoto) {
-                moondreamChecked++;
-                const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(primaryPhoto);
-                if (roomErr) {
-                    await log(`  [${listing.address}] Moondream error: ${roomErr}`);
-                } else {
-                    await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
-                    if (isEmpty && confidence >= 80) {
-                        emptyRooms.push({ roomType, imageUrl: primaryPhoto });
-                        emptyRoomsFound++;
-                        await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
-                    }
+        if (shouldRunMoondream) {
+            moondreamChecked++;
+            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 8);
+            await log(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
+            let foundStageable = false;
+            for (const photo of detailPhotos.slice(1, 7)) { // Skip photo[0] — always exterior facade on HAR
+                const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photo);
+                if (roomErr) { await log(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
+                await log(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
+                if (!isStageable) continue; // floor plan / entryway / stairway / exterior — skip
+                foundStageable = true;
+                if (isEmpty) {
+                    emptyRooms.push({ roomType, imageUrl: photo });
+                    emptyRoomsFound++;
+                    await log(`  → Empty ${roomType}! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
+                    break; // Found confirmed empty stageable room — stop scanning this listing
                 }
+                // Furnished stageable room — record first one found, keep scanning for empty
+                if (!furnishedRoom) furnishedRoom = { roomType, imageUrl: photo };
             }
-        } else if (!looksVacant) {
-            // skip silently — furnished listing
+            if (!foundStageable) await log(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
         } else if (moondreamChecked >= MAX_MOONDREAM) {
             await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
-            await log(`  [${listing.address}] Skipping Moondream (target reached)`);
+            await log(`  [${listing.address}] Skipping Moondream (empty target met, score ${listing.score} < 25)`);
         }
 
         const saveResult = await saveLead({ ...listing, emptyRooms });
@@ -1405,31 +2201,36 @@ export async function runPipelineSession(config: {
         const leadId = saveResult.lead?.id;
         if (!leadId) continue;
 
+        // Mark as scored (ICP score was computed — separate from 'scraped' baseline)
+        await updateLeadStatus(leadId, 'scored');
+
         if (emptyRooms.length > 0) {
+            // Empty room — add furniture
             const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType, false);
             if (taskId) {
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Staged (empty room)! taskId=${taskId}`);
+                await log(`  → Staged (empty room, add furniture) taskId=${taskId}`);
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if ((listing.score ?? 0) >= 25 && listing.photos[0] && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // High-score furnished lead — redesign any available room photo
+        } else if (furnishedRoom && listing.score >= 25 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+            // Furnished room + score 25+ — redesign existing staging
             highScoreStaged++;
-            const photoUrl = listing.photos[0];
-            const roomEntry = { roomType: 'room', imageUrl: photoUrl, redesign: true };
-            await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', leadId);
-            const { taskId, error: stageErr } = await stageEmptyRoom(photoUrl, 'room', true);
+            const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
             if (taskId) {
+                // Store furnished room as before-photo reference so poll/email step can use it
+                await supabase.from('outreach_leads')
+                    .update({ empty_rooms: [{ roomType: furnishedRoom.roomType, imageUrl: furnishedRoom.imageUrl }] })
+                    .eq('id', leadId);
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Redesign staged (score ${listing.score})! taskId=${taskId}`);
+                await log(`  → Staged (score ${listing.score} furnished redesign) taskId=${taskId}`);
             } else {
                 await log(`  → Redesign FAILED: ${stageErr}`);
             }
         }
 
         processed++;
-        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length})`);
+        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length}, furnishedRoom=${furnishedRoom?.roomType ?? 'none'})`);
     }
 
     if (allListings.length === 0) {
@@ -1441,6 +2242,19 @@ export async function runPipelineSession(config: {
     return { processed, errors, debug, sessionId };
 }
 
+// One-time backfill: promote 'scraped' leads that have icp_score > 0 to 'scored'
+export async function backfillScoredStatus(): Promise<{ updated: number; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .update({ status: 'scored' })
+        .eq('status', 'scraped')
+        .gt('icp_score', 0)
+        .select('id');
+    if (error) return { updated: 0, error: error.message };
+    return { updated: data?.length || 0 };
+}
+
 // ─────────────────────────────────────────────
 // 9. PIPELINE CONFIG — Persist & load settings
 // ─────────────────────────────────────────────
@@ -1449,51 +2263,151 @@ export interface PipelineConfig {
     sessions_per_day: number;
     scrapes_per_session: number;
     cities: string[];
+    cron_enabled: boolean;
 }
 
 export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { error } = await supabase
-        .from('pipeline_config')
-        .upsert({ id: 1, ...config, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-    if (error) return { error: error.message };
+    // cron_enabled column may not exist yet — upsert without it if insert fails
+    const row = { id: 1, ...config, updated_at: new Date().toISOString() };
+    const { error } = await supabase.from('pipeline_config').upsert(row, { onConflict: 'id' });
+    if (error?.message?.includes('cron_enabled')) {
+        const { cron_enabled: _ce, ...rowWithout } = row;
+        await supabase.from('pipeline_config').upsert(rowWithout, { onConflict: 'id' });
+    } else if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data, error } = await supabase
-        .from('pipeline_config')
-        .select('*')
-        .eq('id', 1)
-        .single();
-    // HAR.com covers Houston metro area + Texas cities — defaults target these reliably
-    if (error || !data) return { config: { sessions_per_day: 3, scrapes_per_session: 10, cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'] } };
-    return { config: { sessions_per_day: data.sessions_per_day, scrapes_per_session: data.scrapes_per_session, cities: data.cities } };
+    const { data, error } = await supabase.from('pipeline_config').select('*').eq('id', 1).single();
+    const defaults: PipelineConfig = { sessions_per_day: 3, scrapes_per_session: 10, cron_enabled: true, cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'] };
+    if (error || !data) return { config: defaults };
+    return { config: { sessions_per_day: data.sessions_per_day, scrapes_per_session: data.scrapes_per_session, cities: data.cities, cron_enabled: data.cron_enabled ?? true } };
 }
 
 // ─────────────────────────────────────────────
 // 10. PIPELINE RUNS — Log cron executions
 // ─────────────────────────────────────────────
 
-export async function logPipelineRun(result: { processed: number; errors: string[]; debug?: string[] }): Promise<void> {
+// trigger: 'cron' for scheduled runs, 'manual' for UI-triggered runs.
+// Only cron runs count toward sessions_per_day so manual runs don't consume the budget.
+export async function logPipelineRun(result: { processed: number; errors: string[]; debug?: string[]; trigger?: 'cron' | 'manual' }): Promise<void> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    await supabase.from('pipeline_runs').insert({
+    const row: any = {
         ran_at: new Date().toISOString(),
         processed: result.processed,
         errors: [...(result.errors || []), ...(result.debug || []).map(d => `LOG:${d}`)],
-    });
+        trigger: result.trigger ?? 'cron',
+    };
+    const { error } = await supabase.from('pipeline_runs').insert(row);
+    if (error?.message?.includes('trigger')) {
+        // trigger column not yet added — insert without it
+        const { trigger: _t, ...rowWithout } = row;
+        await supabase.from('pipeline_runs').insert(rowWithout);
+    }
 }
 
-export async function countTodayRuns(): Promise<number> {
+// Count cron-only runs today (manual UI runs don't count toward the daily limit).
+export async function countTodayCronRuns(): Promise<number> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const { count } = await supabase
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    // Try to filter by trigger='cron'; fall back to all runs if column missing
+    const { count, error } = await supabase
         .from('pipeline_runs')
         .select('*', { count: 'exact', head: true })
-        .gte('ran_at', todayStart.toISOString());
+        .gte('ran_at', today.toISOString())
+        .neq('processed', -1)
+        .eq('trigger', 'cron');
+    if (error?.message?.includes('trigger')) {
+        // Column doesn't exist yet — count all completed runs
+        const { count: all } = await supabase
+            .from('pipeline_runs')
+            .select('*', { count: 'exact', head: true })
+            .gte('ran_at', today.toISOString())
+            .neq('processed', -1);
+        return all ?? 0;
+    }
     return count ?? 0;
+}
+
+// Returns cron schedule health info for the dashboard.
+// Cron fires hourly 13–22 UTC (8am–5pm CDT). Slots expected so far today = hours elapsed in that window.
+export async function getCronStatus(): Promise<{
+    cron_enabled: boolean;
+    sessions_per_day: number;
+    today_cron_runs: number;
+    last_cron_run: string | null;
+    next_scheduled_utc: string;
+    expected_so_far: number;
+    schedule: string;
+}> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { config } = await loadPipelineConfig();
+
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    // Cron schedule: 13–22 UTC inclusive (10 slots/day)
+    const CRON_HOURS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+    const passedHours = CRON_HOURS.filter(h => h <= utcHour);
+    const expected_so_far = passedHours.length;
+
+    // Next scheduled UTC time
+    const nextHour = CRON_HOURS.find(h => h > utcHour);
+    let next_scheduled_utc: string;
+    if (nextHour !== undefined) {
+        const next = new Date(now);
+        next.setUTCHours(nextHour, 0, 0, 0);
+        next_scheduled_utc = next.toISOString();
+    } else {
+        // Tomorrow at 13 UTC
+        const next = new Date(now);
+        next.setUTCDate(next.getUTCDate() + 1);
+        next.setUTCHours(13, 0, 0, 0);
+        next_scheduled_utc = next.toISOString();
+    }
+
+    // Last cron run — try to filter by trigger='cron', fall back to any run
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const { data: cronRuns, error } = await supabase
+        .from('pipeline_runs')
+        .select('ran_at, processed')
+        .gte('ran_at', today.toISOString())
+        .neq('processed', -1)
+        .eq('trigger', 'cron')
+        .order('ran_at', { ascending: false })
+        .limit(20);
+
+    let today_cron_runs = 0;
+    let last_cron_run: string | null = null;
+
+    if (error?.message?.includes('trigger')) {
+        // Column missing — show all runs (will overcount manual runs, but gives signal)
+        const { data: allRuns } = await supabase
+            .from('pipeline_runs')
+            .select('ran_at')
+            .gte('ran_at', today.toISOString())
+            .neq('processed', -1)
+            .order('ran_at', { ascending: false })
+            .limit(1);
+        last_cron_run = allRuns?.[0]?.ran_at ?? null;
+        today_cron_runs = 0;
+    } else {
+        today_cron_runs = cronRuns?.length ?? 0;
+        last_cron_run = cronRuns?.[0]?.ran_at ?? null;
+    }
+
+    return {
+        cron_enabled: config?.cron_enabled ?? true,
+        sessions_per_day: config?.sessions_per_day ?? 3,
+        today_cron_runs,
+        last_cron_run,
+        next_scheduled_utc,
+        expected_so_far,
+        schedule: 'Hourly 8am–5pm CDT (13–22 UTC)',
+    };
 }
 
 export async function getRecentRuns(limit = 20): Promise<{ runs?: any[]; error?: string }> {

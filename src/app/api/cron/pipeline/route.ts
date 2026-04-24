@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch } from '@/app/actions/outreach';
+import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
 
 export const maxDuration = 300; // Vercel Pro max
 
@@ -15,10 +14,9 @@ export async function GET(request: Request) {
     const { config } = await loadPipelineConfig();
     if (!config) return NextResponse.json({ skipped: true, reason: 'No config found' });
 
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    if (!config.cron_enabled) {
+        return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
+    }
 
     // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
     // Runs before poll so staged leads appear in step 2 on the NEXT cron call.
@@ -28,24 +26,17 @@ export async function GET(request: Request) {
     // Always runs regardless of sessions_per_day limit.
     const emailResult = await pollAndEmailStagedLeads(10);
 
-    // Step 2: Check if we've already hit today's scrape session limit.
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const { count } = await supabase
-        .from('pipeline_runs')
-        .select('*', { count: 'exact', head: true })
-        .gte('ran_at', today.toISOString())
-        .neq('processed', -1); // exclude in-progress runs
-
-    if ((count ?? 0) >= config.sessions_per_day) {
+    // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
+    const todayCronRuns = await countTodayCronRuns();
+    if (todayCronRuns >= config.sessions_per_day) {
         return NextResponse.json({
             skipped: true,
-            reason: `Already ran ${count} sessions today (limit: ${config.sessions_per_day})`,
+            reason: `Already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,
             emailed: emailResult.emailed,
         });
     }
 
-    // Step 3: Scrape + stage new leads.
+    // Step 4: Scrape + stage new leads.
     const result = await runPipelineSession({
         cities: config.cities,
         scrapesPerSession: config.scrapes_per_session,
@@ -55,6 +46,7 @@ export async function GET(request: Request) {
     await logPipelineRun({
         ...result,
         debug: [...emailResult.debug, ...result.debug],
+        trigger: 'cron',
     });
 
     return NextResponse.json({
