@@ -660,7 +660,46 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
         .eq('address', listing.address)
         .single();
 
-    if (existing) return { skipped: true, reason: 'Already in database' };
+    if (existing) {
+        const duplicateUpdates: {
+            city: string;
+            price: number;
+            days_on_market: number;
+            price_reduced: boolean;
+            photo_count: number;
+            agent_name: string;
+            agent_phone?: string;
+            agent_email?: string;
+            listing_url: string;
+            keywords: string[];
+            icp_score: number;
+            empty_rooms?: { roomType: string; imageUrl: string; stagedUrl?: string }[];
+        } = {
+            city: listing.city,
+            price: listing.price,
+            days_on_market: listing.daysOnMarket,
+            price_reduced: listing.priceReduced,
+            photo_count: listing.photoCount,
+            agent_name: listing.agentName,
+            agent_phone: listing.agentPhone,
+            agent_email: listing.agentEmail,
+            listing_url: listing.listingUrl,
+            keywords: listing.keywords,
+            icp_score: listing.score || 0,
+        };
+
+        if (listing.emptyRooms && listing.emptyRooms.length > 0) {
+            duplicateUpdates.empty_rooms = listing.emptyRooms;
+        }
+
+        const { error: updateError } = await supabase
+            .from('outreach_leads')
+            .update(duplicateUpdates)
+            .eq('id', existing.id);
+
+        if (updateError) return { error: updateError.message };
+        return { skipped: true, reason: 'Already in database', lead: existing };
+    }
 
     const { data, error } = await supabase
         .from('outreach_leads')
@@ -765,16 +804,19 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
     return { staged, skipped, failed, total: leads.length, errors };
 }
 
-export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
+export async function submitStagingBatch(limit?: number): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Stage leads that have a Moondream-confirmed room (already verified during pipeline scan).
-    const { data: emptyData } = await supabase
+    let query = supabase
         .from('outreach_leads')
         .select('id, address, empty_rooms, listing_url, icp_score')
         .in('status', ['scraped', 'scored'])
-        .not('empty_rooms', 'eq', '[]')
-        .limit(limit);
+        .not('empty_rooms', 'eq', '[]');
+
+    if (typeof limit === 'number') query = query.limit(limit);
+
+    const { data: emptyData } = await query;
 
     const allPending = (emptyData || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
 
@@ -825,15 +867,18 @@ async function uploadStagedImage(tempUrl: string, leadId: string): Promise<strin
 }
 
 // Poll all staged leads, save the generated image URL, then send outreach email
-export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
+export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('outreach_leads')
         .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id')
         .eq('status', 'staged')
-        .not('staging_task_id', 'is', null)
-        .limit(limit);
+        .not('staging_task_id', 'is', null);
+
+    if (typeof limit === 'number') query = query.limit(limit);
+
+    const { data, error } = await query;
 
     if (error) return { emailed: 0, stillProcessing: 0, failed: 0, errors: [error.message], debug: [] };
 
@@ -976,25 +1021,56 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
 
 export async function getLeadStats(since?: string) {
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const pageSize = 1000;
+    const leads: {
+        status: string;
+        icp_score: number | null;
+        photo_count: number | null;
+        empty_rooms: { roomType?: string; imageUrl?: string; stagedUrl?: string }[] | null;
+        staging_task_id: string | null;
+        email_sent_at: string | null;
+    }[] = [];
 
-    let query = supabase.from('outreach_leads').select('status, icp_score, photo_count, empty_rooms');
-    if (since) query = query.gte('created_at', since);
+    for (let from = 0; ; from += pageSize) {
+        let query = supabase
+            .from('outreach_leads')
+            .select('status, icp_score, photo_count, empty_rooms, staging_task_id, email_sent_at')
+            .range(from, from + pageSize - 1);
 
-    const { data, error } = await query;
+        if (since) query = query.gte('created_at', since);
 
-    if (error) return { error: error.message };
+        const { data, error } = await query;
+        if (error) return { error: error.message };
+
+        const batch = data || [];
+        leads.push(...batch);
+        if (batch.length < pageSize) break;
+    }
+
+    const currentStaged = leads.filter(l => l.status === 'staged').length;
+    const stagedEver = leads.filter(l =>
+        !!l.staging_task_id ||
+        (Array.isArray(l.empty_rooms) && l.empty_rooms.some(room => room?.stagedUrl))
+    ).length;
+    const stagedQueue = leads.filter(l =>
+        ['scraped', 'scored'].includes(l.status) &&
+        !l.staging_task_id &&
+        Array.isArray(l.empty_rooms) &&
+        l.empty_rooms.length > 0
+    ).length;
 
     const stats = {
-        total: data?.length || 0,
-        scraped: data?.filter(l => l.status === 'scraped').length || 0,
-        scored: data?.filter(l => l.status === 'scored').length || 0,
-        staged: data?.filter(l => l.status === 'staged').length || 0,
-        form_filled: data?.filter(l => l.status === 'form_filled').length || 0,
-        emailed: data?.filter(l => l.status === 'emailed').length || 0,
-        avgScore: data?.length ? Math.round(data.reduce((s, l) => s + (l.icp_score || 0), 0) / data.length) : 0,
-        totalPhotos: data?.reduce((s, l) => s + (l.photo_count || 0), 0) || 0,
-        leadsWithPhotos: data?.filter(l => (l.photo_count || 0) > 0).length || 0,
-        emptyRoomsFound: data?.filter(l => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0).length || 0,
+        total: leads.length,
+        scraped: leads.filter(l => l.status === 'scraped').length,
+        scored: leads.filter(l => l.status === 'scored').length,
+        staged: currentStaged,
+        stagedEver,
+        form_filled: leads.filter(l => l.status === 'form_filled').length,
+        emailed: leads.filter(l => l.status === 'emailed' || !!l.email_sent_at).length,
+        avgScore: leads.length ? Math.round(leads.reduce((s, l) => s + (l.icp_score || 0), 0) / leads.length) : 0,
+        totalPhotos: leads.reduce((s, l) => s + (l.photo_count || 0), 0),
+        leadsWithPhotos: leads.filter(l => (l.photo_count || 0) > 0).length,
+        emptyRoomsFound: stagedQueue,
     };
 
     return { stats };
@@ -1110,8 +1186,123 @@ export async function sendOutreachEmail(lead: {
     try {
         const accessToken = await getGmailAccessToken();
 
-        // ASCII-only subject — avoid non-ASCII chars (em dashes etc.) that cause garbled encoding in some clients
-        const subject = `Free virtual staging sample for your listing at ${lead.address}`;
+        // Randomized subject lines — varied phrasing to avoid spam pattern detection
+        const firstName = lead.agentName?.split(' ')[0] ?? 'there';
+        const prop = lead.address;
+        const subjectTemplates = [
+            // --- "regarding your property at" core pattern ---
+            `${firstName}, regarding your property at ${prop}, I put together something for you`,
+            `${firstName}, regarding your property at ${prop}, I mocked up a new look`,
+            `${firstName}, regarding your property at ${prop}, I made this after seeing the listing`,
+            `${firstName}, regarding your property at ${prop}, I created something you may want to see`,
+            `${firstName}, regarding your property at ${prop}, I wanted your take on this version`,
+            `${firstName}, regarding your property at ${prop}, I put together a visual idea`,
+            `${firstName}, regarding your property at ${prop}, I drafted a cleaner presentation`,
+            `${firstName}, regarding your property at ${prop}, I had an idea for the photos`,
+            `${firstName}, regarding your property at ${prop}, I made a quick preview`,
+            `${firstName}, regarding your property at ${prop}, I created a staged version`,
+            `${firstName}, regarding your property at ${prop}, I tried a different look`,
+            `${firstName}, regarding your property at ${prop}, I reworked one of the rooms`,
+            `${firstName}, regarding your property at ${prop}, I built a quick staging concept`,
+            `${firstName}, regarding your property at ${prop}, I pulled together a simple preview`,
+            `${firstName}, regarding your property at ${prop}, I put together a fresh angle`,
+            `${firstName}, regarding your property at ${prop}, I prepared a staged sample`,
+            `${firstName}, regarding your property at ${prop}, I made a visual update`,
+            `${firstName}, regarding your property at ${prop}, I tested a new presentation`,
+            `${firstName}, regarding your property at ${prop}, I put together a room concept`,
+            `${firstName}, regarding your property at ${prop}, I gave the listing a fresh treatment`,
+            `${firstName}, regarding your property at ${prop}, I created a first-pass staging idea`,
+            `${firstName}, regarding your property at ${prop}, I wanted to share this concept`,
+            `${firstName}, regarding your property at ${prop}, I made a sample image set`,
+            `${firstName}, regarding your property at ${prop}, I sketched out a presentation idea`,
+            `${firstName}, regarding your property at ${prop}, I made a quick before-and-after concept`,
+            `${firstName}, regarding your property at ${prop}, I created a photo concept for you`,
+            `${firstName}, regarding your property at ${prop}, I worked up a quick visual`,
+            `${firstName}, regarding your property at ${prop}, I created a mockup you might like`,
+            `${firstName}, regarding your property at ${prop}, I put a room idea together`,
+            `${firstName}, regarding your property at ${prop}, I staged one of the photos for you`,
+            `${firstName}, regarding your property at ${prop}, I redesigned one of the rooms`,
+            `${firstName}, regarding your property at ${prop}, I made something worth a look`,
+            `${firstName}, regarding your property at ${prop}, I created a version with furniture`,
+            `${firstName}, regarding your property at ${prop}, I put together a quick visual concept`,
+            `${firstName}, regarding your property at ${prop}, I updated the look on one room`,
+            `${firstName}, regarding your property at ${prop}, I put furniture in the space`,
+            `${firstName}, regarding your property at ${prop}, I gave one room a new look`,
+            `${firstName}, regarding your property at ${prop}, I created an interior concept for it`,
+            `${firstName}, regarding your property at ${prop}, I put together a listing presentation idea`,
+            `${firstName}, regarding your property at ${prop}, I made a furnished version for you`,
+            `${firstName}, regarding your property at ${prop}, I created a staged photo for the listing`,
+            `${firstName}, regarding your property at ${prop}, I made something for the photos`,
+            `${firstName}, regarding your property at ${prop}, I staged the space digitally`,
+            `${firstName}, regarding your property at ${prop}, I created a concept worth sharing`,
+            `${firstName}, regarding your property at ${prop}, I put a staged photo together for you`,
+            `${firstName}, regarding your property at ${prop}, I came up with a visual concept`,
+            `${firstName}, regarding your property at ${prop}, I staged a room photo for you`,
+            `${firstName}, regarding your property at ${prop}, I applied a new look to one of the photos`,
+            `${firstName}, regarding your property at ${prop}, I made a before-and-after for you`,
+            `${firstName}, regarding your property at ${prop}, I created a styled version of the space`,
+            // --- "I saw your listing" variants ---
+            `${firstName}, I saw your listing at ${prop} and put something together`,
+            `${firstName}, I saw your listing at ${prop} and created this for you`,
+            `${firstName}, I saw your listing at ${prop} and staged it for you`,
+            `${firstName}, I saw your listing at ${prop} and wanted to share an idea`,
+            `${firstName}, I saw your listing at ${prop} and made a quick concept`,
+            `${firstName}, I saw your listing at ${prop} and built a staged version`,
+            `${firstName}, I saw your listing at ${prop} and created a photo idea`,
+            `${firstName}, I saw your listing at ${prop} and drafted a new look`,
+            `${firstName}, I saw your listing at ${prop} and made a visual for it`,
+            `${firstName}, I saw your listing at ${prop} and put together a room concept`,
+            `${firstName}, I saw your listing at ${prop} and came up with a staged idea`,
+            `${firstName}, I saw your listing at ${prop} and tried a different angle`,
+            `${firstName}, I saw your listing at ${prop} and created something for you`,
+            `${firstName}, I saw your listing at ${prop} and wanted your take on this`,
+            // --- "I noticed your property" variants ---
+            `${firstName}, I noticed your property at ${prop} and made a quick concept`,
+            `${firstName}, I noticed your property at ${prop} and staged a room for you`,
+            `${firstName}, I noticed your property at ${prop} and put together a visual idea`,
+            `${firstName}, I noticed your property at ${prop} and created something you may like`,
+            `${firstName}, I noticed your property at ${prop} and worked up a staged photo`,
+            `${firstName}, I noticed your property at ${prop} and made a before-and-after`,
+            `${firstName}, I noticed your property at ${prop} and drafted a presentation idea`,
+            `${firstName}, I noticed your property at ${prop} and created a new look for it`,
+            `${firstName}, I noticed your property at ${prop} and wanted to show you something`,
+            `${firstName}, I noticed your property at ${prop} and put together a quick mockup`,
+            // --- short address-only subject lines ---
+            `${firstName}, a staging idea for ${prop}`,
+            `${firstName}, a fresh look for ${prop}`,
+            `${firstName}, a staged version of ${prop}`,
+            `${firstName}, one idea for ${prop}`,
+            `${firstName}, a new look for ${prop}`,
+            `${firstName}, a sharper first impression for ${prop}`,
+            `${firstName}, a presentation concept for ${prop}`,
+            `${firstName}, a room concept for ${prop}`,
+            `${firstName}, a visual idea for ${prop}`,
+            `${firstName}, a quick mockup for ${prop}`,
+            `${firstName}, a furnished version of ${prop}`,
+            `${firstName}, a styled photo for ${prop}`,
+            `${firstName}, a before-and-after for ${prop}`,
+            `${firstName}, a listing photo idea for ${prop}`,
+            `${firstName}, a cleaner presentation for ${prop}`,
+            `${firstName}, an interior concept for ${prop}`,
+            `${firstName}, a staged photo for ${prop}`,
+            `${firstName}, a quick visual for ${prop}`,
+            // --- curiosity / soft hook variants ---
+            `${firstName}, thought you might want to see this for ${prop}`,
+            `${firstName}, had an idea for ${prop}`,
+            `${firstName}, made something for ${prop}`,
+            `${firstName}, created something for ${prop}`,
+            `${firstName}, wanted to show you something about ${prop}`,
+            `${firstName}, wanted to share an idea for ${prop}`,
+            `${firstName}, put something together for ${prop}`,
+            `${firstName}, worked up a concept for ${prop}`,
+            `${firstName}, came across ${prop} and made this`,
+            `${firstName}, came across your listing at ${prop} and created something for you`,
+            `${firstName}, saw ${prop} and put a concept together`,
+            `${firstName}, saw ${prop} and made a quick visual`,
+            `${firstName}, saw ${prop} and created a staged version`,
+            `${firstName}, saw ${prop} and wanted to show you this`,
+        ];
+        const subject = subjectTemplates[Math.floor(Math.random() * subjectTemplates.length)];
 
         const imagesHtml = lead.stagedImageUrl ? `
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
@@ -1400,7 +1591,7 @@ export async function getActiveSession(): Promise<{ sessionId?: string; isRunnin
 
     if (pending && pending.length > 0) {
         const logEntry = (pending[0].errors || []).find((e: string) => e.startsWith('LOG:Session '));
-        const sessionId = logEntry?.match(/Session ([a-f0-9-]{36})/)?.[1] || pending[0].id;
+        const sessionId = logEntry?.match(/Session (.+) starting\.\.\./)?.[1] || pending[0].id;
         return { sessionId, isRunning: true };
     }
 
@@ -1409,7 +1600,27 @@ export async function getActiveSession(): Promise<{ sessionId?: string; isRunnin
 
 export async function requestSessionStop(sessionId: string): Promise<void> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__STOP_REQUESTED__' });
+    const { error } = await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__STOP_REQUESTED__' });
+    if (!error) return;
+
+    const { data: pending } = await supabase
+        .from('pipeline_runs')
+        .select('id, errors')
+        .eq('processed', -1)
+        .order('ran_at', { ascending: false })
+        .limit(20);
+
+    const matchingRun = (pending || []).find((run: { id: string; errors?: string[] }) =>
+        (run.errors || []).some((entry: string) => entry === `LOG:Session ${sessionId} starting...`)
+    );
+
+    if (!matchingRun) return;
+
+    const nextErrors = [...(matchingRun.errors || [])];
+    if (!nextErrors.includes('LOG:__STOP_REQUESTED__')) {
+        nextErrors.push('LOG:__STOP_REQUESTED__');
+        await supabase.from('pipeline_runs').update({ errors: nextErrors }).eq('id', matchingRun.id);
+    }
 }
 
 export async function getRecentActivityLog(limit = 300): Promise<{ entries?: { logged_at: string; session_id: string; message: string }[]; error?: string }> {
@@ -1460,10 +1671,13 @@ export async function runPipelineSession(config: {
     const debug: string[] = [];
     let processed = 0;
     const minEmptyRooms = config.minEmptyRooms ?? 5;
-    // Scrape 4x the target per city across 4 pages so we find enough new listings
-    // even when many are already in DB (e.g. 700+ existing leads)
-    const batchSize = config.scrapesPerSession * 4;
-    const harPages = 4;
+    // Scrape enough inventory to fill the session target without overfetching every city.
+    // Large sessions used to scrape 4x the session target PER city, which could exceed
+    // Vercel's 5-minute function limit. We now distribute the fetch budget across cities.
+    const cityCount = Math.max(config.cities.length, 1);
+    const bufferMultiplier = cityCount <= 2 ? 4 : cityCount <= 5 ? 3 : 2;
+    const batchSize = Math.max(20, Math.ceil((config.scrapesPerSession * bufferMultiplier) / cityCount));
+    const harPages = Math.min(2, Math.max(1, Math.ceil(batchSize / 50)));
 
     // Buffer log writes — flush to DB every 5 lines to keep Supabase calls low
     let logBuffer: string[] = [];
@@ -1591,13 +1805,32 @@ export async function runPipelineSession(config: {
     for (const listing of toProcess) {
         // Check for stop request every 3rd lead to keep DB calls low
         if (processed > 0 && processed % 3 === 0) {
-            const { data: stopData } = await supabase
+            let stopRequested = false;
+
+            const { data: stopData, error: stopError } = await supabase
                 .from('pipeline_session_log')
                 .select('id')
                 .eq('session_id', sessionId)
                 .eq('message', '__STOP_REQUESTED__')
                 .limit(1);
-            if ((stopData?.length ?? 0) > 0) {
+
+            if (!stopError) {
+                stopRequested = (stopData?.length ?? 0) > 0;
+            } else {
+                const { data: pendingRuns } = await supabase
+                    .from('pipeline_runs')
+                    .select('id, errors')
+                    .eq('processed', -1)
+                    .order('ran_at', { ascending: false })
+                    .limit(20);
+
+                stopRequested = (pendingRuns || []).some((run: { errors?: string[] }) =>
+                    (run.errors || []).includes(`LOG:Session ${sessionId} starting...`) &&
+                    (run.errors || []).includes('LOG:__STOP_REQUESTED__')
+                );
+            }
+
+            if (stopRequested) {
                 await log(`Session stopped by user after ${processed} leads`);
                 await flushLog();
                 await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
