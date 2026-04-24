@@ -1344,36 +1344,231 @@ export async function sendOutreachEmail(lead: {
         // Build context-aware personalized body copy
         const room = lead.roomType || 'room';
         const dom = lead.daysOnMarket ?? 0;
-        const cityLabel = lead.city ? lead.city : '';
+        const cityLabel = lead.city ?? '';
         const neighborhood = lead.keywords?.find(k => k && k.length > 2 && !/^\d/.test(k)) ?? '';
+        const addr = `<strong>${lead.address}</strong>`;
+        const cityStr = cityLabel ? `${cityLabel} ` : '';
+        const nbhStr = neighborhood ? ` in ${neighborhood}` : '';
+        const nbhAreaStr = neighborhood ? ` in the ${neighborhood} area` : '';
+        const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-        // Opening line — varies by how long listing has been active
-        const openingLine = (() => {
-            if (lead.priceReduced) {
-                return `I saw your listing at <strong>${lead.address}</strong> went through a price adjustment recently — so I staged the ${room} to give the photos a fresh angle that might re-spark some buyer interest.`;
-            }
-            if (dom >= 45) {
-                return `I came across your ${cityLabel ? `${cityLabel} ` : ''}listing at <strong>${lead.address}</strong> and noticed it's been on the market for a little while, so I staged the ${room} to see if a furnished version helps it stand out more.`;
-            }
-            if (dom <= 7) {
-                return `Saw your new listing at <strong>${lead.address}</strong>${neighborhood ? ` in ${neighborhood}` : ''} — nice property. I staged the ${room} to show buyers what it could look like furnished.`;
-            }
-            return `I came across your listing at <strong>${lead.address}</strong>${neighborhood ? ` in the ${neighborhood} area` : ''} and took the liberty of staging the ${room} — thought it might be worth a look.`;
-        })();
+        // ── Opening lines (25+ per bucket) ──────────────────────────────────
+        const openingLine = pick(lead.priceReduced ? [
+            `I noticed your listing at ${addr} went through a price adjustment recently, so I staged the ${room} to give the photos a fresh angle that might re-spark buyer interest.`,
+            `Saw that ${addr} had a price update — I took the liberty of staging the ${room} to see if a new look helps it get more attention.`,
+            `I came across ${addr} after the price change and staged the ${room} for you — sometimes a fresh photo set is all it takes to get buyers clicking again.`,
+            `I saw the recent price adjustment on ${addr} and wanted to help — staged the ${room} so the listing has something new to show buyers.`,
+            `Noticed ${addr} went through a price reduction, so I staged the ${room}. A fresh photo after a price drop can re-engage buyers who passed on it before.`,
+            `I spotted the price change on ${addr} and thought this might be useful — staged the ${room} to give the listing a new visual angle.`,
+            `Saw that ${addr} had a recent price update and put together a staged version of the ${room} — might help get some renewed interest from buyers.`,
+            `I came across your ${cityStr}listing at ${addr} after the price adjustment and staged the ${room}. Fresh photos after a price drop tend to pull buyers back in.`,
+            `Noticed the price change on ${addr} — I staged the ${room} so you have something new to lead with in the photos.`,
+            `I saw ${addr} had a price adjustment and took the liberty of staging the ${room} for you. A new look can make a real difference after a reduction.`,
+            `Caught the price update on ${addr} and wanted to do something useful with it — staged the ${room} so the photos feel fresh again.`,
+            `I noticed ${addr} had a recent price change. I staged the ${room} — buyers who scrolled past it might stop when they see a furnished version.`,
+            `Saw the reduction on ${addr} and thought a staged ${room} photo could help give it a second life in buyers' searches.`,
+            `I came across the price change on ${addr} and staged the ${room} — worth showing buyers a new side of the property at the new price point.`,
+            `Noticed the recent price update on ${addr} so I staged the ${room} for you. Sometimes a visual refresh is what moves a listing forward.`,
+            `I spotted ${addr} after the price adjustment and staged the ${room}. A new photo angle right after a reduction can re-activate buyer interest.`,
+            `Saw the price drop on ${addr} and put together a staged ${room} photo — might help it stand out to buyers browsing at that price range now.`,
+            `I came across ${addr} after the recent price change and took the liberty of virtually staging the ${room}. Happy to share it in case it's useful.`,
+            `Noticed the price adjustment on ${addr} — staged the ${room} so the listing has something new to offer buyers who are browsing fresh.`,
+            `I saw the price update on ${addr} and created a staged version of the ${room}. A fresh photo set can do a lot right after a reduction.`,
+            `Caught the price change on ${addr} and wanted to put something together for you — staged the ${room} in case it helps attract a new round of buyers.`,
+            `I noticed ${addr} had a recent price reduction. I staged the ${room} — a furnished photo can completely change how buyers perceive the value.`,
+            `Saw the listing at ${addr} go through a price adjustment and staged the ${room} for you. Buyers often re-engage when they see something new.`,
+            `I came across the price update on ${addr} and staged the ${room} to help it show better at the new price point.`,
+            `Noticed the recent price change on ${addr} and staged the ${room}. Sometimes a new photo is all it takes to move a listing that has plateaued.`,
+        ] : dom >= 45 ? [
+            `I came across your ${cityStr}listing at ${addr} and noticed it has been on the market for a while, so I staged the ${room} to see if a furnished version helps it stand out.`,
+            `I was browsing ${cityStr}listings and found ${addr} — it has been active for a bit, so I staged the ${room} to give it a fresh angle.`,
+            `I came across ${addr}${nbhAreaStr} and noticed the days on market. I staged the ${room} — a furnished photo can bring in a new wave of buyers.`,
+            `Saw your listing at ${addr} and thought a staged ${room} photo might help it get more traction. Sometimes a new visual is all a listing needs.`,
+            `I noticed ${addr} has been sitting for a while and wanted to help — staged the ${room} so you have something new to share with buyers.`,
+            `I came across ${addr}${nbhAreaStr} and took the liberty of staging the ${room}. Listings that get a visual refresh often see renewed interest.`,
+            `I found ${addr} while browsing${nbhAreaStr} and staged the ${room} for you — thought a furnished version might help it get more saves and showings.`,
+            `I noticed ${addr} has been on the market and staged the ${room}. A furnished photo at this stage can re-engage buyers who saw it before.`,
+            `I came across your ${cityStr}listing at ${addr} — it has been active for a while so I staged the ${room} to give buyers something new to look at.`,
+            `I found ${addr} and noticed the listing age. I staged the ${room} — a new photo can be exactly what brings a dormant listing back to life.`,
+            `I was looking at ${cityStr}listings and came across ${addr}. Staged the ${room} in case a fresh photo helps it get more attention.`,
+            `I came across ${addr}${nbhAreaStr} and staged the ${room} for you. At this point in the listing cycle, a visual refresh can make a real impact.`,
+            `I noticed your listing at ${addr} has been active for some time — staged the ${room} so you have a new angle to show buyers.`,
+            `I found ${addr} while browsing and took the liberty of staging the ${room}. A furnished photo can bring buyers back who already dismissed it once.`,
+            `I came across ${addr} and noticed it has been on the market. Staged the ${room} — sometimes one new image is all it takes to start getting calls again.`,
+            `I was browsing active listings${nbhAreaStr} and came across ${addr}. Staged the ${room} for you — a new look can change how buyers perceive the whole property.`,
+            `I noticed ${addr} has been listed for a while and wanted to do something useful. Staged the ${room} in case a fresh photo set helps move it forward.`,
+            `I came across your listing at ${addr} — has been active for a bit. Staged the ${room} to give buyers a better sense of what the space could look like.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Listings that have been sitting often just need one strong photo to turn things around.`,
+            `I noticed ${addr} has been on the market and staged the ${room}. Buyers scrolling past an empty room will often stop at a furnished version.`,
+            `I came across ${addr} while looking at ${cityStr}listings. It has been active for a while so I staged the ${room} — thought it might help.`,
+            `I saw ${addr} and noticed it has been listed for some time. Took the liberty of staging the ${room} so there is something new to share with buyers.`,
+            `I found your listing at ${addr} and staged the ${room} — a fresh photo can re-activate buyer interest even after a listing has been sitting.`,
+            `I came across ${addr}${nbhAreaStr} and noticed the listing has been active for a while. Staged the ${room} to give buyers a new reason to look.`,
+            `I noticed your ${cityStr}listing at ${addr} has some market time on it. Staged the ${room} in case a new visual helps it get more traction.`,
+        ] : dom <= 7 ? [
+            `Saw your new listing at ${addr}${nbhStr} — staged the ${room} to show buyers what it could look like furnished.`,
+            `I came across your new listing at ${addr} and staged the ${room}. Now is a great time to make the photos pop while buyers are seeing it fresh.`,
+            `Noticed ${addr} just went live${nbhStr} — I staged the ${room} to help it make a strong first impression.`,
+            `I saw ${addr} just hit the market and took the liberty of staging the ${room} for you.`,
+            `I came across your new listing at ${addr}${nbhStr} and staged the ${room} — great timing to get staged photos in front of buyers right away.`,
+            `Saw the new listing at ${addr} and staged the ${room}. Listings that launch with furnished photos tend to get more attention in the first week.`,
+            `I noticed ${addr} just came on the market${nbhStr} — staged the ${room} so you have a polished photo to lead with.`,
+            `I came across ${addr} right after it went live and staged the ${room}. The first few days on market are when photos matter most.`,
+            `Saw ${addr} just listed${nbhStr} — staged the ${room} so buyers browsing fresh listings see the space at its best.`,
+            `I noticed your new ${cityStr}listing at ${addr} and staged the ${room}. A furnished photo in the first week can set the tone for the whole campaign.`,
+            `I came across ${addr}${nbhStr} just as it went live — staged the ${room} to help it stand out while it's getting fresh buyer traffic.`,
+            `Saw the new listing at ${addr} and staged the ${room} for you. Now is the best window to get buyers excited about the space.`,
+            `I noticed ${addr} just came on the market and staged the ${room} — thought a furnished photo could help it make a great first impression.`,
+            `I came across your listing at ${addr} right after launch${nbhStr} and staged the ${room}. Happy to share it in case it helps.`,
+            `Saw ${addr} go live${nbhStr} — staged the ${room} to show buyers the potential of the space while the listing is still brand new.`,
+            `I noticed ${addr} just hit the market and took the liberty of staging the ${room}. The first week is prime time for buyer interest.`,
+            `I came across your new listing at ${addr}${nbhStr} and staged the ${room} so you have a polished photo to work with right from the start.`,
+            `Saw ${addr} just listed and staged the ${room} for you — buyers browsing new listings will get a much better sense of the space with a furnished version.`,
+            `I noticed ${addr} just came on the market${nbhStr}. Staged the ${room} — a great first photo impression can drive more showings in the opening days.`,
+            `I came across ${addr} right after it launched and staged the ${room}. Now is the ideal time to put a strong visual in front of buyers.`,
+            `Saw your new ${cityStr}listing at ${addr} and staged the ${room}. Buyers making quick decisions early in a listing's life respond well to furnished photos.`,
+            `I noticed ${addr}${nbhStr} just went live — staged the ${room} for you so the listing has a strong visual from day one.`,
+            `I came across your listing at ${addr} right after launch. Staged the ${room} — this is exactly the right moment to have great photos working for you.`,
+            `Saw ${addr} just hit the market and staged the ${room}. A furnished photo can be the difference between a scroll-past and a showing request.`,
+            `I noticed ${addr} just came on the market${nbhStr} and staged the ${room}. Great timing to put a polished version in front of buyers early.`,
+        ] : [
+            `I came across your listing at ${addr}${nbhAreaStr} and took the liberty of staging the ${room} — thought it might be worth a look.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Wanted to share it in case it's helpful.`,
+            `I was browsing ${cityStr}listings and came across ${addr} — staged the ${room} and thought you might want to see it.`,
+            `I noticed your listing at ${addr}${nbhAreaStr} and staged the ${room}. A furnished photo can make a real difference in how buyers perceive the space.`,
+            `I came across ${addr} and staged the ${room} for you — thought a furnished version might help buyers connect with the space.`,
+            `I found your ${cityStr}listing at ${addr} and took the liberty of staging the ${room}. Wanted to share it in case it's useful.`,
+            `I came across ${addr}${nbhAreaStr} and staged the ${room}. Buyers often need help visualizing a space — this gives them that.`,
+            `I noticed ${addr} and staged the ${room} for you — a furnished photo can get buyers to spend more time looking at a listing.`,
+            `I was browsing listings${nbhAreaStr} and came across ${addr}. Staged the ${room} and wanted to pass it along.`,
+            `I found ${addr} and staged the ${room} — thought it could help buyers see the full potential of the space.`,
+            `I came across your listing at ${addr}${nbhAreaStr} and took the liberty of staging the ${room} for you.`,
+            `I noticed ${addr}${nbhAreaStr} and staged the ${room}. Wanted to share in case a furnished photo helps the listing get more traction.`,
+            `I came across ${addr} and staged the ${room} — buyers who see an empty room often have a harder time picturing themselves in it.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Staged listings tend to generate more saves and showing requests.`,
+            `I was looking at ${cityStr}listings and came across ${addr} — staged the ${room} and thought it was worth sharing.`,
+            `I noticed your ${cityStr}listing at ${addr} and staged the ${room}. A furnished photo can make a strong impression on buyers comparing multiple listings.`,
+            `I came across ${addr}${nbhAreaStr} and created a staged version of the ${room} for you — thought it might be useful.`,
+            `I found ${addr} and staged the ${room}. Buyers browsing listings stop longer on photos that show a furnished space.`,
+            `I came across your listing at ${addr} and staged the ${room}${nbhAreaStr} — wanted to share it in case it helps.`,
+            `I noticed ${addr} and took the liberty of staging the ${room} for you. Happy to pass it along in case it's useful.`,
+            `I came across ${addr}${nbhAreaStr} while browsing listings and staged the ${room} — thought a furnished version could help it stand out.`,
+            `I found your listing at ${addr} and staged the ${room}. Sometimes one good photo changes how buyers feel about an entire property.`,
+            `I noticed ${addr}${nbhAreaStr} and staged the ${room} for you — buyers often make snap decisions based on the first few photos.`,
+            `I came across ${addr} and took the liberty of staging the ${room}. Wanted to share it in case it gives the listing a boost.`,
+            `I found ${addr}${nbhAreaStr} and staged the ${room} — a furnished version of the space can help buyers picture living there.`,
+        ]);
 
-        // Value line — varies by DOM context
-        const valueLine = (() => {
-            if (lead.priceReduced) {
-                return `A fresh set of staged photos right after a price adjustment can re-engage buyers who skipped past it the first time. I put this together in seconds — happy to stage a couple more rooms at no cost.`;
-            }
-            if (dom >= 45) {
-                return `Listings with staged photos tend to get more saves and scheduled showings. Sometimes one good image is all it takes to get a buyer to book a tour. Happy to stage a few more rooms for free if it's useful.`;
-            }
-            if (dom <= 7) {
-                return `Now's a great time to make the photos pop while the listing is getting fresh traffic. Happy to send a couple more staged versions at no charge.`;
-            }
-            return `Staged photos help buyers picture themselves in the space — and they tend to lead to more saves and showings. Happy to do a few more rooms for free if you'd like.`;
-        })();
+        // ── Value lines (15+ per bucket) ────────────────────────────────────
+        const valueLine = pick(lead.priceReduced ? [
+            `A fresh set of staged photos right after a price adjustment can re-engage buyers who scrolled past it the first time. Happy to stage a couple more rooms at no cost.`,
+            `Buyers who dismissed the listing at the old price often come back when they see new photos. Happy to stage a few more rooms for free if that would help.`,
+            `A new photo after a price drop can completely change how a listing performs. I can put together more staged rooms at no charge — just say the word.`,
+            `Staged photos after a price reduction tend to bring in a fresh wave of interest. Happy to do a couple more rooms for free if you want to test it.`,
+            `A visual refresh pairs really well with a price adjustment — buyers often re-engage when they see something new. Happy to stage more rooms at no cost.`,
+            `Price drops get noticed more when they come with new photos. I can stage more rooms for free if you want to give the listing a full refresh.`,
+            `Buyers who already saw the listing are more likely to book a showing when there's something new to look at. Happy to do more rooms at no charge.`,
+            `A new staged photo after a price change can re-activate buyers who had the listing saved but never acted. Happy to send more at no cost.`,
+            `Staged photos at a new price point often get buyers back on the phone. I can do more rooms for free — happy to help move this one forward.`,
+            `A visual update after a price drop can make a real difference in buyer perception. Happy to stage a few more rooms for free.`,
+            `Buyers browsing at the new price point will respond better to a furnished photo. Happy to stage more rooms at no charge if it helps.`,
+            `A fresh photo set can be the nudge buyers who were on the fence needed. Happy to do more rooms for free if you want to test a few more angles.`,
+            `Staged photos help buyers see value — especially useful right after a price change when you want to re-attract attention. Happy to stage more for free.`,
+            `Buyers often reconsider a listing when the price drops and new photos appear. Happy to put together more staged rooms at no cost.`,
+            `A new visual at a new price point can completely shift buyer perception. Happy to stage a couple more rooms for free if this is useful.`,
+        ] : dom >= 45 ? [
+            `Listings with staged photos tend to get more saves and scheduled showings. Sometimes one good image is all it takes to get buyers booking a tour. Happy to stage more rooms for free.`,
+            `Buyers often scroll past an empty room but stop at a furnished version. Happy to stage a few more rooms at no charge if you want to see the difference.`,
+            `A visual refresh at this point in the listing cycle can bring in a new wave of buyer interest. Happy to do more rooms for free.`,
+            `Staged photos give buyers something to react to — and listings with furnished photos tend to get more inquiries. Happy to stage more rooms at no cost.`,
+            `Buyers who saw the listing before might reconsider when they see new photos. Happy to stage a few more rooms for free if that would help.`,
+            `Sometimes a listing just needs one strong photo to start getting traction again. Happy to put together more staged rooms at no charge.`,
+            `A furnished room photo can completely change how buyers feel about a space — especially after a listing has been sitting. Happy to stage more for free.`,
+            `Listings that get a visual refresh after some market time often see renewed showing activity. Happy to do more rooms at no cost.`,
+            `Buyers spend more time on listings with staged photos. A new furnished image can bring back buyers who skipped it before. Happy to stage more for free.`,
+            `At this point in the listing, something new in the photos can re-ignite buyer interest. Happy to stage a couple more rooms at no charge.`,
+            `Staged photos help buyers picture themselves in the space — and that often leads to showings. Happy to do a few more rooms for free if useful.`,
+            `A fresh visual can be exactly what moves a listing that has been sitting. Happy to stage more rooms at no cost — just let me know.`,
+            `Buyers who passed on the listing before often come back when they see new photos. Happy to put together more staged rooms at no charge.`,
+            `A furnished photo at this stage can re-engage buyers who have the listing saved but never acted. Happy to stage more rooms for free.`,
+            `Listings that show furnished rooms tend to get more second looks. Happy to do more rooms for free if you want to test a few more angles.`,
+        ] : dom <= 7 ? [
+            `Now is a great time to make the photos pop while the listing is getting fresh buyer traffic. Happy to send a couple more staged versions at no charge.`,
+            `The first week on market is when listings get the most attention — a strong photo set now can set the tone for the whole campaign. Happy to stage more for free.`,
+            `Buyers make fast decisions on new listings. A furnished photo right now can be the difference between a scroll-past and a showing request. Happy to do more for free.`,
+            `Great timing to have staged photos working while the listing is fresh. Happy to stage a few more rooms at no charge.`,
+            `New listings get the most views in the first few days — a furnished photo right now can really move the needle. Happy to do more rooms for free.`,
+            `Buyers browsing new listings respond well to furnished photos — it helps them make faster decisions. Happy to stage more rooms at no cost.`,
+            `The opening days of a listing are prime time for buyer interest. A staged photo now can capture that attention right away. Happy to do more rooms for free.`,
+            `Buyers comparing multiple new listings will spend more time on the one with furnished photos. Happy to stage more rooms at no charge.`,
+            `A strong first impression in the first week can set the pace for the whole listing. Happy to put together more staged rooms for free.`,
+            `New listings get the most organic traffic — a furnished photo while it's fresh can drive real showing activity. Happy to stage more at no cost.`,
+            `Buyers making quick decisions on new listings stop longer on furnished photos. Happy to stage a few more rooms at no charge.`,
+            `The first few days on market are when photos matter most. Happy to send more staged versions for free while the listing is still brand new.`,
+            `Staged photos help new listings make a strong first impression and get more saves. Happy to do more rooms for free.`,
+            `Now is exactly the right time to have great photos working for you — buyers are seeing the listing fresh. Happy to stage more rooms at no cost.`,
+            `A furnished photo right at launch can significantly improve how many buyers save the listing. Happy to do more rooms for free if you want to test it.`,
+        ] : [
+            `Staged photos help buyers picture themselves in the space — and they tend to lead to more saves and showings. Happy to do a few more rooms for free if you'd like.`,
+            `Buyers often scroll past empty rooms but stop at furnished ones. Happy to stage more rooms at no charge if you want to see the difference.`,
+            `A furnished photo can make buyers feel more connected to the space right away. Happy to stage a few more rooms for free.`,
+            `Staged listings tend to get more saves, more clicks, and more showing requests. Happy to do more rooms at no cost.`,
+            `Buyers spend more time on listings with furnished photos — and more time usually means more interest. Happy to stage more rooms for free.`,
+            `A furnished version of a room gives buyers something to respond to emotionally. Happy to put together more staged photos at no charge.`,
+            `Staged photos tend to lead to faster offers and stronger interest. Happy to do a few more rooms for free if this is useful.`,
+            `Buyers who can picture themselves in a space are more likely to schedule a showing. Happy to stage more rooms at no cost.`,
+            `A good staged photo can be the thing that makes a buyer pick up the phone. Happy to do more rooms for free.`,
+            `Listings with furnished photos tend to generate more inquiries. Happy to stage a few more rooms at no charge.`,
+            `Buyers make faster decisions when they can visualize a furnished space. Happy to stage more rooms for free if you want to test a few angles.`,
+            `A staged photo helps buyers see past an empty room and focus on the space itself. Happy to do more rooms at no cost.`,
+            `Staged listings get more saves and showings on average. Happy to put together more rooms for free if this is helpful.`,
+            `Buyers browsing multiple listings will stop longer on a furnished photo. Happy to stage more rooms at no charge.`,
+            `A furnished photo gives buyers a reason to imagine living there. Happy to do a few more rooms for free if you'd like.`,
+        ]);
+
+        // ── Video walkthrough lines (12 variations) ─────────────────────────
+        const videoLine = pick([
+            `We can also turn any staged room into a <strong>virtual video walkthrough</strong> — gives buyers an immersive tour without setting foot in the property.`,
+            `We can also create a <strong>virtual video walkthrough</strong> from any staged room — buyers get a full tour experience before they ever schedule a showing.`,
+            `If you want to go further, we can turn the staged photo into a <strong>virtual video walkthrough</strong> so buyers can actually move through the space.`,
+            `We can also convert any of these into a <strong>virtual video walkthrough</strong> — a great way to give out-of-town buyers a real sense of the property.`,
+            `We can take this further and create a <strong>virtual video walkthrough</strong> from the staged room — buyers get a tour experience from their phones.`,
+            `We also do <strong>virtual video walkthroughs</strong> from staged photos — gives buyers a full immersive look at the property without needing to visit.`,
+            `Beyond photos, we can generate a <strong>virtual video walkthrough</strong> from any staged room — useful for buyers who want to tour before committing to a showing.`,
+            `We can also create a <strong>virtual video walkthrough</strong> from the staged image — a great tool for buyers doing early research from out of the area.`,
+            `If helpful, we can turn any staged photo into a <strong>virtual video walkthrough</strong> so buyers can explore the space before their visit.`,
+            `We also produce <strong>virtual video walkthroughs</strong> from staged images — buyers can tour the property remotely before deciding to schedule a showing.`,
+            `We can go a step further and create a <strong>virtual video walkthrough</strong> from the staged room — great for buyers who want to explore before committing.`,
+            `We also build <strong>virtual video walkthroughs</strong> from staged photos — an immersive experience that helps buyers make faster decisions.`,
+        ]);
+
+        // ── Closing lines (12 variations) ────────────────────────────────────
+        const closingLine = pick([
+            `Either way, no strings attached — just let me know if you want more.`,
+            `Happy to put together more staged rooms for free — no obligation at all.`,
+            `No cost, no commitment — just let me know if you want more rooms done.`,
+            `I can stage more rooms for free if this is useful — totally up to you.`,
+            `Happy to send a few more at no charge — just reply and I will get them to you.`,
+            `No strings attached — if you want more staged rooms, I am happy to do them for free.`,
+            `Happy to keep going with more rooms at no cost — just let me know.`,
+            `Completely free, no commitment — happy to stage more rooms if you find it helpful.`,
+            `Just reply if you want more — happy to do a few more rooms at no charge.`,
+            `No obligation at all — if you want more staged photos, just say the word.`,
+            `Happy to stage more rooms for free — no pitch, no pressure, just let me know.`,
+            `I can do more rooms at no charge — totally up to you whether you want to use them.`,
+        ]);
+
+        // ── Sign-offs (8 variations) ─────────────────────────────────────────
+        const signoff = pick([
+            `– Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Best,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Thanks,<br>Minh @ Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `– Minh at Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `Talk soon,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `Cheers,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `– Minh<br>Kogflow — AI Virtual Staging<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
+            `Best regards,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+        ]);
 
         const html = `<!DOCTYPE html>
 <html>
@@ -1399,10 +1594,10 @@ export async function sendOutreachEmail(lead: {
               ${valueLine}
             </p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-              We can also turn any staged room into a <strong>virtual video walkthrough</strong> — gives buyers an immersive tour without setting foot in the property.
+              ${videoLine}
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-              Either way, no strings attached — just let me know if you want more.
+              ${closingLine}
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
               <tr>
@@ -1411,7 +1606,7 @@ export async function sendOutreachEmail(lead: {
                 </td>
               </tr>
             </table>
-            <p style="margin:0;font-size:15px;color:#374151;">– Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a></p>
+            <p style="margin:0;font-size:15px;color:#374151;">${signoff}</p>
           </td>
         </tr>
         <tr>
