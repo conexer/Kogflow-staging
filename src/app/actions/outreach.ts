@@ -1666,6 +1666,9 @@ export async function runPipelineSession(config: {
         const leadId = saveResult.lead?.id;
         if (!leadId) continue;
 
+        // Mark as scored (ICP score was computed — separate from 'scraped' baseline)
+        await updateLeadStatus(leadId, 'scored');
+
         if (emptyRooms.length > 0) {
             // Empty room — add furniture
             const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType, false);
@@ -1702,6 +1705,19 @@ export async function runPipelineSession(config: {
     await flushLog();
     await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
     return { processed, errors, debug, sessionId };
+}
+
+// One-time backfill: promote 'scraped' leads that have icp_score > 0 to 'scored'
+export async function backfillScoredStatus(): Promise<{ updated: number; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .update({ status: 'scored' })
+        .eq('status', 'scraped')
+        .gt('icp_score', 0)
+        .select('id');
+    if (error) return { updated: 0, error: error.message };
+    return { updated: data?.length || 0 };
 }
 
 // ─────────────────────────────────────────────

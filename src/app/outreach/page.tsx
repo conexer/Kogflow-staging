@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, backfillScoredStatus, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -755,7 +755,23 @@ export default function OutreachPage() {
 
                         {/* Pipeline Flow */}
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            <h2 className="font-bold text-lg flex items-center gap-2"><BarChart2 className="w-5 h-5 text-primary" /> Pipeline Stages</h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="font-bold text-lg flex items-center gap-2"><BarChart2 className="w-5 h-5 text-primary" /> Pipeline Stages</h2>
+                                {stats.scraped > 0 && stats.scored === 0 && (
+                                    <button
+                                        onClick={async () => {
+                                            toast.loading('Backfilling scored status...', { id: 'backfill' });
+                                            const r = await backfillScoredStatus();
+                                            toast.dismiss('backfill');
+                                            if (r.error) toast.error(r.error);
+                                            else { toast.success(`${r.updated} leads promoted to Scored`); loadData(); }
+                                        }}
+                                        className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
+                                    >
+                                        Fix Stats (backfill scored)
+                                    </button>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 {(['scraped', 'scored', 'staged', 'form_filled', 'emailed'] as const).map((stage, i, arr) => (
                                     <div key={stage} className="flex items-center gap-2">
