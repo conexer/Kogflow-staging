@@ -941,6 +941,7 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
                 photoCount: lead.photo_count,
                 keywords: lead.keywords,
                 roomType: lead.empty_rooms?.[0]?.roomType,
+                listingUrl: lead.listing_url,
             });
             if (emailResult.success) {
                 await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
@@ -968,7 +969,7 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
 
     const { data, error } = await supabase
         .from('outreach_leads')
-        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
         .eq('status', 'staged')
         .not('staging_task_id', 'is', null)
         .order('created_at', { ascending: true });
@@ -1016,6 +1017,7 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
             photoCount: lead.photo_count,
             keywords: lead.keywords,
             roomType: lead.empty_rooms?.[0]?.roomType,
+            listingUrl: lead.listing_url,
         });
 
         if (emailResult.success) {
@@ -1198,6 +1200,7 @@ export async function sendOutreachEmail(lead: {
     photoCount?: number;
     keywords?: string[];
     roomType?: string;
+    listingUrl?: string;
 }): Promise<{ success?: boolean; error?: string }> {
     if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
         return { error: 'Gmail OAuth credentials not configured' };
@@ -1352,8 +1355,38 @@ export async function sendOutreachEmail(lead: {
         const nbhAreaStr = neighborhood ? ` in the ${neighborhood} area` : '';
         const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-        // ── Opening lines (25+ per bucket) ──────────────────────────────────
+        // Derive a human-readable source label from listing_url
+        const sourceLabel = (() => {
+            const url = lead.listingUrl ?? '';
+            if (url.includes('har.com')) return 'HAR.com';
+            if (url.includes('homes.com')) return 'homes.com';
+            return null;
+        })();
+        // Randomized source phrases — only injected when sourceLabel is known
+        const sourcePhrases = sourceLabel ? pick([
+            `I found your listing on ${sourceLabel}`,
+            `I came across your listing on ${sourceLabel}`,
+            `I saw your listing on ${sourceLabel}`,
+            `I spotted your listing on ${sourceLabel}`,
+            `I noticed your listing on ${sourceLabel}`,
+            `I was browsing ${sourceLabel} and found your listing`,
+            `I came across your property on ${sourceLabel}`,
+            `I found your property on ${sourceLabel}`,
+        ]) : null;
+
+        // ── Opening lines (25+ per bucket, source-aware variants mixed in) ──
         const openingLine = pick(lead.priceReduced ? [
+            // source-aware variants (only non-null when sourceLabel is known)
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} — noticed the price adjustment, so I staged the ${room} to give it a fresh angle that might re-spark buyer interest.`,
+                `${sourcePhrases} — saw the recent price change on ${addr} and staged the ${room} for you. Fresh photos after a reduction tend to pull buyers back in.`,
+                `${sourcePhrases} and noticed ${addr} had a price update, so I took the liberty of staging the ${room}.`,
+                `${sourcePhrases} — ${addr} had a recent price adjustment so I staged the ${room} to give buyers something new to look at.`,
+                `${sourcePhrases} at ${addr}. Noticed the price change and staged the ${room} — a new photo right after a reduction can make a real difference.`,
+                `${sourcePhrases} — caught the price update on ${addr} and staged the ${room} so the listing has a fresh visual to go with the new price.`,
+                `${sourcePhrases} and saw ${addr} went through a price adjustment. Staged the ${room} in case a new photo helps bring buyers back.`,
+                `${sourcePhrases} — noticed the price drop on ${addr} and staged the ${room} for you. Buyers who passed on it before often come back when they see something new.`,
+            ] : []),
             `I noticed your listing at ${addr} went through a price adjustment recently, so I staged the ${room} to give the photos a fresh angle that might re-spark buyer interest.`,
             `Saw that ${addr} had a price update — I took the liberty of staging the ${room} to see if a new look helps it get more attention.`,
             `I came across ${addr} after the price change and staged the ${room} for you — sometimes a fresh photo set is all it takes to get buyers clicking again.`,
@@ -1380,6 +1413,17 @@ export async function sendOutreachEmail(lead: {
             `I came across the price update on ${addr} and staged the ${room} to help it show better at the new price point.`,
             `Noticed the recent price change on ${addr} and staged the ${room}. Sometimes a new photo is all it takes to move a listing that has plateaued.`,
         ] : dom >= 45 ? [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} and noticed it has been on the market for a little while — staged the ${room} to see if a furnished version helps it get more traction.`,
+                `${sourcePhrases} — ${addr} has been active for a bit, so I staged the ${room} to give it a fresh angle.`,
+                `${sourcePhrases} and came across ${addr}${nbhAreaStr}. It has been listed for a while so I staged the ${room} — a new photo can bring in a fresh wave of buyers.`,
+                `${sourcePhrases} at ${addr}. Noticed the listing has been active for some time, so I staged the ${room} for you.`,
+                `${sourcePhrases} — saw ${addr} has been on the market and staged the ${room}. Sometimes one new photo is all it takes to start getting calls again.`,
+                `${sourcePhrases} and noticed ${addr}${nbhAreaStr} has been sitting for a while. Staged the ${room} in case a visual refresh helps move it forward.`,
+                `${sourcePhrases} — ${addr} has been active for a bit. Staged the ${room} so you have something new to share with buyers.`,
+                `${sourcePhrases} at ${addr} and staged the ${room} — listings that get a visual refresh after some market time often see renewed interest.`,
+            ] : []),
             `I came across your ${cityStr}listing at ${addr} and noticed it has been on the market for a while, so I staged the ${room} to see if a furnished version helps it stand out.`,
             `I was browsing ${cityStr}listings and found ${addr} — it has been active for a bit, so I staged the ${room} to give it a fresh angle.`,
             `I came across ${addr}${nbhAreaStr} and noticed the days on market. I staged the ${room} — a furnished photo can bring in a new wave of buyers.`,
@@ -1406,6 +1450,17 @@ export async function sendOutreachEmail(lead: {
             `I came across ${addr}${nbhAreaStr} and noticed the listing has been active for a while. Staged the ${room} to give buyers a new reason to look.`,
             `I noticed your ${cityStr}listing at ${addr} has some market time on it. Staged the ${room} in case a new visual helps it get more traction.`,
         ] : dom <= 7 ? [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} — saw ${addr}${nbhStr} just went live and staged the ${room} to show buyers what it could look like furnished.`,
+                `${sourcePhrases} and noticed ${addr} just hit the market. Staged the ${room} — great timing to get a strong photo in front of buyers right away.`,
+                `${sourcePhrases} — ${addr}${nbhStr} just came on the market so I staged the ${room} to help it make a strong first impression.`,
+                `${sourcePhrases} at ${addr} right after it went live. Staged the ${room} — the first week is when photos matter most.`,
+                `${sourcePhrases} — saw your new ${cityStr}listing at ${addr} and staged the ${room}. Now is the best window to get buyers excited about the space.`,
+                `${sourcePhrases} and caught ${addr}${nbhStr} just as it went live. Staged the ${room} so buyers browsing fresh listings see it at its best.`,
+                `${sourcePhrases} — ${addr} just listed${nbhStr}. Staged the ${room} so you have a polished photo to lead with from day one.`,
+                `${sourcePhrases} at ${addr} right after launch. Staged the ${room} — buyers making fast decisions on new listings respond well to furnished photos.`,
+            ] : []),
             `Saw your new listing at ${addr}${nbhStr} — staged the ${room} to show buyers what it could look like furnished.`,
             `I came across your new listing at ${addr} and staged the ${room}. Now is a great time to make the photos pop while buyers are seeing it fresh.`,
             `Noticed ${addr} just went live${nbhStr} — I staged the ${room} to help it make a strong first impression.`,
@@ -1432,6 +1487,17 @@ export async function sendOutreachEmail(lead: {
             `Saw ${addr} just hit the market and staged the ${room}. A furnished photo can be the difference between a scroll-past and a showing request.`,
             `I noticed ${addr} just came on the market${nbhStr} and staged the ${room}. Great timing to put a polished version in front of buyers early.`,
         ] : [
+            // source-aware variants
+            ...(sourcePhrases ? [
+                `${sourcePhrases} at ${addr} and took the liberty of staging the ${room} — thought it might be worth a look.`,
+                `${sourcePhrases} — found ${addr}${nbhAreaStr} and staged the ${room} for you.`,
+                `${sourcePhrases} and came across ${addr}${nbhAreaStr}. Staged the ${room} and thought you might want to see it.`,
+                `${sourcePhrases} at ${addr}${nbhAreaStr} and staged the ${room}. Wanted to share it in case it helps.`,
+                `${sourcePhrases} — noticed ${addr}${nbhAreaStr} and took the liberty of staging the ${room} for you.`,
+                `${sourcePhrases} and found ${addr}${nbhAreaStr}. Staged the ${room} — thought a furnished version might help buyers connect with the space.`,
+                `${sourcePhrases} at ${addr} and staged the ${room}. Wanted to pass it along in case it gives the listing a boost.`,
+                `${sourcePhrases} — came across ${addr}${nbhAreaStr} and staged the ${room}. Sometimes one good photo changes how buyers feel about a property.`,
+            ] : []),
             `I came across your listing at ${addr}${nbhAreaStr} and took the liberty of staging the ${room} — thought it might be worth a look.`,
             `I found ${addr}${nbhAreaStr} and staged the ${room} for you. Wanted to share it in case it's helpful.`,
             `I was browsing ${cityStr}listings and came across ${addr} — staged the ${room} and thought you might want to see it.`,
