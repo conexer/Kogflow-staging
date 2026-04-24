@@ -18,8 +18,6 @@ export async function POST(request: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Insert an in-progress marker (processed = -1) so getActiveSession can detect running state
-    // Try with trigger column first; fall back without it if the column doesn't exist yet
     let pendingRun: any = null;
     const baseRow = { ran_at: new Date().toISOString(), processed: -1, errors: [`LOG:Session ${sessionId} starting...`] };
     const { data: d1, error: e1 } = await supabase.from('pipeline_runs').insert({ ...baseRow, trigger: 'manual' }).select().single();
@@ -32,19 +30,27 @@ export async function POST(request: Request) {
 
     const runId = pendingRun?.id;
 
+    // Writes messages to pipeline_session_log so they appear in the UI activity log
+    const logToSession = async (messages: string[]) => {
+        if (!messages.length) return;
+        await supabase.from('pipeline_session_log').insert(
+            messages.map(message => ({ session_id: sessionId, message }))
+        );
+    };
+
     // after() runs AFTER the response is sent — survives page refresh/close
     after(async () => {
         try {
-            // Step 1: Submit any queued leads (empty rooms found) to Kie.ai
+            // Step 1: Retry any leads that have empty_rooms saved but weren't submitted to Kie.ai
             await submitStagingBatch(5);
 
-            // Step 2: Email leads whose Kie.ai images are ready from prior sessions
-            const emailResult = await pollAndEmailStagedLeads(10);
+            // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones
+            // Limit 50 so no backlog accumulates across sessions
+            const emailResult = await pollAndEmailStagedLeads(50);
+            await logToSession(emailResult.debug);
 
-            // Step 2: Scrape + stage new leads
+            // Step 3: Scrape + score + stage new leads
             const result = await runPipelineSession({ cities, scrapesPerSession, sessionId });
-
-            const allDebug = [...emailResult.debug, ...result.debug];
 
             if (runId) {
                 await supabase
@@ -53,7 +59,8 @@ export async function POST(request: Request) {
                         processed: result.processed,
                         errors: [
                             ...(result.errors || []),
-                            ...allDebug.map((d: string) => `LOG:${d}`),
+                            ...emailResult.debug.map((d: string) => `LOG:${d}`),
+                            ...result.debug.map((d: string) => `LOG:${d}`),
                         ],
                     })
                     .eq('id', runId);
