@@ -687,7 +687,7 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
     return { success: true, lead: data };
 }
 
-export async function getLeads(status?: string, limit = 50) {
+export async function getLeads(status?: string, limit = 500) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let query = supabase

@@ -991,7 +991,7 @@ export default function OutreachPage() {
                 {activeTab === 'leads' && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="font-bold text-lg">Lead Queue <span className="text-muted-foreground font-normal text-sm">({leads.length} total, ordered by ICP score)</span></h2>
+                            <h2 className="font-bold text-lg">Lead Queue <span className="text-muted-foreground font-normal text-sm">({leads.length} shown, ordered by ICP score)</span></h2>
                             <button onClick={loadData} disabled={loadingData} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50">
                                 <RefreshCw className={`w-3.5 h-3.5 ${loadingData ? 'animate-spin' : ''}`} />
                                 Refresh
