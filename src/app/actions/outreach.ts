@@ -872,7 +872,7 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
 
     let query = supabase
         .from('outreach_leads')
-        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
         .eq('status', 'staged')
         .not('staging_task_id', 'is', null);
 
@@ -934,6 +934,13 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
                 address: lead.address,
                 stagedImageUrl: permanentUrl,
                 beforeImageUrl: storedBeforeUrl,
+                city: lead.city,
+                price: lead.price,
+                daysOnMarket: lead.days_on_market,
+                priceReduced: lead.price_reduced,
+                photoCount: lead.photo_count,
+                keywords: lead.keywords,
+                roomType: lead.empty_rooms?.[0]?.roomType,
             });
             if (emailResult.success) {
                 await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
@@ -961,7 +968,7 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
 
     const { data, error } = await supabase
         .from('outreach_leads')
-        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
+        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
         .eq('status', 'staged')
         .not('staging_task_id', 'is', null)
         .order('created_at', { ascending: true });
@@ -1002,6 +1009,13 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
             address: lead.address,
             stagedImageUrl: permanentUrl,
             beforeImageUrl: storedBeforeUrl,
+            city: lead.city,
+            price: lead.price,
+            daysOnMarket: lead.days_on_market,
+            priceReduced: lead.price_reduced,
+            photoCount: lead.photo_count,
+            keywords: lead.keywords,
+            roomType: lead.empty_rooms?.[0]?.roomType,
         });
 
         if (emailResult.success) {
@@ -1177,6 +1191,13 @@ export async function sendOutreachEmail(lead: {
     address: string;
     stagedImageUrl?: string;
     beforeImageUrl?: string;
+    city?: string;
+    price?: number;
+    daysOnMarket?: number;
+    priceReduced?: boolean;
+    photoCount?: number;
+    keywords?: string[];
+    roomType?: string;
 }): Promise<{ success?: boolean; error?: string }> {
     if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
         return { error: 'Gmail OAuth credentials not configured' };
@@ -1320,6 +1341,40 @@ export async function sendOutreachEmail(lead: {
           </tr>
         </table>` : '';
 
+        // Build context-aware personalized body copy
+        const room = lead.roomType || 'room';
+        const dom = lead.daysOnMarket ?? 0;
+        const cityLabel = lead.city ? lead.city : '';
+        const neighborhood = lead.keywords?.find(k => k && k.length > 2 && !/^\d/.test(k)) ?? '';
+
+        // Opening line — varies by how long listing has been active
+        const openingLine = (() => {
+            if (lead.priceReduced) {
+                return `I saw your listing at <strong>${lead.address}</strong> went through a price adjustment recently — so I staged the ${room} to give the photos a fresh angle that might re-spark some buyer interest.`;
+            }
+            if (dom >= 45) {
+                return `I came across your ${cityLabel ? `${cityLabel} ` : ''}listing at <strong>${lead.address}</strong> and noticed it's been on the market for a little while, so I staged the ${room} to see if a furnished version helps it stand out more.`;
+            }
+            if (dom <= 7) {
+                return `Saw your new listing at <strong>${lead.address}</strong>${neighborhood ? ` in ${neighborhood}` : ''} — nice property. I staged the ${room} to show buyers what it could look like furnished.`;
+            }
+            return `I came across your listing at <strong>${lead.address}</strong>${neighborhood ? ` in the ${neighborhood} area` : ''} and took the liberty of staging the ${room} — thought it might be worth a look.`;
+        })();
+
+        // Value line — varies by DOM context
+        const valueLine = (() => {
+            if (lead.priceReduced) {
+                return `A fresh set of staged photos right after a price adjustment can re-engage buyers who skipped past it the first time. I put this together in seconds — happy to stage a couple more rooms at no cost.`;
+            }
+            if (dom >= 45) {
+                return `Listings with staged photos tend to get more saves and scheduled showings. Sometimes one good image is all it takes to get a buyer to book a tour. Happy to stage a few more rooms for free if it's useful.`;
+            }
+            if (dom <= 7) {
+                return `Now's a great time to make the photos pop while the listing is getting fresh traffic. Happy to send a couple more staged versions at no charge.`;
+            }
+            return `Staged photos help buyers picture themselves in the space — and they tend to lead to more saves and showings. Happy to do a few more rooms for free if you'd like.`;
+        })();
+
         const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -1335,19 +1390,19 @@ export async function sendOutreachEmail(lead: {
         </tr>
         <tr>
           <td style="padding:32px;">
-            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${lead.agentName || 'there'},</p>
+            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${firstName},</p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-              I noticed your listing at <strong>${lead.address}</strong> and created a free professional staging upgrade to show what it could look like with premium virtual staging.
+              ${openingLine}
             </p>
             ${imagesHtml}
-            <p style="margin:16px 0;font-size:15px;color:#374151;line-height:1.6;">
-              Virtual staging helps buyers visualize the space and typically leads to faster sales and stronger offers. We generate results like this in seconds at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>.
+            <p style="margin:16px 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+              ${valueLine}
             </p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
-              We can also turn these virtually staged rooms into <strong>virtual video walkthroughs</strong> -- giving buyers an immersive tour experience without ever stepping foot in the property.
+              We can also turn any staged room into a <strong>virtual video walkthrough</strong> — gives buyers an immersive tour without setting foot in the property.
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-              Happy to send a few more free samples for this listing if you're interested.
+              Either way, no strings attached — just let me know if you want more.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
               <tr>
@@ -1356,12 +1411,12 @@ export async function sendOutreachEmail(lead: {
                 </td>
               </tr>
             </table>
-            <p style="margin:0;font-size:15px;color:#374151;">Best,<br><strong>Minh</strong><br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a></p>
+            <p style="margin:0;font-size:15px;color:#374151;">– Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a></p>
           </td>
         </tr>
         <tr>
           <td style="background:#f3f4f6;padding:16px 32px;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because your listing at ${lead.address} is publicly listed. To unsubscribe reply with "unsubscribe".</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because your listing at ${lead.address} is publicly listed. Reply "unsubscribe" to opt out.</p>
           </td>
         </tr>
       </table>
