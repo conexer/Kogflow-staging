@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -166,7 +166,6 @@ export default function OutreachPage() {
         cron_enabled: boolean; sessions_per_day: number; today_cron_runs: number;
         last_cron_run: string | null; next_scheduled_utc: string; expected_so_far: number; schedule: string;
     } | null>(null);
-    const [cronRunning, setCronRunning] = useState(false);
     const [togglingCron, setTogglingCron] = useState(false);
 
     // Config save state
@@ -267,6 +266,45 @@ export default function OutreachPage() {
         if (authorized) loadData();
     }, [authorized, loadData]);
 
+    const startSessionAndEnableCron = async (sessionId: string) => {
+        const res = await fetch('/api/trigger-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start session');
+
+        // Enable cron schedule — persists across refreshes
+        await savePipelineConfig({
+            sessions_per_day: sessionsPerDay,
+            scrapes_per_session: scrapesPerSession,
+            cities: selectedCities,
+            cron_enabled: true,
+        });
+        setCronStatus(prev => prev ? { ...prev, cron_enabled: true } : prev);
+
+        // Poll activity log + running state every 5s until session completes
+        pollRef.current = setInterval(async () => {
+            const [activityRes, activeRes] = await Promise.all([
+                getRecentActivityLog(),
+                getActiveSession(),
+            ]);
+            if (activityRes.entries) {
+                setActivityLog(activityRes.entries);
+                if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
+            }
+            if (!activeRes.isRunning) {
+                clearInterval(pollRef.current!);
+                pollRef.current = null;
+                setRunningSession(false);
+                setActiveSessionId(null);
+                toast.success('Session complete');
+                await loadData();
+            }
+        }, 5000);
+    };
+
     const handleRunSession = async () => {
         if (selectedCities.length === 0) { toast.error('Select at least one city'); return; }
         const sessionId = crypto.randomUUID();
@@ -275,40 +313,10 @@ export default function OutreachPage() {
         setLastDebug([]);
         setRunningSession(true);
         toast.loading('Starting pipeline session...', { id: 'pipeline' });
-
         try {
-            // Call background API route — returns immediately, pipeline runs server-side
-            // even if you close or refresh the page
-            const res = await fetch('/api/trigger-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start session');
-
+            await startSessionAndEnableCron(sessionId);
             toast.dismiss('pipeline');
-            toast.success('Pipeline running in background — safe to close or refresh');
-
-            // Poll activity log + running state every 5s until session completes
-            pollRef.current = setInterval(async () => {
-                const [activityRes, activeRes] = await Promise.all([
-                    getRecentActivityLog(),
-                    getActiveSession(),
-                ]);
-                if (activityRes.entries) {
-                    setActivityLog(activityRes.entries);
-                    if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
-                }
-                if (!activeRes.isRunning) {
-                    clearInterval(pollRef.current!);
-                    pollRef.current = null;
-                    setRunningSession(false);
-                    setActiveSessionId(null);
-                    toast.success('Session complete');
-                    await loadData();
-                }
-            }, 5000);
+            toast.success('Pipeline running — schedule active until you stop it');
         } catch (e: any) {
             toast.dismiss('pipeline');
             toast.error(e.message || 'Session failed to start');
@@ -405,6 +413,43 @@ export default function OutreachPage() {
         }
     };
 
+    const [testingEmail, setTestingEmail] = useState(false);
+    const [testEmailResult, setTestEmailResult] = useState<{ success?: boolean; error?: string; detail?: string } | null>(null);
+    const handleSendTestEmail = async () => {
+        setTestingEmail(true);
+        setTestEmailResult(null);
+        toast.loading('Sending test email to conexer@gmail.com...', { id: 'testemail' });
+        const result = await sendTestEmail('conexer@gmail.com');
+        toast.dismiss('testemail');
+        setTestEmailResult(result);
+        if (result.success) toast.success('Test email sent — check conexer@gmail.com inbox');
+        else toast.error(`Email failed: ${result.error}`);
+        setTestingEmail(false);
+    };
+
+    const [drainingBacklog, setDrainingBacklog] = useState(false);
+    const handleDrainBacklog = async () => {
+        setDrainingBacklog(true);
+        toast.loading('Sending backlog emails slowly (8s between each)...', { id: 'drain' });
+        try {
+            const result = await drainEmailBacklog(8000);
+            toast.dismiss('drain');
+            const parts = [];
+            if (result.emailed > 0) parts.push(`${result.emailed} emailed`);
+            if (result.stillProcessing > 0) parts.push(`${result.stillProcessing} still generating`);
+            if (result.skipped > 0) parts.push(`${result.skipped} skipped (no email)`);
+            if (result.failed > 0) parts.push(`${result.failed} failed`);
+            if (result.total === 0) toast.info('No staged leads in backlog');
+            else if (result.emailed > 0) toast.success(parts.join(' · '));
+            else toast.info(parts.join(' · ') || 'Nothing to send');
+            if (result.emailed > 0 || result.failed > 0) loadData();
+        } catch (e: any) {
+            toast.dismiss('drain');
+            toast.error(e.message || 'Backlog drain failed');
+        }
+        setDrainingBacklog(false);
+    };
+
     const handleSendEmail = async (lead: any) => {
         if (!lead.agent_email) { toast.error('No email on file for this lead'); return; }
         toast.loading(`Sending to ${lead.agent_email}...`, { id: `send-${lead.id}` });
@@ -446,51 +491,37 @@ export default function OutreachPage() {
         setResettingStats(false);
     };
 
-    const handleRunCronNow = async () => {
-        if (selectedCities.length === 0) { toast.error('Select at least one city first'); return; }
-        setCronRunning(true);
-        toast.loading('Triggering cron session...', { id: 'cron-now' });
-        try {
-            const sessionId = crypto.randomUUID();
-            const res = await fetch('/api/trigger-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
-            });
-            const data = await res.json();
-            toast.dismiss('cron-now');
-            if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start');
-            toast.success('Cron session running in background');
-            setRunningSession(true);
-            setActiveSessionId(sessionId);
-            if (!pollRef.current) {
-                pollRef.current = setInterval(async () => {
-                    const [activityRes, activeRes] = await Promise.all([getRecentActivityLog(), getActiveSession()]);
-                    if (activityRes.entries) { setActivityLog(activityRes.entries); if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight; }
-                    if (!activeRes.isRunning) { clearInterval(pollRef.current!); pollRef.current = null; setRunningSession(false); setActiveSessionId(null); setCronRunning(false); await loadData(); }
-                }, 5000);
-            }
-        } catch (e: any) {
-            toast.dismiss('cron-now');
-            toast.error(e.message || 'Failed to trigger session');
-            setCronRunning(false);
-        }
-    };
-
-    const handleToggleCron = async () => {
-        if (!cronStatus) return;
+    const handleStartScheduledSession = async () => {
+        if (selectedCities.length === 0) { toast.error('Select at least one city'); return; }
         setTogglingCron(true);
-        const newEnabled = !cronStatus.cron_enabled;
         const result = await savePipelineConfig({
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
             cities: selectedCities,
-            cron_enabled: newEnabled,
+            cron_enabled: true,
         });
         setTogglingCron(false);
         if (result.error) { toast.error(`Failed: ${result.error}`); return; }
-        setCronStatus(prev => prev ? { ...prev, cron_enabled: newEnabled } : prev);
-        toast.success(newEnabled ? 'Schedule resumed — cron will run next hour' : 'Schedule paused — cron will skip until resumed');
+        setCronStatus(prev => prev ? { ...prev, cron_enabled: true } : prev);
+        toast.success('Schedule started — cron will run on its configured intervals');
+    };
+
+    const handleStopSchedule = async () => {
+        setTogglingCron(true);
+        const result = await savePipelineConfig({
+            sessions_per_day: sessionsPerDay,
+            scrapes_per_session: scrapesPerSession,
+            cities: selectedCities,
+            cron_enabled: false,
+        });
+        setTogglingCron(false);
+        if (result.error) { toast.error(`Failed: ${result.error}`); return; }
+        setCronStatus(prev => prev ? { ...prev, cron_enabled: false } : prev);
+        // Also stop any in-progress session
+        if (activeSessionId) {
+            await requestSessionStop(activeSessionId);
+        }
+        toast.success('Schedule stopped');
     };
 
     const handleTestMoondream = async () => {
@@ -529,6 +560,36 @@ export default function OutreachPage() {
                                 <AlertCircle className="w-4 h-4" /> DB Setup Required
                             </button>
                         )}
+                        {dbReady && cronStatus && !cronStatus.cron_enabled && (
+                            <button
+                                onClick={handleStartScheduledSession}
+                                disabled={togglingCron}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-violet-500/10 text-violet-400 border border-violet-500/30 hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                            >
+                                {togglingCron ? (
+                                    <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                                ) : (
+                                    <Clock className="w-4 h-4" />
+                                )}
+                                Start Scheduled Session
+                            </button>
+                        )}
+                        {dbReady && cronStatus && cronStatus.cron_enabled && (
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-green-500/10 text-green-400 border border-green-500/30">
+                                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                    Schedule Active
+                                </div>
+                                <button
+                                    onClick={handleStopSchedule}
+                                    disabled={togglingCron}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 transition-colors disabled:opacity-50"
+                                >
+                                    {togglingCron ? <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : null}
+                                    Stop
+                                </button>
+                            </div>
+                        )}
                         {dbReady && !runningSession && (
                             <button
                                 onClick={handleRunSession}
@@ -551,6 +612,7 @@ export default function OutreachPage() {
                                 </button>
                             </div>
                         )}
+
                         <button onClick={loadData} className="p-2 hover:bg-muted rounded-lg transition-colors">
                             <RefreshCw className={cn("w-4 h-4", loadingData && "animate-spin")} />
                         </button>
@@ -651,6 +713,13 @@ export default function OutreachPage() {
                                     >
                                         Poll &amp; Email
                                     </button>
+                                    <button
+                                        onClick={handleDrainBacklog}
+                                        disabled={drainingBacklog}
+                                        className="w-full text-xs px-2 py-1.5 rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                        {drainingBacklog ? <><div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> Sending slowly...</> : <><Mail className="w-3 h-3" /> Send Backlog Emails</>}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -696,32 +765,13 @@ export default function OutreachPage() {
                         {/* Schedule Status */}
                         {cronStatus && (
                             <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="font-bold text-lg flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-primary" />
-                                        Schedule Status
-                                        <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", cronStatus.cron_enabled ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400')}>
-                                            {cronStatus.cron_enabled ? 'Active' : 'Paused'}
-                                        </span>
-                                    </h2>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={handleRunCronNow}
-                                            disabled={cronRunning || runningSession}
-                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50 transition-colors"
-                                        >
-                                            {cronRunning ? <><div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> Running...</> : <><Play className="w-3.5 h-3.5" /> Run Now</>}
-                                        </button>
-                                        <button
-                                            onClick={handleToggleCron}
-                                            disabled={togglingCron}
-                                            className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50", cronStatus.cron_enabled ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20')}
-                                        >
-                                            {togglingCron ? <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : null}
-                                            {cronStatus.cron_enabled ? 'Pause Schedule' : 'Resume Schedule'}
-                                        </button>
-                                    </div>
-                                </div>
+                                <h2 className="font-bold text-lg flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-primary" />
+                                    Schedule & Throttling
+                                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", cronStatus.cron_enabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-500/10 text-slate-400')}>
+                                        {cronStatus.cron_enabled ? 'Running' : 'Stopped'}
+                                    </span>
+                                </h2>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                     <div className="bg-muted/30 rounded-lg p-3 space-y-1">
                                         <div className="text-xs text-muted-foreground">Schedule</div>
@@ -1152,11 +1202,33 @@ export default function OutreachPage() {
                     <div className="space-y-6 max-w-2xl">
                         <h2 className="font-bold text-lg flex items-center gap-2"><Send className="w-5 h-5" /> Email Outreach</h2>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            <h3 className="font-semibold">Sender — kogflow.media@gmail.com</h3>
-                            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-sm text-green-400 flex items-start gap-2">
-                                <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                                Gmail API connected via OAuth2. Sending from kogflow.media@gmail.com.
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold">Sender — kogflow.media@gmail.com</h3>
+                                <button
+                                    onClick={handleSendTestEmail}
+                                    disabled={testingEmail}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-medium transition-colors disabled:opacity-50"
+                                >
+                                    {testingEmail ? <><div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> Sending...</> : <><Send className="w-3 h-3" /> Send Test Email</>}
+                                </button>
                             </div>
+                            {testEmailResult ? (
+                                <div className={cn('p-3 rounded-lg text-sm font-mono space-y-1', testEmailResult.success ? 'bg-green-500/10 border border-green-500/20 text-green-400' : 'bg-destructive/10 border border-destructive/20 text-destructive')}>
+                                    {testEmailResult.success ? (
+                                        <div className="flex items-center gap-2"><CheckCircle className="w-4 h-4 shrink-0" /> Sent to conexer@gmail.com — check your inbox now</div>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" /> {testEmailResult.error}</div>
+                                            {testEmailResult.detail && <div className="text-xs opacity-70 break-all">{testEmailResult.detail}</div>}
+                                        </>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="p-3 bg-muted/30 border border-border rounded-lg text-sm text-muted-foreground flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-400" />
+                                    Click "Send Test Email" to confirm Gmail OAuth is working before relying on the pipeline.
+                                </div>
+                            )}
                         </div>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                             <h3 className="font-semibold">Outreach Template</h3>

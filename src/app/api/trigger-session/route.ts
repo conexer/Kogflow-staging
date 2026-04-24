@@ -19,16 +19,16 @@ export async function POST(request: Request) {
     );
 
     // Insert an in-progress marker (processed = -1) so getActiveSession can detect running state
-    const { data: pendingRun } = await supabase
-        .from('pipeline_runs')
-        .insert({
-            ran_at: new Date().toISOString(),
-            processed: -1,
-            trigger: 'manual',
-            errors: [`LOG:Session ${sessionId} starting...`],
-        })
-        .select()
-        .single();
+    // Try with trigger column first; fall back without it if the column doesn't exist yet
+    let pendingRun: any = null;
+    const baseRow = { ran_at: new Date().toISOString(), processed: -1, errors: [`LOG:Session ${sessionId} starting...`] };
+    const { data: d1, error: e1 } = await supabase.from('pipeline_runs').insert({ ...baseRow, trigger: 'manual' }).select().single();
+    if (e1?.message?.includes('trigger')) {
+        const { data: d2 } = await supabase.from('pipeline_runs').insert(baseRow).select().single();
+        pendingRun = d2;
+    } else {
+        pendingRun = d1;
+    }
 
     const runId = pendingRun?.id;
 

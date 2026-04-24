@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const ZYTE_API_KEY = process.env.ZYTE_API_KEY!;
-const MOONDREAM_API_KEY = process.env.MOONDREAM_API_KEY!;
+const MOONDREAM_API_KEY = (process.env.MOONDREAM_API_KEY || '').trim();
 const CAPMONSTER_API_KEY = process.env.CAPMONSTER_API_KEY!;
 const KIE_API_KEY = process.env.KIE_AI_API_KEY!;
 
@@ -161,7 +161,8 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
 export async function scrapeHarCity(city: string, maxListings: number = 40, pages: number = 2): Promise<{ listings?: ScrapedListing[]; rawHtmlSnippet?: string; error?: string }> {
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
 
-    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=150000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`;
+    // dom=60: 60+ days on market → more likely to be vacant/distressed
+    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=600000&status=A&city=${encodeURIComponent(city)}&dom=60`;
 
     // Helper: parse a single HAR page HTML into listing rows
     function parseHarHtml(html: string): any[] {
@@ -420,15 +421,18 @@ export async function extractListingDetails(listingUrl: string): Promise<{ data?
 
 export async function detectRoom(imageUrl: string): Promise<{
     isEmpty: boolean;
+    isStageable: boolean;
+    isInterior: boolean;
     confidence: number;
     roomType: string;
     isExterior: boolean;
     error?: string;
 }> {
-    if (!MOONDREAM_API_KEY) return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: 'MOONDREAM_API_KEY not configured' };
+    const REJECT = { isEmpty: false, isStageable: false, isInterior: false, confidence: 0, roomType: 'unknown', isExterior: true };
+    if (!MOONDREAM_API_KEY) return { ...REJECT, error: 'MOONDREAM_API_KEY not configured' };
 
     try {
-        // Moondream requires base64 — fetch the image with browser-like headers to bypass hotlink protection
+        // Moondream requires base64 — fetch with browser-like headers to bypass hotlink protection
         const imageOrigin = new URL(imageUrl).origin;
         const imgRes = await fetch(imageUrl, {
             headers: {
@@ -439,79 +443,156 @@ export async function detectRoom(imageUrl: string): Promise<{
                 'Cache-Control': 'no-cache',
             },
         });
-        if (!imgRes.ok) return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: `Image fetch failed: ${imgRes.status}` };
+        if (!imgRes.ok) return { ...REJECT, error: `Image fetch failed: ${imgRes.status}` };
 
         const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
         const arrayBuffer = await imgRes.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
         const imageData = `data:${contentType};base64,${base64}`;
 
-        const res = await fetch('https://api.moondream.ai/v1/query', {
+        const moonHeaders = {
+            'X-Moondream-Auth': MOONDREAM_API_KEY,
+            'Content-Type': 'application/json',
+        };
+
+        // ── Q1: Interior check (positive gate) ───────────────────────────────────
+        // Ask positively "is this interior?" — more reliable than asking "is this NOT exterior?"
+        // Exterior photos (yard, facade, driveway) should answer "no" to this.
+        const interiorRes = await fetch('https://api.moondream.ai/v1/query', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${MOONDREAM_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
+            headers: moonHeaders,
             body: JSON.stringify({
-                image: imageData,
-                question: 'What furniture and objects do you see in this room? Be specific and list every item you can see.',
+                image_url: imageData,
+                question: 'Is this photo taken inside a building, showing an indoor room with walls, floor, and ceiling visible? Answer only "yes" or "no".',
                 stream: false,
             }),
         });
+        if (!interiorRes.ok) {
+            const err = await interiorRes.text();
+            return { ...REJECT, error: `Moondream interior check error ${interiorRes.status}: ${err}` };
+        }
+        const interiorData = await interiorRes.json();
+        const interiorAnswer: string = (interiorData.answer || interiorData.result || '').toLowerCase().trim();
+        if (!interiorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true }; // exterior — reject immediately
 
-        if (!res.ok) {
-            const err = await res.text();
-            return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: `Moondream error ${res.status}: ${err}` };
+        // ── Q1b: Explicit Exterior Negative Check ──────────────────────────────
+        // Ask negatively to catch yards, pools, facades that pass the interior check
+        await new Promise(r => setTimeout(r, 400));
+        const exteriorRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this photo show a backyard, swimming pool, front yard, garden, driveway, or the outside of a house? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (exteriorRes.ok) {
+            const exteriorData = await exteriorRes.json();
+            const exteriorAnswer: string = (exteriorData.answer || exteriorData.result || '').toLowerCase().trim();
+            if (exteriorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true };
         }
 
-        const data = await res.json();
-        const answer: string = (data.answer || data.result || '').toLowerCase();
+        // ── Q2: Empty room check ───────────────────────────────────────────────
+        // Now that we know it's interior, check if it's empty/unfurnished
+        await new Promise(r => setTimeout(r, 400));
+        const emptyRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Are there any objects, furniture, appliances, personal items, decorations, or belongings visible in this room? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (!emptyRes.ok) {
+            const err = await emptyRes.text();
+            return { ...REJECT, error: `Moondream empty check error ${emptyRes.status}: ${err}` };
+        }
+        const emptyData = await emptyRes.json();
+        const emptyAnswer: string = (emptyData.answer || emptyData.result || '').toLowerCase().trim();
+        // Question asks "is there furniture?" — "yes" = furnished (not empty), "no" = empty
+        const hasFurniture = emptyAnswer.startsWith('yes');
+        const isEmpty = !hasFurniture;
 
-        // Keywords that indicate furniture/furnishings — if any match, room is NOT empty
-        const FURNITURE_KEYWORDS = [
-            'sofa', 'couch', 'chair', 'table', 'bed', 'desk', 'dresser', 'cabinet',
-            'shelf', 'bookshelf', 'bookcase', 'wardrobe', 'television', 'tv', 'lamp',
-            'rug', 'carpet', 'curtain', 'blinds', 'artwork', 'picture', 'mirror',
-            'stove', 'refrigerator', 'fridge', 'dishwasher', 'sink', 'toilet', 'bathtub',
-            'shower', 'vanity', 'counter', 'island', 'appliance', 'fireplace', 'ceiling fan',
-        ];
+        // Has furniture → not stageable (but is interior, so not a hard reject)
+        if (!isEmpty) return { ...REJECT, isEmpty: false, isExterior: false, isInterior: true };
 
-        // Phrases that confirm the room is empty
-        const EMPTY_KEYWORDS = [
-            'empty room', 'no furniture', 'bare', 'unfurnished', 'vacant',
-            'nothing in', 'no objects', 'no items', 'does not contain any',
-            'there is nothing', 'i don\'t see any furniture', 'i do not see any furniture',
-            'no visible furniture', 'appears to be empty', 'room is empty',
-        ];
+        // ── Q3: Floor plan rejection ───────────────────────────────────────────
+        // Floor plans have no furniture so they pass Q2. Explicitly reject them.
+        await new Promise(r => setTimeout(r, 400));
+        const planRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this image show a 2D floor plan, architectural blueprint, or room diagram with labels or dimension lines? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (planRes.ok) {
+            const planData = await planRes.json();
+            const planAnswer: string = (planData.answer || planData.result || '').toLowerCase().trim();
+            if (planAnswer.startsWith('yes')) return { ...REJECT }; // floor plan — reject
+        }
 
-        const hasFurniture = FURNITURE_KEYWORDS.some(kw => answer.includes(kw));
-        const confirmsEmpty = EMPTY_KEYWORDS.some(kw => answer.includes(kw));
+        // ── Q4: Foyer/stairway/hallway rejection ───────────────────────────────
+        // Entryways and staircases are not stageable rooms even when empty.
+        await new Promise(r => setTimeout(r, 400));
+        const foyerRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'Does this image show a staircase, hallway, entryway, foyer, or corridor? Answer only "yes" or "no".',
+                stream: false,
+            }),
+        });
+        if (foyerRes.ok) {
+            const foyerData = await foyerRes.json();
+            const foyerAnswer: string = (foyerData.answer || foyerData.result || '').toLowerCase().trim();
+            if (foyerAnswer.startsWith('yes')) return { ...REJECT }; // not a stageable room — reject
+        }
 
-        // Keywords that indicate this is an exterior photo (front of house, yard, etc.)
-        const EXTERIOR_KEYWORDS = [
-            'exterior', 'outside', 'yard', 'lawn', 'grass', 'driveway', 'garage',
-            'roof', 'sidewalk', 'street', 'outdoor', 'porch', 'deck', 'patio',
-            'front of', 'back of', 'side of', 'curb', 'landscape', 'garden',
-            'fence', 'aerial', 'parking', 'trees', 'tree',
-        ];
-        const isExterior = EXTERIOR_KEYWORDS.some(kw => answer.includes(kw));
+        // ── Q5: Room type (only for confirmed interior, empty rooms) ─────────
+        await new Promise(r => setTimeout(r, 400));
+        const typeRes = await fetch('https://api.moondream.ai/v1/query', {
+            method: 'POST',
+            headers: moonHeaders,
+            body: JSON.stringify({
+                image_url: imageData,
+                question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, dining room, or bathroom.',
+                stream: false,
+            }),
+        });
+        let roomType = 'room';
+        if (typeRes.ok) {
+            const typeData = await typeRes.json();
+            const typeAnswer: string = (typeData.answer || typeData.result || '').toLowerCase().trim();
+            roomType = typeAnswer.includes('bedroom') ? 'bedroom'
+                : typeAnswer.includes('living') ? 'living room'
+                : typeAnswer.includes('kitchen') ? 'kitchen'
+                : typeAnswer.includes('dining') ? 'dining room'
+                : typeAnswer.includes('bathroom') || typeAnswer.includes('bath') ? 'bathroom'
+                : 'room';
+        }
 
-        // Room must have NO furniture keywords AND at least one empty-confirming phrase
-        const isEmpty = !isExterior && !hasFurniture && confirmsEmpty;
-        const confidence = isEmpty ? 90 : hasFurniture ? 0 : 0;
+        // Final Check: Must have identified a SPECIFIC room type to be stageable.
+        // Ambiguous "room" or "unknown" is not high-enough quality for automated outreach.
+        const VALID_ROOM_TYPES = ['bedroom', 'living room', 'kitchen', 'dining room', 'bathroom'];
+        const isKnownRoom = VALID_ROOM_TYPES.includes(roomType);
 
-        // Guess room type from description
-        const roomType = answer.includes('bedroom') || answer.includes('bed') ? 'bedroom'
-            : answer.includes('living') ? 'living room'
-            : answer.includes('kitchen') ? 'kitchen'
-            : answer.includes('dining') ? 'dining room'
-            : answer.includes('bathroom') || answer.includes('bath') ? 'bathroom'
-            : 'room';
-
-        return { isEmpty, confidence, roomType, isExterior };
+        return {
+            isEmpty: isEmpty,
+            isStageable: isKnownRoom, // Stricter gate
+            isInterior: true,
+            confidence: 90,
+            roomType,
+            isExterior: false
+        };
 
     } catch (error: any) {
-        return { isEmpty: false, confidence: 0, roomType: 'unknown', isExterior: false, error: error.message };
+        return { ...REJECT, error: error.message };
     }
 }
 
@@ -634,11 +715,12 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
     return { success: true };
 }
 
-// Submit a batch to Kie.ai — empty rooms first, then high-score (≥25) furnished leads
+// Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
 export async function submitStagingBatch(limit = 3): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Priority 1: leads with detected empty rooms
+    // Only stage leads that have a confirmed empty room from Moondream scanning.
+    // Never stage high-score leads without empty rooms — too risky for exterior slip-through.
     const { data: emptyData } = await supabase
         .from('outreach_leads')
         .select('id, address, empty_rooms, listing_url, icp_score')
@@ -646,55 +728,28 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
         .not('empty_rooms', 'eq', '[]')
         .limit(limit);
 
-    // Priority 2: high-score leads without empty rooms (will redesign any room)
-    const { data: highScoreData } = await supabase
-        .from('outreach_leads')
-        .select('id, address, empty_rooms, listing_url, icp_score')
-        .eq('status', 'scraped')
-        .eq('empty_rooms', '[]')
-        .gte('icp_score', 5)
-        .not('listing_url', 'is', null)
-        .order('icp_score', { ascending: false })
-        .limit(limit);
-
-    const emptyLeads = (emptyData || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
-    const highScoreLeads = (highScoreData || []);
-
-    // Combine: empty rooms first, fill remaining slots with high-score
-    const allPending = [...emptyLeads, ...highScoreLeads].slice(0, limit);
+    const allPending = (emptyData || []).filter((l: any) => Array.isArray(l.empty_rooms) && l.empty_rooms.length > 0);
 
     let submitted = 0;
     let failed = 0;
     const errors: string[] = [];
 
     for (const lead of allPending) {
-        const hasEmptyRoom = Array.isArray(lead.empty_rooms) && lead.empty_rooms.length > 0;
-        let imageUrl: string | null = null;
-        let roomType = 'room';
-        let redesign = false;
+        const imageUrl: string = lead.empty_rooms[0].imageUrl;
+        const roomType: string = lead.empty_rooms[0].roomType || 'room';
 
-        if (hasEmptyRoom) {
-            imageUrl = lead.empty_rooms[0].imageUrl;
-            roomType = lead.empty_rooms[0].roomType || 'room';
-            redesign = false;
-        } else {
-            // Fetch and verify an interior photo — Moondream rejects exterior shots
-            const interiorPhoto = await findInteriorPhoto(lead.listing_url);
-            if (!interiorPhoto) {
-                errors.push(`${lead.address}: no interior photo found`);
-                failed++;
-                continue;
-            }
-            imageUrl = interiorPhoto;
-            roomType = 'room';
-            redesign = true;
-            // Store in empty_rooms so the downstream poll/email pipeline works
-            await supabase.from('outreach_leads').update({
-                empty_rooms: [{ roomType, imageUrl, redesign: true }],
-            }).eq('id', lead.id);
+        // Re-verify the stored image is a confirmed stageable room before sending to Kie.ai.
+        // Must be a real bedroom/living room/kitchen/dining room/bathroom — not a floor plan,
+        // entryway, stairway, or exterior shot.
+        const recheck = await detectRoom(imageUrl);
+        if (!recheck.isStageable || recheck.error) {
+            errors.push(`${lead.address}: stored photo failed re-verify (${recheck.roomType} — rejected)`);
+            failed++;
+            await supabase.from('outreach_leads').update({ empty_rooms: [], status: 'scraped' }).eq('id', lead.id);
+            continue;
         }
 
-        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl!, roomType, redesign);
+        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, false);
         if (taskId) {
             await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
             submitted++;
@@ -702,6 +757,7 @@ export async function submitStagingBatch(limit = 3): Promise<{ submitted: number
             failed++;
             errors.push(`${lead.address}: ${stageErr}`);
         }
+
         if (allPending.indexOf(lead) < allPending.length - 1) {
             await new Promise(r => setTimeout(r, 5000));
         }
@@ -757,29 +813,19 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
         const result = await checkStagingResult(lead.staging_task_id);
 
         if (result.status === 'success' && result.url) {
-            // Verify the stored "before" photo is actually an interior room.
-            // Leads staged before the interior-photo fix may have exterior shots stored.
+            // Re-verify the before photo when one is stored — rejects floor plans / exterior shots.
+            // If no before URL is stored (furnished redesign path), skip the check — room was
+            // already verified by Moondream during the pipeline run.
             const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
             if (storedBeforeUrl) {
-                const { isExterior } = await detectRoom(storedBeforeUrl);
-                if (isExterior) {
-                    // Re-stage with a confirmed interior photo — email on next poll cycle
-                    const interiorPhoto = await findInteriorPhoto(lead.listing_url);
-                    if (interiorPhoto) {
-                        const { taskId } = await stageEmptyRoom(interiorPhoto, 'room', true);
-                        if (taskId) {
-                            const updatedRooms = [{ roomType: 'room', imageUrl: interiorPhoto, redesign: true }];
-                            await supabase.from('outreach_leads')
-                                .update({ empty_rooms: updatedRooms, staging_task_id: taskId })
-                                .eq('id', lead.id);
-                            stillProcessing++;
-                            debug.push(`⟳ Re-staging with interior photo: ${lead.address}`);
-                            continue;
-                        }
-                    }
-                    // Could not find interior photo — skip this lead entirely
-                    debug.push(`✗ Skipped (no interior photo): ${lead.address}`);
+                const beforeCheck = await detectRoom(storedBeforeUrl);
+                if (!beforeCheck.isStageable) {
+                    await supabase.from('outreach_leads')
+                        .update({ staging_task_id: null, empty_rooms: [] })
+                        .eq('id', lead.id);
+                    await updateLeadStatus(lead.id, 'scraped');
                     failed++;
+                    debug.push(`✗ Before-image rejected (${beforeCheck.roomType}), reset: ${lead.address}`);
                     continue;
                 }
             }
@@ -824,6 +870,78 @@ export async function pollAndEmailStagedLeads(limit = 10): Promise<{ emailed: nu
 
     debug.push(`Poll complete: ${emailed} emailed, ${stillProcessing} still generating, ${failed} failed`);
     return { emailed, stillProcessing, failed, errors, debug };
+}
+
+// Finds all staged leads that were never emailed and sends slowly with a delay between each.
+// Handles both: Kie.ai task still pending (polls first) and task already completed.
+export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: number; skipped: number; stillProcessing: number; failed: number; total: number; errors: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+        .from('outreach_leads')
+        .select('id, address, agent_name, agent_email, empty_rooms, staging_task_id')
+        .eq('status', 'staged')
+        .not('staging_task_id', 'is', null)
+        .order('created_at', { ascending: true });
+
+    if (error) return { emailed: 0, skipped: 0, stillProcessing: 0, failed: 0, total: 0, errors: [error.message] };
+
+    const leads = data || [];
+    let emailed = 0, skipped = 0, stillProcessing = 0, failed = 0;
+    const errors: string[] = [];
+
+    for (const lead of leads) {
+        if (!lead.agent_email) { skipped++; continue; }
+
+        const result = await checkStagingResult(lead.staging_task_id);
+
+        if (result.status === 'processing') { stillProcessing++; continue; }
+
+        if (result.status !== 'success' || !result.url) {
+            await updateLeadStatus(lead.id, 'scraped', { staging_task_id: null });
+            failed++;
+            errors.push(`Generation failed ${lead.address}: ${result.error}`);
+            continue;
+        }
+
+        const storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+        if (storedBeforeUrl) {
+            const beforeCheck = await detectRoom(storedBeforeUrl);
+            if (!beforeCheck.isStageable) {
+                await supabase.from('outreach_leads').update({ staging_task_id: null, empty_rooms: [] }).eq('id', lead.id);
+                await updateLeadStatus(lead.id, 'scraped');
+                failed++;
+                errors.push(`Before-image rejected (${beforeCheck.roomType}): ${lead.address}`);
+                continue;
+            }
+        }
+
+        const permanentUrl = await uploadStagedImage(result.url, lead.id);
+        const updatedRooms = [...(lead.empty_rooms || [])];
+        if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+        await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+
+        const emailResult = await sendOutreachEmail({
+            agentName: lead.agent_name,
+            agentEmail: lead.agent_email,
+            address: lead.address,
+            stagedImageUrl: permanentUrl,
+            beforeImageUrl: storedBeforeUrl,
+        });
+
+        if (emailResult.success) {
+            await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+            emailed++;
+        } else {
+            failed++;
+            errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
+        }
+
+        // Delay between sends to avoid triggering spam filters
+        if (emailed + failed < leads.length) await new Promise(r => setTimeout(r, delayMs));
+    }
+
+    return { emailed, skipped, stillProcessing, failed, total: leads.length, errors };
 }
 
 export async function getLeadStats(since?: string) {
@@ -911,7 +1029,7 @@ export async function checkStagingResult(taskId: string): Promise<{ status: stri
             const resultJson = JSON.parse(data.data.resultJson || '{}');
             const url = resultJson.resultUrls?.[0];
             return { status: 'success', url };
-        } else if (state === 'failed') {
+        } else if (state === 'fail' || state === 'failed') {
             return { status: 'failed', error: data.data?.failMsg || 'Generation failed' };
         }
 
@@ -1060,6 +1178,42 @@ export async function sendOutreachEmail(lead: {
     }
 }
 
+// Sends a test email to the given address and returns the raw result.
+// Use this to confirm Gmail OAuth is wired up correctly before relying on the pipeline.
+export async function sendTestEmail(toEmail: string): Promise<{ success?: boolean; error?: string; detail?: string }> {
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
+        return {
+            error: 'Gmail credentials missing',
+            detail: `CLIENT_ID=${GMAIL_CLIENT_ID ? 'set' : 'EMPTY'} SECRET=${GMAIL_CLIENT_SECRET ? 'set' : 'EMPTY'} REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN ? 'set' : 'EMPTY'}`,
+        };
+    }
+    try {
+        const accessToken = await getGmailAccessToken();
+        const message = [
+            `From: Kogflow <kogflow.media@gmail.com>`,
+            `To: ${toEmail}`,
+            `Subject: Kogflow email test`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset=utf-8`,
+            ``,
+            `<p>This is a test email from the Kogflow outreach pipeline. If you see this, Gmail OAuth is working correctly.</p>`,
+        ].join('\r\n');
+        const encoded = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const sendRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raw: encoded }),
+        });
+        if (!sendRes.ok) {
+            const err = await sendRes.text();
+            return { error: `Gmail API ${sendRes.status}`, detail: err };
+        }
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message };
+    }
+}
+
 // ─────────────────────────────────────────────
 // 7b. LISTING PHOTO FETCHER — Get all room photos from HAR detail page
 // ─────────────────────────────────────────────
@@ -1072,16 +1226,12 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     const fullUrl = propertyUrl.startsWith('http') ? propertyUrl : `https://www.har.com${propertyUrl}`;
 
     try {
-        // Direct fetch — HAR.com allows it and returns in ~700ms vs Zyte's 10-15s
-        const res = await fetch(fullUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml',
-                'Accept-Language': 'en-US,en;q=0.9',
-            },
-        });
-        if (!res.ok) return [];
-        const html = await res.text();
+        // Must use Zyte — HAR.com blocks Vercel datacenter IPs for direct fetch
+        const { html, error } = await zyteGet(fullUrl);
+        if (error || !html) {
+            console.warn(`[getHarListingPhotos] Zyte error for ${fullUrl}: ${error}`);
+            return [];
+        }
 
         const urls = [
             ...new Set(
@@ -1090,7 +1240,8 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
             ),
         ];
         return urls.slice(0, maxPhotos);
-    } catch {
+    } catch (err: any) {
+        console.warn(`[getHarListingPhotos] error for ${fullUrl}: ${err.message}`);
         return [];
     }
 }
@@ -1100,12 +1251,12 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
 // HAR photo order is typically [0]=exterior, then mixed — this guarantees interior.
 async function findInteriorPhoto(listingUrl: string): Promise<string | null> {
     const photos = await getHarListingPhotos(listingUrl, 10);
-    // Always skip index 0 (HAR primary photo = exterior front-of-house listing shot)
+    // Skip photo[0] — HAR always puts the exterior facade shot first
     for (const photo of photos.slice(1, 8)) {
-        const { isExterior, error } = await detectRoom(photo);
-        if (!error && !isExterior) return photo;
+        const { isStageable, error } = await detectRoom(photo);
+        if (!error && isStageable) return photo;
     }
-    return null; // no interior found — do not fall back to exterior
+    return null; // no stageable room found — do not fall back to exterior/other
 }
 
 // Scan top leads for empty rooms by fetching HAR detail pages (separate from main pipeline)
@@ -1133,15 +1284,15 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
 
     for (const lead of (data || [])) {
         scanned++;
-        // Fetch up to 4 photos total, skip first (exterior), check photos[1..3] (interior)
-        const photos = await getHarListingPhotos(lead.listing_url, 4);
-        const interiorPhotos = photos.slice(1, 4);
+        const photos = await getHarListingPhotos(lead.listing_url, 5);
+        const interiorPhotos = photos.slice(1, 5); // Skip photo[0] — always exterior facade on HAR
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
 
         for (const photoUrl of interiorPhotos) {
-            const { isEmpty, confidence, roomType, error: roomErr } = await detectRoom(photoUrl);
+            const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photoUrl);
             if (roomErr) { errors.push(`${lead.address}: ${roomErr}`); continue; }
-            if (isEmpty && confidence >= 80) {
+            // Must be a confirmed stageable room (bedroom/living/kitchen/dining/bath) AND empty
+            if (isStageable && isEmpty) {
                 emptyRooms.push({ roomType, imageUrl: photoUrl });
                 break;
             }
@@ -1150,11 +1301,16 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
         if (emptyRooms.length > 0) {
             await supabase.from('outreach_leads').update({ empty_rooms: emptyRooms }).eq('id', lead.id);
             found++;
-        } else if ((lead.icp_score ?? 0) >= 25 && interiorPhotos[0]) {
-            // No empty room detected — but high ICP score, so queue any interior room for redesign staging
-            const roomEntry = { roomType: 'room', imageUrl: interiorPhotos[0], redesign: true };
-            await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', lead.id);
-            found++;
+        } else if ((lead.icp_score ?? 0) >= 40 && interiorPhotos[0]) {
+            // High ICP score (stricter 40+ threshold) but no empty room found.
+            // Check the first interior photo for REDESIGN staging.
+            const { isStageable: s2, roomType: rt2, isExterior: ex2 } = await detectRoom(interiorPhotos[0]);
+            // ONLY proceed if it's confirmed stageable AND NOT exterior.
+            if (s2 && !ex2) {
+                const roomEntry = { roomType: rt2, imageUrl: interiorPhotos[0], redesign: true };
+                await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', lead.id);
+                found++;
+            }
         }
     }
 
@@ -1416,35 +1572,39 @@ export async function runPipelineSession(config: {
 
         listing.score = await scoreICP(listing);
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
+        let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
 
-        // Run Moondream on all new leads with photos — vacancy keywords help sort order
-        // but are not a gate, since HAR listings rarely include them in keywords
-        if (emptyRoomsFound < minEmptyRooms && moondreamChecked < MAX_MOONDREAM) {
-            // HAR primary photo (index 0) is always the exterior front-of-house shot.
-            // Scan from index 1 onward, skipping any exterior photos, until we find interior.
+        // Run Moondream when:
+        //   (a) still looking for empty rooms, OR
+        //   (b) listing scores 35+ — qualifies for furnished redesign even if empty target is met
+        const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM &&
+            (emptyRoomsFound < minEmptyRooms || listing.score >= 35);
+
+        if (shouldRunMoondream) {
+            moondreamChecked++;
             const detailPhotos = await getHarListingPhotos(listing.listingUrl, 8);
-            let checkedInterior = false;
-            for (const photo of detailPhotos.slice(1, 6)) {
-                if (moondreamChecked >= MAX_MOONDREAM) break;
-                moondreamChecked++;
-                const { isEmpty, confidence, roomType, isExterior, error: roomErr } = await detectRoom(photo);
+            await log(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
+            let foundStageable = false;
+            for (const photo of detailPhotos.slice(1, 7)) { // Skip photo[0] — always exterior facade on HAR
+                const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photo);
                 if (roomErr) { await log(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
-                if (isExterior) { await log(`  [${listing.address}] Skipping exterior photo`); continue; }
-                // First confirmed interior photo — check for empty room, then stop scanning
-                checkedInterior = true;
-                await log(`  [${listing.address}] isEmpty=${isEmpty} conf=${confidence} type=${roomType}`);
-                if (isEmpty && confidence >= 80) {
+                await log(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
+                if (!isStageable) continue; // floor plan / entryway / stairway / exterior — skip
+                foundStageable = true;
+                if (isEmpty) {
                     emptyRooms.push({ roomType, imageUrl: photo });
                     emptyRoomsFound++;
-                    await log(`  → Empty room! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
+                    await log(`  → Empty ${roomType}! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
+                    break; // Found confirmed empty stageable room — stop scanning this listing
                 }
-                break;
+                // Furnished stageable room — record first one found, keep scanning for empty
+                if (!furnishedRoom) furnishedRoom = { roomType, imageUrl: photo };
             }
-            if (!checkedInterior) await log(`  [${listing.address}] No interior photo found`);
+            if (!foundStageable) await log(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
         } else if (moondreamChecked >= MAX_MOONDREAM) {
             await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
-            await log(`  [${listing.address}] Skipping Moondream (target reached)`);
+            await log(`  [${listing.address}] Skipping Moondream (empty target met, score ${listing.score} < 35)`);
         }
 
         const saveResult = await saveLead({ ...listing, emptyRooms });
@@ -1458,34 +1618,32 @@ export async function runPipelineSession(config: {
         if (!leadId) continue;
 
         if (emptyRooms.length > 0) {
+            // Empty room — add furniture
             const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType, false);
             if (taskId) {
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Staged (empty room)! taskId=${taskId}`);
+                await log(`  → Staged (empty room, add furniture) taskId=${taskId}`);
             } else {
                 await log(`  → Stage FAILED: ${stageErr}`);
             }
-        } else if ((listing.score ?? 0) >= 5 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // High-score furnished lead — redesign a confirmed interior room photo
-            const photoUrl = await findInteriorPhoto(listing.listingUrl);
-            if (!photoUrl) {
-                await log(`  [${listing.address}] No interior photo — skipping stage`);
-                continue;
-            }
+        } else if (furnishedRoom && listing.score >= 35 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
+            // Furnished room + score 35+ — redesign existing staging
             highScoreStaged++;
-            const roomEntry = { roomType: 'room', imageUrl: photoUrl, redesign: true };
-            await supabase.from('outreach_leads').update({ empty_rooms: [roomEntry] }).eq('id', leadId);
-            const { taskId, error: stageErr } = await stageEmptyRoom(photoUrl, 'room', true);
+            const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
             if (taskId) {
+                // Store furnished room as before-photo reference so poll/email step can use it
+                await supabase.from('outreach_leads')
+                    .update({ empty_rooms: [{ roomType: furnishedRoom.roomType, imageUrl: furnishedRoom.imageUrl }] })
+                    .eq('id', leadId);
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Redesign staged (score ${listing.score})! taskId=${taskId}`);
+                await log(`  → Staged (score ${listing.score} furnished redesign) taskId=${taskId}`);
             } else {
                 await log(`  → Redesign FAILED: ${stageErr}`);
             }
         }
 
         processed++;
-        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length})`);
+        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length}, furnishedRoom=${furnishedRoom?.roomType ?? 'none'})`);
     }
 
     if (allListings.length === 0) {
