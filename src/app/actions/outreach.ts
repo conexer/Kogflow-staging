@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -2896,10 +2895,11 @@ async function generateAiReply(params: {
     originalAddress: string;
     kb: string;
 }): Promise<string | null> {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.INFERMATIC_API_KEY;
     if (!apiKey) return null;
 
-    const client = new Anthropic({ apiKey });
+    const baseUrl = process.env.INFERMATIC_BASE_URL || 'https://api.totalgpt.ai';
+    const model = process.env.INFERMATIC_MODEL || 'Meta-Llama-3.3-70B-Instruct';
 
     const system = `You are a helpful assistant responding on behalf of Kogflow AI Virtual Staging (kogflow.com).
 A real estate agent received a cold outreach email from Kogflow showing a free AI-staged version of their listing and has replied.
@@ -2925,13 +2925,24 @@ Their reply: "${params.incomingBody.slice(0, 1500)}"
 Write the reply email body only.`;
 
     try {
-        const msg = await client.messages.create({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 400,
-            messages: [{ role: 'user', content: userMsg }],
-            system,
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model,
+                max_tokens: 400,
+                messages: [
+                    { role: 'system', content: system },
+                    { role: 'user', content: userMsg },
+                ],
+            }),
         });
-        return msg.content[0].type === 'text' ? msg.content[0].text : null;
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content ?? null;
     } catch {
         return null;
     }

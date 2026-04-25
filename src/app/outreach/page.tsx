@@ -1385,7 +1385,7 @@ export default function OutreachPage() {
                                     { name: 'CapMonster (CAPTCHA)', env: 'CAPMONSTER_API_KEY', status: true },
                                     { name: 'Kie.ai (Staging)', env: 'KIE_AI_API_KEY', status: true },
                                     { name: 'Gmail API', env: 'GMAIL_CLIENT_ID', status: true },
-                                    { name: 'Claude AI (Reply Bot)', env: 'ANTHROPIC_API_KEY', status: true },
+                                    { name: 'Infermatic AI (Reply Bot)', env: 'INFERMATIC_API_KEY', status: true },
                                 ].map(key => (
                                     <div key={key.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                                         <div>
@@ -1496,7 +1496,7 @@ export default function OutreachPage() {
                                                     AI Response {reply.sent_at && <span className="normal-case font-normal">· sent {new Date(reply.sent_at).toLocaleTimeString()}</span>}
                                                 </div>
                                                 <div className={cn("text-sm rounded-lg p-3 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed", reply.ai_draft ? "bg-green-500/5 border border-green-500/20" : "bg-muted/40 text-muted-foreground italic")}>
-                                                    {reply.ai_draft || 'No AI draft generated (ANTHROPIC_API_KEY missing?)'}
+                                                    {reply.ai_draft || 'No AI draft generated (INFERMATIC_API_KEY missing?)'}
                                                 </div>
                                             </div>
                                         </div>
