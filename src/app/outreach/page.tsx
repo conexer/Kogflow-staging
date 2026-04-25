@@ -10,7 +10,7 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, backfillScoredStatus, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, backfillScoredStatus, checkAndReplyToOutreach, getOutreachReplies, markReplyReviewed, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
@@ -143,7 +143,7 @@ export default function OutreachPage() {
     const [dbReady, setDbReady] = useState<boolean | null>(null);
 
     // Stats
-    const [stats, setStats] = useState({ total: 0, scraped: 0, scored: 0, staged: 0, form_filled: 0, emailed: 0, avgScore: 0, totalPhotos: 0, leadsWithPhotos: 0, emptyRoomsFound: 0 });
+    const [stats, setStats] = useState({ total: 0, scraped: 0, scored: 0, staged: 0, stagedEver: 0, form_filled: 0, emailed: 0, avgScore: 0, totalPhotos: 0, leadsWithPhotos: 0, emptyRoomsFound: 0 });
     const [leads, setLeads] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
@@ -159,7 +159,11 @@ export default function OutreachPage() {
     const [selectedCities, setSelectedCities] = useState<string[]>(['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood']);
     const [pipelineRunning, setPipelineRunning] = useState(false);
     const [runningSession, setRunningSession] = useState(false);
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'config' | 'email' | 'setup'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'config' | 'email' | 'setup' | 'replies'>('dashboard');
+    const [replies, setReplies] = useState<any[]>([]);
+    const [repliesLoading, setRepliesLoading] = useState(false);
+    const [checkingReplies, setCheckingReplies] = useState(false);
+    const [repliesFilter, setRepliesFilter] = useState<'all' | 'unreviewed'>('unreviewed');
 
     // Cron schedule status
     const [cronStatus, setCronStatus] = useState<{
@@ -643,8 +647,16 @@ export default function OutreachPage() {
 
                 {/* Tabs */}
                 <div className="max-w-7xl mx-auto px-6 flex gap-1">
-                    {(['dashboard', 'leads', 'config', 'email', 'setup'] as const).map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)}
+                    {(['dashboard', 'leads', 'config', 'email', 'replies', 'setup'] as const).map(tab => (
+                        <button key={tab} onClick={() => {
+                            setActiveTab(tab);
+                            if (tab === 'replies') {
+                                setRepliesLoading(true);
+                                getOutreachReplies({ unreviewedOnly: repliesFilter === 'unreviewed' })
+                                    .then(r => setReplies(r.replies))
+                                    .finally(() => setRepliesLoading(false));
+                            }
+                        }}
                             className={cn("px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors",
                                 activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                             )}>
@@ -675,7 +687,7 @@ export default function OutreachPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {[
                                 { label: 'Total Leads', value: stats.total, icon: Database, color: 'text-blue-400' },
-                                { label: 'Staged', value: stats.staged, icon: Image, color: 'text-violet-400' },
+                                { label: 'Staged', value: stats.stagedEver, icon: Image, color: 'text-violet-400' },
                                 { label: 'Emailed', value: stats.emailed, icon: Mail, color: 'text-green-400' },
                                 { label: 'Avg ICP Score', value: stats.avgScore, icon: Star, color: 'text-amber-400' },
                             ].map(stat => (
@@ -715,19 +727,19 @@ export default function OutreachPage() {
                                     <Zap className="w-4 h-4 text-violet-400" />
                                 </div>
                                 <div className="text-3xl font-bold">{stats.emptyRoomsFound ?? 0}</div>
-                                <div className="text-xs text-muted-foreground mb-1">rooms ready (empty + score ≥35)</div>
+                                <div className="text-xs text-muted-foreground mb-1">detected rooms waiting to be submitted to staging</div>
                                 <div className="flex gap-2 flex-wrap">
                                     <button
                                         onClick={handleScanEmptyRooms}
                                         className="flex-1 text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
                                     >
-                                        Scan &amp; Prep (3)
+                                        Scan &amp; Prep
                                     </button>
                                     <button
                                         onClick={handleSubmitBatch}
                                         className="flex-1 text-xs px-2 py-1 rounded bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 transition-colors"
                                     >
-                                        Stage Batch (3)
+                                        Stage Batch
                                     </button>
                                     <button
                                         onClick={handlePollAndEmail}
@@ -1373,6 +1385,7 @@ export default function OutreachPage() {
                                     { name: 'CapMonster (CAPTCHA)', env: 'CAPMONSTER_API_KEY', status: true },
                                     { name: 'Kie.ai (Staging)', env: 'KIE_AI_API_KEY', status: true },
                                     { name: 'Gmail API', env: 'GMAIL_CLIENT_ID', status: true },
+                                    { name: 'Claude AI (Reply Bot)', env: 'ANTHROPIC_API_KEY', status: true },
                                 ].map(key => (
                                     <div key={key.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                                         <div>
@@ -1386,6 +1399,111 @@ export default function OutreachPage() {
                                 ))}
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* ── REPLIES TAB ── */}
+                {activeTab === 'replies' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="font-semibold text-lg">Reply Inbox</h2>
+                                <p className="text-sm text-muted-foreground mt-1">AI reads every reply and responds automatically. Review Q&amp;A pairs here.</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={repliesFilter}
+                                    onChange={e => {
+                                        const v = e.target.value as 'all' | 'unreviewed';
+                                        setRepliesFilter(v);
+                                        setRepliesLoading(true);
+                                        getOutreachReplies({ unreviewedOnly: v === 'unreviewed' })
+                                            .then(r => setReplies(r.replies))
+                                            .finally(() => setRepliesLoading(false));
+                                    }}
+                                    className="text-sm bg-muted border border-border rounded-lg px-3 py-1.5"
+                                >
+                                    <option value="unreviewed">Unreviewed only</option>
+                                    <option value="all">All replies</option>
+                                </select>
+                                <button
+                                    onClick={async () => {
+                                        setCheckingReplies(true);
+                                        try {
+                                            const result = await checkAndReplyToOutreach();
+                                            toast.success(`Checked inbox: ${result.checked} new, ${result.replied} replied`);
+                                            const r = await getOutreachReplies({ unreviewedOnly: repliesFilter === 'unreviewed' });
+                                            setReplies(r.replies);
+                                        } catch (e: any) {
+                                            toast.error(e.message);
+                                        } finally {
+                                            setCheckingReplies(false);
+                                        }
+                                    }}
+                                    disabled={checkingReplies}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                                >
+                                    <Mail className="w-4 h-4" />
+                                    {checkingReplies ? 'Checking...' : 'Check & Reply Now'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {repliesLoading ? (
+                            <div className="text-center py-12 text-muted-foreground text-sm">Loading replies...</div>
+                        ) : replies.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground text-sm">
+                                No {repliesFilter === 'unreviewed' ? 'unreviewed ' : ''}replies yet. The AI checks every 30 minutes automatically.
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {replies.map(reply => (
+                                    <div key={reply.id} className={cn("rounded-xl border p-5 space-y-4", reply.reviewed ? "border-border opacity-60" : "border-primary/30 bg-primary/5")}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-sm">{reply.sender_name || reply.sender_email}</span>
+                                                    <span className="text-xs text-muted-foreground font-mono">{reply.sender_email}</span>
+                                                    {reply.unsubscribe && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-medium">Unsubscribe</span>}
+                                                    {reply.ai_sent && <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-medium">AI Replied</span>}
+                                                    {!reply.ai_sent && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium">Not sent</span>}
+                                                </div>
+                                                {reply.address && <div className="text-xs text-muted-foreground">Re: {reply.address}</div>}
+                                                <div className="text-xs text-muted-foreground">{new Date(reply.created_at).toLocaleString()}</div>
+                                            </div>
+                                            {!reply.reviewed && (
+                                                <button
+                                                    onClick={async () => {
+                                                        await markReplyReviewed(reply.id);
+                                                        setReplies(prev => prev.map(r => r.id === reply.id ? { ...r, reviewed: true } : r));
+                                                    }}
+                                                    className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors"
+                                                >
+                                                    Mark Reviewed
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Their Reply</div>
+                                                <div className="text-sm bg-muted/40 rounded-lg p-3 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed">
+                                                    {reply.incoming_body}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                                    AI Response {reply.sent_at && <span className="normal-case font-normal">· sent {new Date(reply.sent_at).toLocaleTimeString()}</span>}
+                                                </div>
+                                                <div className={cn("text-sm rounded-lg p-3 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed", reply.ai_draft ? "bg-green-500/5 border border-green-500/20" : "bg-muted/40 text-muted-foreground italic")}>
+                                                    {reply.ai_draft || 'No AI draft generated (ANTHROPIC_API_KEY missing?)'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

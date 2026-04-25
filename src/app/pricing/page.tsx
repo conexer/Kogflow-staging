@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { CREDIT_COST_IMAGE } from '@/lib/credit-costs';
 
 const plans = [
     {
         name: 'Free',
         price: '$0',
         period: 'forever',
+        credits: 100,
         description: 'Perfect for trying out Kogflow',
         features: [
             '100 credits on signup ($5 value)',
@@ -27,6 +29,7 @@ const plans = [
         name: 'Starter',
         price: '$4.99',
         period: 'per month',
+        credits: 100,
         description: 'For hobbyists exploring AI creativity',
         features: [
             '100 credits per month ($5 value)',
@@ -45,6 +48,7 @@ const plans = [
         name: 'Pro',
         price: '$14.99',
         period: 'per month',
+        credits: 500,
         description: 'For consistent creators who need speed',
         features: [
             '500 credits per month',
@@ -64,6 +68,7 @@ const plans = [
         name: 'Business',
         price: '$49.99',
         period: 'per month',
+        credits: 2500,
         description: 'The ultimate powerhouse for brands',
         features: [
             '2500 credits per month',
@@ -81,6 +86,18 @@ const plans = [
         popular: false,
     },
 ];
+
+const formatImageCostLabel = (plan: typeof plans[number]) => {
+    if (plan.tier === 'free') {
+        return '1 staged image: 0c with included credits';
+    }
+
+    const priceInCents = Math.round(Number(plan.price.replace('$', '')) * 100);
+    const imageCount = plan.credits / CREDIT_COST_IMAGE;
+    const centsPerImage = Math.round(priceInCents / imageCount);
+
+    return `1 staged image: ${centsPerImage}c`;
+};
 
 export default function PricingPage() {
     const { user } = useAuth();
@@ -184,6 +201,9 @@ export default function PricingPage() {
                                 <div className="mb-6">
                                     <span className="text-4xl font-extrabold">{plan.price}</span>
                                     <span className="text-muted-foreground ml-2">{plan.period}</span>
+                                    <div className="mt-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                                        {formatImageCostLabel(plan)}
+                                    </div>
                                 </div>
 
                                 <ul className="space-y-3 mb-8">

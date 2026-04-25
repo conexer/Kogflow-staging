@@ -20,11 +20,11 @@ export async function GET(request: Request) {
 
     // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
     // Runs before poll so staged leads appear in step 2 on the NEXT cron call.
-    await submitStagingBatch(5);
+    await submitStagingBatch();
 
     // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
     // Always runs regardless of sessions_per_day limit.
-    const emailResult = await pollAndEmailStagedLeads(10);
+    const emailResult = await pollAndEmailStagedLeads();
 
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();

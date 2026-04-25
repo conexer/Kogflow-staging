@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import Anthropic from '@anthropic-ai/sdk';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -1713,6 +1714,33 @@ export async function sendOutreachEmail(lead: {
             return { error: `Gmail send error ${sendRes.status}: ${err}` };
         }
 
+        const sentMsg = await sendRes.json();
+        const gmailMessageId: string = sentMsg.id ?? null;
+        const gmailThreadId: string = sentMsg.threadId ?? null;
+
+        // Save thread/message IDs to the lead row so we can track replies
+        if ((gmailThreadId || gmailMessageId) && lead.agentEmail) {
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            await supabase.from('outreach_leads')
+                .update({ gmail_thread_id: gmailThreadId, gmail_message_id: gmailMessageId })
+                .eq('agent_email', lead.agentEmail)
+                .eq('address', lead.address);
+        }
+
+        // Apply "Kogflow Outreach" Gmail label to the sent message (best-effort)
+        if (gmailMessageId) {
+            try {
+                const labelId = await getOrCreateGmailLabel(accessToken, 'Kogflow Outreach');
+                if (labelId) {
+                    await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${gmailMessageId}/modify`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ addLabelIds: [labelId] }),
+                    });
+                }
+            } catch { /* label is best-effort */ }
+        }
+
         return { success: true };
 
     } catch (error: any) {
@@ -2321,13 +2349,9 @@ export async function countTodayCronRuns(): Promise<number> {
         .neq('processed', -1)
         .eq('trigger', 'cron');
     if (error?.message?.includes('trigger')) {
-        // Column doesn't exist yet — count all completed runs
-        const { count: all } = await supabase
-            .from('pipeline_runs')
-            .select('*', { count: 'exact', head: true })
-            .gte('ran_at', today.toISOString())
-            .neq('processed', -1);
-        return all ?? 0;
+        // trigger column not yet added — can't distinguish cron from manual runs,
+        // so return 0 to prevent manual UI runs from blocking the cron schedule.
+        return 0;
     }
     return count ?? 0;
 }
@@ -2761,4 +2785,355 @@ export async function getSiteStats(): Promise<{ stats?: any[]; error?: string }>
         .sort((a, b) => b.successRate - a.successRate || b.avgAddresses - a.avgAddresses);
 
     return { stats };
+}
+
+// ---------------------------------------------------------------------------
+// Gmail label helper
+// ---------------------------------------------------------------------------
+
+let _labelIdCache: string | null = null;
+
+async function getOrCreateGmailLabel(accessToken: string, labelName: string): Promise<string | null> {
+    if (_labelIdCache) return _labelIdCache;
+    const listRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!listRes.ok) return null;
+    const { labels } = await listRes.json();
+    const existing = labels?.find((l: any) => l.name === labelName);
+    if (existing) { _labelIdCache = existing.id; return existing.id; }
+    const createRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: labelName, labelListVisibility: 'labelShow', messageListVisibility: 'show' }),
+    });
+    if (!createRes.ok) return null;
+    const created = await createRes.json();
+    _labelIdCache = created.id;
+    return created.id;
+}
+
+// ---------------------------------------------------------------------------
+// Kogflow knowledge base for AI replies
+// ---------------------------------------------------------------------------
+
+let _kbCache: string | null = null;
+let _kbFetchedAt = 0;
+
+async function getKogflowKnowledgeBase(): Promise<string> {
+    if (_kbCache && Date.now() - _kbFetchedAt < 86_400_000) return _kbCache;
+
+    const staticKb = `
+KOGFLOW — AI Virtual Staging Platform (kogflow.com)
+
+WHAT IT DOES:
+Kogflow uses AI to virtually stage empty or poorly furnished rooms in real estate photos.
+Upload a photo, AI adds furniture, download the staged image in seconds.
+It also generates virtual video walkthroughs from staged images.
+
+HOW TO STAGE AN IMAGE (step by step):
+1. Go to https://kogflow.com and create a free account (no credit card needed)
+2. Click "New Project" or drag and drop a room photo onto the dashboard
+3. Select a staging style (Modern, Scandinavian, Coastal, etc.)
+4. Choose the room type (Living Room, Bedroom, Kitchen, etc.)
+5. Click "Stage" — AI generates the staged version in under a minute
+6. Download the HD result or share the link directly
+
+HOW TO GENERATE A VIDEO WALKTHROUGH:
+1. Stage your room images first (see above)
+2. On the project page, click "Generate Video"
+3. Select images to include in the tour
+4. Download or share the video
+
+PRICING:
+- Free: $0/month — 100 free credits on signup (~5 free staged images), all staging modes, no credit card
+- Starter: $4.99/month — 100 credits/month, ~50c per image
+- Pro: $14.99/month — 500 credits/month, priority rendering, ~30c per image
+- Business: $49.99/month — 2500 credits/month, commercial license, API access, ~20c per image
+- All plans: 7-day money-back guarantee
+
+KEY LINKS:
+- Sign up free: https://kogflow.com
+- Pricing: https://kogflow.com/pricing
+
+COMMON QUESTIONS:
+Q: How long does staging take? A: Usually 30-60 seconds per image.
+Q: What file types? A: JPG and PNG, up to 10MB.
+Q: Can I stage furnished rooms? A: Yes, Kogflow redesigns furnished rooms too.
+Q: How many free images? A: ~5 free staged images on signup (100 credits).
+Q: Is there a contract? A: No, month-to-month, cancel anytime.
+Q: Commercial use? A: Business plan. Free/Starter/Pro are for personal/single-agent use.
+Q: Bulk discounts? A: Business plan is best value at 20c/image.
+`;
+
+    try {
+        const r = await fetch('https://kogflow.com/pricing', { signal: AbortSignal.timeout(5000) });
+        if (r.ok) {
+            const html = await r.text();
+            const text = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .slice(0, 2000);
+            _kbCache = staticKb + '\n\nLIVE PRICING PAGE:\n' + text;
+        } else {
+            _kbCache = staticKb;
+        }
+    } catch {
+        _kbCache = staticKb;
+    }
+    _kbFetchedAt = Date.now();
+    return _kbCache;
+}
+
+// ---------------------------------------------------------------------------
+// AI reply generator using Claude Haiku
+// ---------------------------------------------------------------------------
+
+async function generateAiReply(params: {
+    senderName: string;
+    incomingBody: string;
+    originalAddress: string;
+    kb: string;
+}): Promise<string | null> {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return null;
+
+    const client = new Anthropic({ apiKey });
+
+    const system = `You are a helpful assistant responding on behalf of Kogflow AI Virtual Staging (kogflow.com).
+A real estate agent received a cold outreach email from Kogflow showing a free AI-staged version of their listing and has replied.
+Respond helpfully, warmly, and concisely.
+
+RULES:
+- Be brief (under 150 words total)
+- If they want to try it: guide them to kogflow.com with clear next steps
+- If they ask how to do something: give numbered steps AND a direct link
+- If they ask about pricing: quote exact figures, link to kogflow.com/pricing
+- If they say unsubscribe / remove me / stop / not interested: confirm removal politely
+- Never invent features or pricing not in the knowledge base
+- End every reply with exactly: — Minh\nKogflow — kogflow.com
+- Plain text only, no markdown
+
+KNOWLEDGE BASE:
+${params.kb}`;
+
+    const userMsg = `Agent name: ${params.senderName || 'the agent'}
+Original listing: ${params.originalAddress}
+Their reply: "${params.incomingBody.slice(0, 1500)}"
+
+Write the reply email body only.`;
+
+    try {
+        const msg = await client.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 400,
+            messages: [{ role: 'user', content: userMsg }],
+            system,
+        });
+        return msg.content[0].type === 'text' ? msg.content[0].text : null;
+    } catch {
+        return null;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Decode Gmail base64url message body to plain text
+// ---------------------------------------------------------------------------
+
+function decodeGmailBody(payload: any): string {
+    const getBody = (p: any): string => {
+        if (p.body?.data) return Buffer.from(p.body.data, 'base64').toString('utf8');
+        if (p.parts) {
+            const plain = p.parts.find((x: any) => x.mimeType === 'text/plain');
+            if (plain) return getBody(plain);
+            const html = p.parts.find((x: any) => x.mimeType === 'text/html');
+            if (html) return getBody(html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            for (const part of p.parts) { const b = getBody(part); if (b) return b; }
+        }
+        return '';
+    };
+    return getBody(payload).trim();
+}
+
+// ---------------------------------------------------------------------------
+// Check Gmail for replies to outreach emails and auto-respond with AI
+// ---------------------------------------------------------------------------
+
+export async function checkAndReplyToOutreach(): Promise<{ checked: number; replied: number; debug: string[] }> {
+    const debug: string[] = [];
+    let checked = 0;
+    let replied = 0;
+
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
+        return { checked: 0, replied: 0, debug: ['Gmail credentials not configured'] };
+    }
+
+    try {
+        const accessToken = await getGmailAccessToken();
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const kb = await getKogflowKnowledgeBase();
+        let messageIds: string[] = [];
+
+        // Strategy 1: Gmail label search
+        const labelSearch = await fetch(
+            `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent('in:inbox is:unread label:"Kogflow Outreach"')}&maxResults=20`,
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        );
+        if (labelSearch.ok) {
+            const data = await labelSearch.json();
+            messageIds = (data.messages || []).map((m: any) => m.id);
+            debug.push(`Label search: ${messageIds.length} unread replies`);
+        }
+
+        // Strategy 2: fallback — scan known thread IDs from DB
+        if (messageIds.length === 0) {
+            const { data: leads } = await supabase
+                .from('outreach_leads')
+                .select('id, gmail_thread_id, address')
+                .eq('status', 'emailed')
+                .not('gmail_thread_id', 'is', null)
+                .limit(100);
+
+            for (const lead of (leads || [])) {
+                const tRes = await fetch(
+                    `https://gmail.googleapis.com/gmail/v1/users/me/threads/${lead.gmail_thread_id}?format=metadata&metadataHeaders=From`,
+                    { headers: { 'Authorization': `Bearer ${accessToken}` } }
+                );
+                if (!tRes.ok) continue;
+                const thread = await tRes.json();
+                for (const msg of (thread.messages || []).slice(1)) {
+                    const from = msg.payload?.headers?.find((h: any) => h.name === 'From')?.value || '';
+                    if (!from.toLowerCase().includes('kogflow.media')) messageIds.push(msg.id);
+                }
+            }
+            if (messageIds.length > 0) debug.push(`Thread scan: ${messageIds.length} potential replies`);
+        }
+
+        if (messageIds.length === 0) {
+            debug.push('No new replies found');
+            return { checked: 0, replied: 0, debug };
+        }
+
+        for (const msgId of messageIds) {
+            const { data: existing } = await supabase
+                .from('outreach_replies').select('id').eq('message_id', msgId).single();
+            if (existing) continue;
+
+            const msgRes = await fetch(
+                `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=full`,
+                { headers: { 'Authorization': `Bearer ${accessToken}` } }
+            );
+            if (!msgRes.ok) continue;
+            const msg = await msgRes.json();
+
+            const hdrs: any[] = msg.payload?.headers || [];
+            const fromHeader = hdrs.find((h: any) => h.name === 'From')?.value || '';
+            const subjectHeader = hdrs.find((h: any) => h.name === 'Subject')?.value || '';
+            const threadId = msg.threadId;
+
+            if (fromHeader.toLowerCase().includes('kogflow.media')) continue;
+
+            const m = fromHeader.match(/^(.+?)\s*<(.+?)>$/) || [null, fromHeader, fromHeader];
+            const senderName = (m[1] || '').replace(/"/g, '').trim();
+            const senderEmail = (m[2] || fromHeader).trim();
+            const incomingBody = decodeGmailBody(msg.payload);
+            if (!incomingBody || incomingBody.length < 3) continue;
+
+            checked++;
+
+            const isUnsub = /\bunsubscribe\b|\bremove me\b|\bnot interested\b|\bopt.?out\b|\bstop emailing\b/i.test(incomingBody);
+
+            const { data: lead } = await supabase
+                .from('outreach_leads').select('id, address').eq('gmail_thread_id', threadId).single();
+
+            const aiDraft = isUnsub
+                ? `Hi ${senderName || 'there'},\n\nAbsolutely — I've removed you from our list. You won't hear from us again. Sorry for any inconvenience and best of luck with your listings!\n\n— Minh\nKogflow — kogflow.com`
+                : await generateAiReply({ senderName, incomingBody, originalAddress: lead?.address || 'your listing', kb });
+
+            await supabase.from('outreach_replies').insert({
+                lead_id: lead?.id ?? null,
+                thread_id: threadId,
+                message_id: msgId,
+                sender_email: senderEmail,
+                sender_name: senderName,
+                incoming_subject: subjectHeader,
+                incoming_body: incomingBody.slice(0, 5000),
+                ai_draft: aiDraft,
+                unsubscribe: isUnsub,
+            });
+
+            if (aiDraft) {
+                const replyRaw = [
+                    `From: Kogflow <kogflow.media@gmail.com>`,
+                    `To: ${senderEmail}`,
+                    `Subject: Re: ${subjectHeader.replace(/^Re:\s*/i, '')}`,
+                    `In-Reply-To: ${msgId}`,
+                    `References: ${msgId}`,
+                    `MIME-Version: 1.0`,
+                    `Content-Type: text/plain; charset=utf-8`,
+                    ``,
+                    aiDraft,
+                ].join('\r\n');
+
+                const encoded = Buffer.from(replyRaw).toString('base64')
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+                const replyRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ raw: encoded, threadId }),
+                });
+
+                if (replyRes.ok) {
+                    await supabase.from('outreach_replies')
+                        .update({ ai_sent: true, sent_at: new Date().toISOString() })
+                        .eq('message_id', msgId);
+                    replied++;
+                    debug.push(`AI replied to ${senderEmail} (${isUnsub ? 'unsubscribe' : 'question'})`);
+                } else {
+                    debug.push(`Reply send failed for ${senderEmail}: ${replyRes.status}`);
+                }
+            }
+
+            await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}/modify`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ removeLabelIds: ['UNREAD'] }),
+            }).catch(() => {});
+        }
+
+        return { checked, replied, debug };
+    } catch (err: any) {
+        return { checked, replied, debug: [...debug, `checkAndReply error: ${err.message}`] };
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Fetch outreach replies for admin review
+// ---------------------------------------------------------------------------
+
+export async function getOutreachReplies(opts: { limit?: number; unreviewedOnly?: boolean } = {}): Promise<{
+    replies: Array<{
+        id: string; sender_email: string; sender_name: string; incoming_subject: string;
+        incoming_body: string; ai_draft: string | null; ai_sent: boolean; sent_at: string | null;
+        reviewed: boolean; unsubscribe: boolean; created_at: string; address: string | null;
+    }>;
+}> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    let query = supabase
+        .from('outreach_replies')
+        .select('id, sender_email, sender_name, incoming_subject, incoming_body, ai_draft, ai_sent, sent_at, reviewed, unsubscribe, created_at, outreach_leads(address)')
+        .order('created_at', { ascending: false })
+        .limit(opts.limit ?? 100);
+    if (opts.unreviewedOnly) query = query.eq('reviewed', false);
+    const { data } = await query;
+    return {
+        replies: (data || []).map((r: any) => ({ ...r, address: r.outreach_leads?.address ?? null })),
+    };
+}
+
+export async function markReplyReviewed(replyId: string): Promise<void> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    await supabase.from('outreach_replies').update({ reviewed: true }).eq('id', replyId);
 }
