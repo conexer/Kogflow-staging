@@ -156,6 +156,7 @@ export default function OutreachPage() {
     // Pipeline config
     const [sessionsPerDay, setSessionsPerDay] = useState(3);
     const [scrapesPerSession, setScrapesPerSession] = useState(10);
+    const [emailsPerDay, setEmailsPerDay] = useState(10);
     const [selectedCities, setSelectedCities] = useState<string[]>(['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood']);
     const [pipelineRunning, setPipelineRunning] = useState(false);
     const [runningSession, setRunningSession] = useState(false);
@@ -223,6 +224,7 @@ export default function OutreachPage() {
                 if (configRes.config) {
                     setSessionsPerDay(configRes.config.sessions_per_day);
                     setScrapesPerSession(configRes.config.scrapes_per_session);
+                    setEmailsPerDay(configRes.config.emails_per_day ?? 10);
                     setSelectedCities(configRes.config.cities);
                 }
                 if (runsRes.runs) setRecentRuns(runsRes.runs);
@@ -276,13 +278,16 @@ export default function OutreachPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ cities: selectedCities, scrapesPerSession, sessionId }),
         });
-        const data = await res.json();
+        const text = await res.text();
+        let data: any;
+        try { data = JSON.parse(text); } catch { throw new Error(`Server error (${res.status}): ${text.slice(0, 120)}`); }
         if (!res.ok || !data.started) throw new Error(data.error || 'Failed to start session');
 
         // Enable cron schedule — persists across refreshes
         await savePipelineConfig({
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
+            emails_per_day: emailsPerDay,
             cities: selectedCities,
             cron_enabled: true,
         });
@@ -333,6 +338,7 @@ export default function OutreachPage() {
         const result = await savePipelineConfig({
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
+            emails_per_day: emailsPerDay,
             cities: selectedCities,
             cron_enabled: cronStatus?.cron_enabled ?? true,
         });
@@ -523,6 +529,7 @@ export default function OutreachPage() {
         const result = await savePipelineConfig({
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
+            emails_per_day: emailsPerDay,
             cities: selectedCities,
             cron_enabled: true,
         });
@@ -537,6 +544,7 @@ export default function OutreachPage() {
         const result = await savePipelineConfig({
             sessions_per_day: sessionsPerDay,
             scrapes_per_session: scrapesPerSession,
+            emails_per_day: emailsPerDay,
             cities: selectedCities,
             cron_enabled: false,
         });
@@ -1204,6 +1212,17 @@ export default function OutreachPage() {
                                     </label>
                                     <input type="range" min={5} max={50} step={5} value={scrapesPerSession} onChange={e => setScrapesPerSession(Number(e.target.value))} className="w-full accent-primary" />
                                     <p className="text-xs text-muted-foreground">Zyte handles proxy/anti-bot — spacing between scrapes doesn't affect ban risk. This controls cost per session.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium flex items-center justify-between">
+                                        Emails per day
+                                        <span className="text-primary font-bold">
+                                            {emailsPerDay} <span className="text-muted-foreground font-normal text-xs">≈ {Math.min(6, Math.max(1, Math.round(emailsPerDay / 10)))} per cron run</span>
+                                        </span>
+                                    </label>
+                                    <input type="range" min={5} max={60} step={5} value={emailsPerDay} onChange={e => setEmailsPerDay(Number(e.target.value))} className="w-full accent-primary" />
+                                    <div className="flex justify-between text-xs text-muted-foreground"><span>5/day</span><span>60/day (max)</span></div>
+                                    <p className="text-xs text-muted-foreground">Spread evenly across 10 daily cron slots. Keep low while warming Gmail sender reputation.</p>
                                 </div>
                             </div>
                         </div>

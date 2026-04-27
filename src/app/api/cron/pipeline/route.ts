@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+import { loadPipelineConfig, emailsPerCronRun, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
 
 export const maxDuration = 300; // Vercel Pro max
 
@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     await submitStagingBatch();
 
     // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
-    // Always runs regardless of sessions_per_day limit.
-    const emailResult = await pollAndEmailStagedLeads();
+    // Per-run limit is derived from emails_per_day ÷ 10 cron slots, capped at 6 (45s gap × 6 = 270s).
+    const emailResult = await pollAndEmailStagedLeads(emailsPerCronRun(config));
 
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();

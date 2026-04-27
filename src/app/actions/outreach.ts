@@ -561,7 +561,7 @@ export async function detectRoom(imageUrl: string): Promise<{
             headers: moonHeaders,
             body: JSON.stringify({
                 image_url: imageData,
-                question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, dining room, or bathroom.',
+                question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, or dining room.',
                 stream: false,
             }),
         });
@@ -573,13 +573,12 @@ export async function detectRoom(imageUrl: string): Promise<{
                 : typeAnswer.includes('living') ? 'living room'
                 : typeAnswer.includes('kitchen') ? 'kitchen'
                 : typeAnswer.includes('dining') ? 'dining room'
-                : typeAnswer.includes('bathroom') || typeAnswer.includes('bath') ? 'bathroom'
                 : 'room';
         }
 
         // Final Check: Must have identified a SPECIFIC room type to be stageable.
         // Ambiguous "room" or "unknown" is not high-enough quality for automated outreach.
-        const VALID_ROOM_TYPES = ['bedroom', 'living room', 'kitchen', 'dining room', 'bathroom'];
+        const VALID_ROOM_TYPES = ['bedroom', 'living room', 'kitchen', 'dining room'];
         const isKnownRoom = VALID_ROOM_TYPES.includes(roomType);
 
         return {
@@ -653,14 +652,20 @@ export async function solveRecaptcha(websiteUrl: string, websiteKey: string): Pr
 export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomType: string; imageUrl: string; stagedUrl?: string }[] }) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check Do Not Contact list
+    // Check if address already exists — select status so we know how far along it is.
     const { data: existing } = await supabase
         .from('outreach_leads')
-        .select('id')
+        .select('id, status')
         .eq('address', listing.address)
         .single();
 
     if (existing) {
+        // Leads that are already in or past the staging pipeline must not have their
+        // pipeline fields overwritten — especially empty_rooms, which stores the staged
+        // image URL after Kie.ai completes. Overwriting it would re-trigger staging on
+        // the next cron run and cause duplicate emails to the same agent.
+        const isPipelined = ['staged', 'sending', 'emailed', 'form_filled'].includes(existing.status);
+
         const duplicateUpdates: {
             city: string;
             price: number;
@@ -688,7 +693,9 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
             icp_score: listing.score || 0,
         };
 
-        if (listing.emptyRooms && listing.emptyRooms.length > 0) {
+        // Only update empty_rooms for pre-pipeline leads (scraped/scored).
+        // Never overwrite on staged/emailed/form_filled — the stagedUrl would be lost.
+        if (!isPipelined && listing.emptyRooms && listing.emptyRooms.length > 0) {
             duplicateUpdates.empty_rooms = listing.emptyRooms;
         }
 
@@ -807,10 +814,17 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
 export async function submitStagingBatch(limit?: number): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Stage leads that have a Moondream-confirmed room (already verified during pipeline scan).
+    // Build the set of agent emails already in the pipeline — don't waste Kie.ai credits on them.
+    const { data: activeAgents } = await supabase
+        .from('outreach_leads')
+        .select('agent_email')
+        .in('status', ['staged', 'sending', 'emailed', 'form_filled'])
+        .not('agent_email', 'is', null);
+    const blockedEmails = new Set<string>((activeAgents || []).map((r: any) => (r.agent_email as string).toLowerCase()));
+
     let query = supabase
         .from('outreach_leads')
-        .select('id, address, empty_rooms, listing_url, icp_score')
+        .select('id, address, agent_email, empty_rooms, listing_url, icp_score')
         .in('status', ['scraped', 'scored'])
         .not('empty_rooms', 'eq', '[]');
 
@@ -823,21 +837,31 @@ export async function submitStagingBatch(limit?: number): Promise<{ submitted: n
     let submitted = 0;
     let failed = 0;
     const errors: string[] = [];
+    // Track agent emails queued in this batch so we only stage one property per realtor.
+    const batchEmails = new Set<string>();
 
     for (const lead of allPending) {
+        const agentKey = lead.agent_email ? (lead.agent_email as string).toLowerCase() : null;
+
+        // Skip if this realtor already has a staged/emailed lead, or was already queued in this batch.
+        if (agentKey && (blockedEmails.has(agentKey) || batchEmails.has(agentKey))) {
+            continue;
+        }
+
         const imageUrl: string = lead.empty_rooms[0].imageUrl;
         const roomType: string = lead.empty_rooms[0].roomType || 'room';
 
         const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, false);
         if (taskId) {
             await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
+            if (agentKey) batchEmails.add(agentKey);
             submitted++;
         } else {
             failed++;
             errors.push(`${lead.address}: ${stageErr}`);
         }
 
-        if (allPending.indexOf(lead) < allPending.length - 1) {
+        if (submitted + failed < allPending.length) {
             await new Promise(r => setTimeout(r, 5000));
         }
     }
@@ -890,6 +914,8 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
 
     const leads = data || [];
     debug.push(`Poll & email: checking ${leads.length} staged lead(s)`);
+    // In-batch dedup — if the DB update hasn't flushed yet for an earlier lead in this same run.
+    const batchEmailedAgents = new Set<string>();
 
     for (const lead of leads) {
         const result = await checkStagingResult(lead.staging_task_id);
@@ -928,6 +954,42 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
         }
 
         if (lead.agent_email) {
+            const agentKey = (lead.agent_email as string).toLowerCase();
+
+            // Never send cold outreach twice to the same realtor — check in-batch Set first, then DB.
+            if (batchEmailedAgents.has(agentKey)) {
+                await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                debug.push(`⏭ Skipped duplicate agent ${lead.agent_email} (${lead.address}) — already contacted this run`);
+                continue;
+            }
+            // Check DB including 'sending' (in-flight by a concurrent run) to prevent race duplicates.
+            const { data: alreadyContacted } = await supabase
+                .from('outreach_leads')
+                .select('id')
+                .eq('agent_email', lead.agent_email)
+                .in('status', ['sending', 'emailed', 'form_filled'])
+                .limit(1)
+                .single();
+            if (alreadyContacted) {
+                await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                debug.push(`⏭ Skipped duplicate agent ${lead.agent_email} (${lead.address}) — already contacted`);
+                continue;
+            }
+
+            // Atomically claim this lead (compare-and-swap: staged → sending).
+            // If two concurrent runs both fetched this lead, only one will win this update.
+            const { data: claimed } = await supabase
+                .from('outreach_leads')
+                .update({ status: 'sending' })
+                .eq('id', lead.id)
+                .eq('status', 'staged')
+                .select('id')
+                .single();
+            if (!claimed) {
+                debug.push(`⏭ Lead ${lead.address} already claimed by another run — skipping`);
+                continue;
+            }
+
             const emailResult = await sendOutreachEmail({
                 agentName: lead.agent_name,
                 agentEmail: lead.agent_email,
@@ -945,9 +1007,15 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
             });
             if (emailResult.success) {
                 await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+                batchEmailedAgents.add(agentKey);
                 emailed++;
                 debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
+                // Throttle sends — Gmail flags burst patterns as spam.
+                // 45s gap makes each send look human regardless of batch size.
+                if (emailed < leads.length) await new Promise(r => setTimeout(r, 45_000));
             } else {
+                // Revert claim so the lead can be retried next run.
+                await updateLeadStatus(lead.id, 'staged');
                 errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
                 debug.push(`✗ Email failed ${lead.address}: ${emailResult.error}`);
                 failed++;
@@ -979,14 +1047,54 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
     const leads = data || [];
     let emailed = 0, skipped = 0, stillProcessing = 0, failed = 0;
     const errors: string[] = [];
+    const batchEmailedAgents = new Set<string>();
 
     for (const lead of leads) {
         if (!lead.agent_email) { skipped++; continue; }
 
+        const agentKey = (lead.agent_email as string).toLowerCase();
+
+        // Never send cold outreach twice to the same realtor — in-batch Set first, then DB.
+        if (batchEmailedAgents.has(agentKey)) {
+            await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+            skipped++;
+            continue;
+        }
+        const { data: alreadyContacted } = await supabase
+            .from('outreach_leads')
+            .select('id')
+            .eq('agent_email', lead.agent_email)
+            .in('status', ['sending', 'emailed', 'form_filled'])
+            .limit(1)
+            .single();
+        if (alreadyContacted) {
+            await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+            skipped++;
+            continue;
+        }
+
+        // Atomically claim: staged → sending.
+        const { data: claimed } = await supabase
+            .from('outreach_leads')
+            .update({ status: 'sending' })
+            .eq('id', lead.id)
+            .eq('status', 'staged')
+            .select('id')
+            .single();
+        if (!claimed) { skipped++; continue; }
+
         const result = await checkStagingResult(lead.staging_task_id);
 
-        if (result.status === 'processing') { stillProcessing++; continue; }
-        if (result.status === 'error') { continue; } // transient — retry next time
+        if (result.status === 'processing') {
+            // Revert claim so the lead stays retryable.
+            await updateLeadStatus(lead.id, 'staged');
+            stillProcessing++;
+            continue;
+        }
+        if (result.status === 'error') {
+            await updateLeadStatus(lead.id, 'staged');
+            continue;
+        }
 
         if (result.status === 'failed') {
             await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
@@ -1022,8 +1130,11 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
 
         if (emailResult.success) {
             await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
+            batchEmailedAgents.add(agentKey);
             emailed++;
         } else {
+            // Revert claim so the lead can be retried.
+            await updateLeadStatus(lead.id, 'staged');
             failed++;
             errors.push(`Email failed ${lead.address}: ${emailResult.error}`);
         }
@@ -2225,6 +2336,13 @@ export async function runPipelineSession(config: {
             continue;
         }
 
+        // Lead already exists in DB — do NOT touch its status or re-stage it.
+        // Overwriting status on an already-emailed lead is what caused duplicate sends.
+        if (saveResult.skipped) {
+            await log(`[${listing.city}] ${listing.address} — already in DB (status: ${(saveResult.lead as any)?.status ?? 'unknown'}), skipping`);
+            continue;
+        }
+
         const leadId = saveResult.lead?.id;
         if (!leadId) continue;
 
@@ -2289,18 +2407,29 @@ export async function backfillScoredStatus(): Promise<{ updated: number; error?:
 export interface PipelineConfig {
     sessions_per_day: number;
     scrapes_per_session: number;
+    emails_per_day: number;
     cities: string[];
     cron_enabled: boolean;
 }
 
+// Number of cron entries that fire each day (hardcoded in vercel.json — 10 slots, 13–22 UTC).
+const CRON_RUNS_PER_DAY = 10;
+
+// Derive how many emails to send per cron run from the daily target.
+// Capped at 6: with a 45s inter-send gap that's 270s/run, safely under the 300s Vercel limit.
+export function emailsPerCronRun(config: Pick<PipelineConfig, 'emails_per_day'>): number {
+    return Math.min(6, Math.max(1, Math.round(config.emails_per_day / CRON_RUNS_PER_DAY)));
+}
+
 export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    // cron_enabled column may not exist yet — upsert without it if insert fails
+    // Gracefully handle columns that may not exist yet in older deployments.
     const row = { id: 1, ...config, updated_at: new Date().toISOString() };
     const { error } = await supabase.from('pipeline_config').upsert(row, { onConflict: 'id' });
-    if (error?.message?.includes('cron_enabled')) {
-        const { cron_enabled: _ce, ...rowWithout } = row;
-        await supabase.from('pipeline_config').upsert(rowWithout, { onConflict: 'id' });
+    if (error?.message?.includes('cron_enabled') || error?.message?.includes('emails_per_day')) {
+        const { cron_enabled: _ce, emails_per_day: _epd, ...rowCore } = row;
+        const { error: e2 } = await supabase.from('pipeline_config').upsert(rowCore, { onConflict: 'id' });
+        if (e2) return { error: e2.message };
     } else if (error) return { error: error.message };
     return { success: true };
 }
@@ -2308,9 +2437,20 @@ export async function savePipelineConfig(config: PipelineConfig): Promise<{ succ
 export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.from('pipeline_config').select('*').eq('id', 1).single();
-    const defaults: PipelineConfig = { sessions_per_day: 3, scrapes_per_session: 10, cron_enabled: true, cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'] };
+    const defaults: PipelineConfig = {
+        sessions_per_day: 3, scrapes_per_session: 10, emails_per_day: 10, cron_enabled: true,
+        cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'],
+    };
     if (error || !data) return { config: defaults };
-    return { config: { sessions_per_day: data.sessions_per_day, scrapes_per_session: data.scrapes_per_session, cities: data.cities, cron_enabled: data.cron_enabled ?? true } };
+    return {
+        config: {
+            sessions_per_day: data.sessions_per_day,
+            scrapes_per_session: data.scrapes_per_session,
+            emails_per_day: data.emails_per_day ?? 10,
+            cities: data.cities,
+            cron_enabled: data.cron_enabled ?? true,
+        },
+    };
 }
 
 // ─────────────────────────────────────────────

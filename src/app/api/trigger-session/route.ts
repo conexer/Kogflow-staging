@@ -41,9 +41,9 @@ export async function POST(request: Request) {
         // Step 1: Retry any leads that have empty_rooms saved but weren't submitted to Kie.ai
         await submitStagingBatch();
 
-        // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones
-        // Limit 50 so no backlog accumulates across sessions
-        const emailResult = await pollAndEmailStagedLeads();
+        // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones.
+        // Cap at 3 — the 45s inter-send delay means more than ~4 leads risks hitting the 300s Vercel limit.
+        const emailResult = await pollAndEmailStagedLeads(3);
         await logToSession(emailResult.debug);
 
         // Step 3: Scrape + score + stage new leads
