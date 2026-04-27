@@ -2413,13 +2413,7 @@ export interface PipelineConfig {
 }
 
 // Number of cron entries that fire each day (hardcoded in vercel.json — 10 slots, 13–22 UTC).
-const CRON_RUNS_PER_DAY = 10;
-
-// Derive how many emails to send per cron run from the daily target.
-// Capped at 6: with a 45s inter-send gap that's 270s/run, safely under the 300s Vercel limit.
-export function emailsPerCronRun(config: Pick<PipelineConfig, 'emails_per_day'>): number {
-    return Math.min(6, Math.max(1, Math.round(config.emails_per_day / CRON_RUNS_PER_DAY)));
-}
+export const CRON_RUNS_PER_DAY = 10;
 
 export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
