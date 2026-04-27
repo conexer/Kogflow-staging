@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { loadPipelineConfig, CRON_RUNS_PER_DAY, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+
+// Matches the number of cron entries in vercel.json (slots 13–22 UTC).
+const CRON_RUNS_PER_DAY = 10;
 
 export const maxDuration = 300; // Vercel Pro max
 

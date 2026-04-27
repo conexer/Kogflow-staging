@@ -2412,8 +2412,6 @@ export interface PipelineConfig {
     cron_enabled: boolean;
 }
 
-// Number of cron entries that fire each day (hardcoded in vercel.json — 10 slots, 13–22 UTC).
-export const CRON_RUNS_PER_DAY = 10;
 
 export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
