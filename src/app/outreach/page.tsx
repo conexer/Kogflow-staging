@@ -33,11 +33,15 @@ const STATUS_LABELS: Record<string, string> = {
     emailed: 'Emailed',
 };
 
-// All cities below are searchable via HAR.com (Texas MLS) — pipeline confirmed working for these
+// National target market pool for rotating outreach sessions
 const CITIES = [
-    { region: 'Houston Metro', cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena'] },
-    { region: 'Houston Suburbs', cities: ['Humble', 'Friendswood', 'League City', 'Baytown', 'Conroe', 'Tomball', 'Richmond', 'Rosenberg'] },
-    { region: 'Texas Other', cities: ['Austin', 'San Antonio', 'Dallas', 'Fort Worth', 'El Paso', 'Arlington', 'Plano', 'Lubbock'] },
+    { region: 'Southwest Growth', cities: ['Phoenix, AZ', 'Scottsdale, AZ', 'Mesa, AZ', 'Tucson, AZ', 'Las Vegas, NV', 'Henderson, NV', 'Denver, CO', 'Aurora, CO', 'Colorado Springs, CO', 'Albuquerque, NM'] },
+    { region: 'Inland West', cities: ['Boise, ID', 'Salt Lake City, UT'] },
+    { region: 'Southeast Demand', cities: ['Atlanta, GA', 'Charlotte, NC', 'Raleigh, NC', 'Durham, NC', 'Greensboro, NC', 'Charleston, SC', 'Nashville, TN', 'Memphis, TN', 'Tampa, FL', 'Orlando, FL', 'Jacksonville, FL', 'Miami, FL', 'Birmingham, AL', 'New Orleans, LA'] },
+    { region: 'Mid-Atlantic', cities: ['Richmond, VA', 'Virginia Beach, VA'] },
+    { region: 'Midwest Expansion', cities: ['Kansas City, MO', 'St. Louis, MO', 'Indianapolis, IN', 'Columbus, OH', 'Cincinnati, OH', 'Louisville, KY', 'Oklahoma City, OK'] },
+    { region: 'West Coast Reach', cities: ['Sacramento, CA', 'Fresno, CA', 'Portland, OR', 'Seattle, WA'] },
+    { region: 'Texas Coverage', cities: ['Austin, TX', 'Dallas, TX', 'Fort Worth, TX', 'San Antonio, TX', 'Houston, TX', 'Katy, TX', 'Sugar Land, TX', 'Spring, TX', 'Pearland, TX', 'The Woodlands, TX', 'Cypress, TX', 'Pasadena, TX', 'Humble, TX', 'Friendswood, TX'] },
 ];
 
 const SETUP_SQL = `-- Run this in Supabase SQL Editor
@@ -73,12 +77,36 @@ ALTER TABLE public.outreach_leads ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role full access" ON public.outreach_leads
   USING (TRUE) WITH CHECK (TRUE);
 
+-- Permanent outreach recipient locks (one cold email per normalized recipient)
+CREATE TABLE IF NOT EXISTS public.outreach_email_locks (
+  normalized_email TEXT PRIMARY KEY CHECK (normalized_email = lower(btrim(normalized_email)) AND normalized_email <> ''),
+  agent_email TEXT NOT NULL,
+  first_lead_id UUID REFERENCES public.outreach_leads(id) ON DELETE SET NULL,
+  first_address TEXT,
+  source TEXT NOT NULL DEFAULT 'outreach',
+  status TEXT NOT NULL DEFAULT 'claimed',
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sent_at TIMESTAMPTZ,
+  gmail_thread_id TEXT,
+  gmail_message_id TEXT,
+  failure_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_outreach_email_locks_status ON public.outreach_email_locks (status);
+CREATE INDEX IF NOT EXISTS idx_outreach_email_locks_sent_at ON public.outreach_email_locks (sent_at DESC);
+
+ALTER TABLE public.outreach_email_locks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON public.outreach_email_locks
+  USING (TRUE) WITH CHECK (TRUE);
+
 -- Pipeline config (single row, id = 1)
 CREATE TABLE IF NOT EXISTS public.pipeline_config (
   id INTEGER PRIMARY KEY DEFAULT 1,
   sessions_per_day INTEGER NOT NULL DEFAULT 3,
   scrapes_per_session INTEGER NOT NULL DEFAULT 10,
-  cities TEXT[] NOT NULL DEFAULT ARRAY['Santa Ana','Garden Grove','Anaheim'],
+  cities TEXT[] NOT NULL DEFAULT ARRAY['Phoenix, AZ','Scottsdale, AZ','Las Vegas, NV','Denver, CO','Atlanta, GA','Charlotte, NC','Nashville, TN','Tampa, FL','Orlando, FL','Sacramento, CA','Dallas, TX','Houston, TX'],
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -104,6 +132,7 @@ ALTER TABLE public.pipeline_runs ADD COLUMN IF NOT EXISTS trigger TEXT DEFAULT '
 
 -- Add cron_enabled to pipeline_config (idempotent)
 ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS cron_enabled BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS emails_per_day INTEGER DEFAULT 10;
 
 -- Site scrape log (one row per site per pipeline run)
 CREATE TABLE IF NOT EXISTS public.site_scrape_log (
@@ -157,7 +186,7 @@ export default function OutreachPage() {
     const [sessionsPerDay, setSessionsPerDay] = useState(3);
     const [scrapesPerSession, setScrapesPerSession] = useState(10);
     const [emailsPerDay, setEmailsPerDay] = useState(10);
-    const [selectedCities, setSelectedCities] = useState<string[]>(['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood']);
+    const [selectedCities, setSelectedCities] = useState<string[]>(CITIES.flatMap(region => region.cities));
     const [pipelineRunning, setPipelineRunning] = useState(false);
     const [runningSession, setRunningSession] = useState(false);
     const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'config' | 'email' | 'setup' | 'replies'>('dashboard');
@@ -226,6 +255,7 @@ export default function OutreachPage() {
                     setScrapesPerSession(configRes.config.scrapes_per_session);
                     setEmailsPerDay(configRes.config.emails_per_day ?? 10);
                     setSelectedCities(configRes.config.cities);
+                    if (configRes.warning) toast.warning(configRes.warning, { id: 'pipeline-config-warning' });
                 }
                 if (runsRes.runs) setRecentRuns(runsRes.runs);
                 if (siteStatsRes.stats) setSiteStats(siteStatsRes.stats);
@@ -273,6 +303,30 @@ export default function OutreachPage() {
     }, [authorized, loadData]);
 
     const startSessionAndEnableCron = async (sessionId: string) => {
+        const startPolling = () => {
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = setInterval(async () => {
+                const [activityRes, activeRes] = await Promise.all([
+                    getRecentActivityLog(),
+                    getActiveSession(),
+                ]);
+                if (activityRes.entries) {
+                    setActivityLog(activityRes.entries);
+                    if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
+                }
+                if (!activeRes.isRunning) {
+                    clearInterval(pollRef.current!);
+                    pollRef.current = null;
+                    setRunningSession(false);
+                    setActiveSessionId(null);
+                    toast.success('Session complete');
+                    await loadData();
+                }
+            }, 2000);
+        };
+
+        startPolling();
+
         const res = await fetch('/api/trigger-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -292,26 +346,6 @@ export default function OutreachPage() {
             cron_enabled: true,
         });
         setCronStatus(prev => prev ? { ...prev, cron_enabled: true } : prev);
-
-        // Poll activity log + running state every 5s until session completes
-        pollRef.current = setInterval(async () => {
-            const [activityRes, activeRes] = await Promise.all([
-                getRecentActivityLog(),
-                getActiveSession(),
-            ]);
-            if (activityRes.entries) {
-                setActivityLog(activityRes.entries);
-                if (activityLogRef.current) activityLogRef.current.scrollTop = activityLogRef.current.scrollHeight;
-            }
-            if (!activeRes.isRunning) {
-                clearInterval(pollRef.current!);
-                pollRef.current = null;
-                setRunningSession(false);
-                setActiveSessionId(null);
-                toast.success('Session complete');
-                await loadData();
-            }
-        }, 5000);
     };
 
     const handleRunSession = async () => {
@@ -329,6 +363,11 @@ export default function OutreachPage() {
         } catch (e: any) {
             toast.dismiss('pipeline');
             toast.error(e.message || 'Session failed to start');
+            if (pollRef.current) {
+                clearInterval(pollRef.current);
+                pollRef.current = null;
+            }
+            setActiveSessionId(null);
             setRunningSession(false);
         }
     };
@@ -344,6 +383,7 @@ export default function OutreachPage() {
         });
         setSavingConfig(false);
         if (result.error) toast.error(`Save failed: ${result.error}`);
+        else if (result.warning) toast.warning(result.warning);
         else toast.success('Config saved — cron will use these settings');
     };
 
@@ -487,14 +527,20 @@ export default function OutreachPage() {
         toast.loading(`Sending to ${lead.agent_email}...`, { id: `send-${lead.id}` });
         try {
             const result = await sendOutreachEmail({
+                leadId: lead.id,
                 agentName: lead.agent_name || '',
                 agentEmail: lead.agent_email,
                 address: lead.address,
                 stagedImageUrl: lead.staged_image_url || undefined,
                 beforeImageUrl: lead.empty_rooms?.[0]?.imageUrl || undefined,
+                source: 'manual-dashboard',
             });
             toast.dismiss(`send-${lead.id}`);
-            if (result.error) {
+            if (result.duplicate) {
+                await updateLeadStatus(lead.id, 'form_filled');
+                toast.info(`Duplicate blocked: ${lead.agent_email} was already contacted`);
+                await loadData();
+            } else if (result.error) {
                 toast.error(`Send failed: ${result.error}`);
             } else {
                 toast.success(`Email sent to ${lead.agent_email}`);
@@ -1228,7 +1274,7 @@ export default function OutreachPage() {
                         </div>
 
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            <h3 className="font-semibold flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> Target Cities ({selectedCities.length} selected)</h3>
+                            <h3 className="font-semibold flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> Market Pool ({selectedCities.length} selected)</h3>
                             {CITIES.map(region => (
                                 <div key={region.region} className="space-y-2">
                                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{region.region}</div>
