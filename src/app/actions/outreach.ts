@@ -2487,11 +2487,11 @@ export async function runPipelineSession(config: {
     // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
     // "vacant", "unfurnished", "empty", "needs staging" → high likelihood of empty rooms
     // Fallback: check any listing with DOM >= 60 (motivated seller, may be vacant)
-    // Limit: 20 Moondream calls max to stay within time budget (~2 min)
+    // Limit: 8 Moondream checks max (~8 × 30s = 240s, fits within 300s Vercel limit)
     let emptyRoomsFound = 0;
     let moondreamChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 20;
+    const MAX_MOONDREAM = 8;
     const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
