@@ -99,6 +99,27 @@ const TARGET_MARKETS: TargetMarket[] = [
     { label: 'Pasadena, TX', city: 'Pasadena', state: 'TX', homesSlug: 'pasadena-tx', sourcePriority: ['har', 'homes'] },
     { label: 'Humble, TX', city: 'Humble', state: 'TX', homesSlug: 'humble-tx', sourcePriority: ['har', 'homes'] },
     { label: 'Friendswood, TX', city: 'Friendswood', state: 'TX', homesSlug: 'friendswood-tx', sourcePriority: ['har', 'homes'] },
+    // --- Added markets ---
+    { label: 'Boise, ID', city: 'Boise', state: 'ID', homesSlug: 'boise-id', sourcePriority: ['homes'] },
+    { label: 'Salt Lake City, UT', city: 'Salt Lake City', state: 'UT', homesSlug: 'salt-lake-city-ut', sourcePriority: ['homes'] },
+    { label: 'Colorado Springs, CO', city: 'Colorado Springs', state: 'CO', homesSlug: 'colorado-springs-co', sourcePriority: ['homes'] },
+    { label: 'Albuquerque, NM', city: 'Albuquerque', state: 'NM', homesSlug: 'albuquerque-nm', sourcePriority: ['homes'] },
+    { label: 'Tucson, AZ', city: 'Tucson', state: 'AZ', homesSlug: 'tucson-az', sourcePriority: ['homes'] },
+    { label: 'Kansas City, MO', city: 'Kansas City', state: 'MO', homesSlug: 'kansas-city-mo', sourcePriority: ['homes'] },
+    { label: 'Indianapolis, IN', city: 'Indianapolis', state: 'IN', homesSlug: 'indianapolis-in', sourcePriority: ['homes'] },
+    { label: 'Columbus, OH', city: 'Columbus', state: 'OH', homesSlug: 'columbus-oh', sourcePriority: ['homes'] },
+    { label: 'Cincinnati, OH', city: 'Cincinnati', state: 'OH', homesSlug: 'cincinnati-oh', sourcePriority: ['homes'] },
+    { label: 'Louisville, KY', city: 'Louisville', state: 'KY', homesSlug: 'louisville-ky', sourcePriority: ['homes'] },
+    { label: 'Memphis, TN', city: 'Memphis', state: 'TN', homesSlug: 'memphis-tn', sourcePriority: ['homes'] },
+    { label: 'Birmingham, AL', city: 'Birmingham', state: 'AL', homesSlug: 'birmingham-al', sourcePriority: ['homes'] },
+    { label: 'New Orleans, LA', city: 'New Orleans', state: 'LA', homesSlug: 'new-orleans-la', sourcePriority: ['homes'] },
+    { label: 'Oklahoma City, OK', city: 'Oklahoma City', state: 'OK', homesSlug: 'oklahoma-city-ok', sourcePriority: ['homes'] },
+    { label: 'Richmond, VA', city: 'Richmond', state: 'VA', homesSlug: 'richmond-va', sourcePriority: ['homes'] },
+    { label: 'Virginia Beach, VA', city: 'Virginia Beach', state: 'VA', homesSlug: 'virginia-beach-va', sourcePriority: ['homes'] },
+    { label: 'Charleston, SC', city: 'Charleston', state: 'SC', homesSlug: 'charleston-sc', sourcePriority: ['homes'] },
+    { label: 'Durham, NC', city: 'Durham', state: 'NC', homesSlug: 'durham-nc', sourcePriority: ['homes'] },
+    { label: 'Greensboro, NC', city: 'Greensboro', state: 'NC', homesSlug: 'greensboro-nc', sourcePriority: ['homes'] },
+    { label: 'St. Louis, MO', city: 'St. Louis', state: 'MO', homesSlug: 'st-louis-mo', sourcePriority: ['homes'] },
 ];
 
 const TARGET_MARKET_LOOKUP = new Map<string, TargetMarket>(
@@ -139,16 +160,22 @@ function hashString(value: string): number {
     return Math.abs(hash);
 }
 
-function selectRotatingCities(candidateCities: string[], maxCities: number, now = new Date()): string[] {
-    const unique = [...new Set(candidateCities.map((city) => resolveTargetMarket(city).label))];
+// Group-based rotation: cities are divided into non-overlapping groups of maxCities.
+// sessionIndex advances one group per session, guaranteeing zero city overlap between
+// consecutive sessions regardless of how many cron runs fire per day.
+function selectRotatingCities(candidateCities: string[], maxCities: number, sessionIndex: number = 0): string[] {
+    const unique = [...new Set(candidateCities.map((city) => resolveTargetMarket(city).label))].sort();
     if (unique.length <= maxCities) return unique;
 
-    const rotationKey = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}-${now.getUTCHours()}`;
-    return unique
-        .map((city) => ({ city, score: hashString(`${rotationKey}:${city}`) }))
-        .sort((a, b) => a.score - b.score || a.city.localeCompare(b.city))
-        .slice(0, maxCities)
-        .map((entry) => entry.city);
+    const numGroups = Math.ceil(unique.length / maxCities);
+    const groupIndex = sessionIndex % numGroups;
+    const start = groupIndex * maxCities;
+    const group = unique.slice(start, start + maxCities);
+    // Last group may be short — pad from the front of the NEXT group to keep count stable
+    if (group.length < maxCities) {
+        group.push(...unique.slice(0, maxCities - group.length));
+    }
+    return group;
 }
 
 
@@ -2366,7 +2393,9 @@ export async function runPipelineSession(config: {
     // Vercel's 5-minute function limit. We now distribute the fetch budget across cities.
     const candidateCities = config.cities.length > 0 ? config.cities : getDefaultTargetCities();
     const rotatingCityCount = Math.max(6, Math.min(12, Math.ceil(config.scrapesPerSession / 4)));
-    const activeCities = selectRotatingCities(candidateCities, rotatingCityCount);
+    // Use total pipeline run count as rotation index so each session picks the next city group
+    const { count: runCount } = await supabase.from('pipeline_runs').select('*', { count: 'exact', head: true });
+    const activeCities = selectRotatingCities(candidateCities, rotatingCityCount, runCount ?? 0);
     const cityCount = Math.max(activeCities.length, 1);
     const bufferMultiplier = cityCount <= 2 ? 4 : cityCount <= 5 ? 3 : 2;
     const batchSize = Math.max(20, Math.ceil((config.scrapesPerSession * bufferMultiplier) / cityCount));
