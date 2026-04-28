@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
 
-// Matches the number of cron entries in vercel.json (slots 13–22 UTC).
+// Matches the number of cron entries in vercel.json (slots 15–23 UTC plus 00 UTC).
 const CRON_RUNS_PER_DAY = 10;
 
 export const maxDuration = 300; // Vercel Pro max
 
-// 10 cron entries fire hourly 13–22 UTC (8am–5pm CDT Houston).
+// 10 cron entries fire hourly 15–23 UTC plus 00 UTC (8am–5pm Pacific during DST).
 // Each trigger: (1) emails leads staged in prior session, (2) scrapes + stages new leads.
 export async function GET(request: Request) {
     const authHeader = request.headers.get('authorization');
@@ -15,9 +15,13 @@ export async function GET(request: Request) {
     }
 
     const { config } = await loadPipelineConfig();
-    if (!config) return NextResponse.json({ skipped: true, reason: 'No config found' });
+    if (!config) {
+        await logPipelineRun({ processed: 0, errors: ['No config found'], debug: ['Cron skipped: no pipeline config'], trigger: 'cron' });
+        return NextResponse.json({ skipped: true, reason: 'No config found' });
+    }
 
     if (!config.cron_enabled) {
+        await logPipelineRun({ processed: 0, errors: [], debug: ['Cron skipped: schedule paused'], trigger: 'cron' });
         return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
     }
 
@@ -33,6 +37,12 @@ export async function GET(request: Request) {
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();
     if (todayCronRuns >= config.sessions_per_day) {
+        await logPipelineRun({
+            processed: 0,
+            errors: [],
+            debug: [`Cron skipped: already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`],
+            trigger: 'cron',
+        });
         return NextResponse.json({
             skipped: true,
             reason: `Already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,

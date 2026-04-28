@@ -35,6 +35,14 @@ export interface ScrapedListing {
     score?: number;
 }
 
+interface TargetMarket {
+    label: string;
+    city: string;
+    state: string;
+    homesSlug: string;
+    sourcePriority: ('har' | 'homes')[];
+}
+
 // ─────────────────────────────────────────────
 // 1. ICP SCORING
 // ─────────────────────────────────────────────
@@ -57,15 +65,91 @@ export async function scoreICP(listing: Partial<ScrapedListing>): Promise<number
 // ─────────────────────────────────────────────
 
 // City → homes.com URL slug lookup
-const CITY_SLUGS: Record<string, string> = {
-    'Phoenix': 'phoenix-az', 'Dallas': 'dallas-tx', 'Atlanta': 'atlanta-ga',
-    'Charlotte': 'charlotte-nc', 'Nashville': 'nashville-tn', 'Tampa': 'tampa-fl',
-    'Las Vegas': 'las-vegas-nv', 'Houston': 'houston-tx', 'Denver': 'denver-co',
-    'Orlando': 'orlando-fl', 'Austin': 'austin-tx', 'Miami': 'miami-fl',
-    'San Antonio': 'san-antonio-tx', 'Scottsdale': 'scottsdale-az',
-    'Jacksonville': 'jacksonville-fl', 'Sacramento': 'sacramento-ca',
-    'Portland': 'portland-or', 'Raleigh': 'raleigh-nc',
-};
+const TARGET_MARKETS: TargetMarket[] = [
+    { label: 'Phoenix, AZ', city: 'Phoenix', state: 'AZ', homesSlug: 'phoenix-az', sourcePriority: ['homes'] },
+    { label: 'Scottsdale, AZ', city: 'Scottsdale', state: 'AZ', homesSlug: 'scottsdale-az', sourcePriority: ['homes'] },
+    { label: 'Mesa, AZ', city: 'Mesa', state: 'AZ', homesSlug: 'mesa-az', sourcePriority: ['homes'] },
+    { label: 'Las Vegas, NV', city: 'Las Vegas', state: 'NV', homesSlug: 'las-vegas-nv', sourcePriority: ['homes'] },
+    { label: 'Henderson, NV', city: 'Henderson', state: 'NV', homesSlug: 'henderson-nv', sourcePriority: ['homes'] },
+    { label: 'Denver, CO', city: 'Denver', state: 'CO', homesSlug: 'denver-co', sourcePriority: ['homes'] },
+    { label: 'Aurora, CO', city: 'Aurora', state: 'CO', homesSlug: 'aurora-co', sourcePriority: ['homes'] },
+    { label: 'Atlanta, GA', city: 'Atlanta', state: 'GA', homesSlug: 'atlanta-ga', sourcePriority: ['homes'] },
+    { label: 'Charlotte, NC', city: 'Charlotte', state: 'NC', homesSlug: 'charlotte-nc', sourcePriority: ['homes'] },
+    { label: 'Raleigh, NC', city: 'Raleigh', state: 'NC', homesSlug: 'raleigh-nc', sourcePriority: ['homes'] },
+    { label: 'Nashville, TN', city: 'Nashville', state: 'TN', homesSlug: 'nashville-tn', sourcePriority: ['homes'] },
+    { label: 'Tampa, FL', city: 'Tampa', state: 'FL', homesSlug: 'tampa-fl', sourcePriority: ['homes'] },
+    { label: 'Orlando, FL', city: 'Orlando', state: 'FL', homesSlug: 'orlando-fl', sourcePriority: ['homes'] },
+    { label: 'Jacksonville, FL', city: 'Jacksonville', state: 'FL', homesSlug: 'jacksonville-fl', sourcePriority: ['homes'] },
+    { label: 'Miami, FL', city: 'Miami', state: 'FL', homesSlug: 'miami-fl', sourcePriority: ['homes'] },
+    { label: 'Sacramento, CA', city: 'Sacramento', state: 'CA', homesSlug: 'sacramento-ca', sourcePriority: ['homes'] },
+    { label: 'Fresno, CA', city: 'Fresno', state: 'CA', homesSlug: 'fresno-ca', sourcePriority: ['homes'] },
+    { label: 'Portland, OR', city: 'Portland', state: 'OR', homesSlug: 'portland-or', sourcePriority: ['homes'] },
+    { label: 'Seattle, WA', city: 'Seattle', state: 'WA', homesSlug: 'seattle-wa', sourcePriority: ['homes'] },
+    { label: 'Austin, TX', city: 'Austin', state: 'TX', homesSlug: 'austin-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Dallas, TX', city: 'Dallas', state: 'TX', homesSlug: 'dallas-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Fort Worth, TX', city: 'Fort Worth', state: 'TX', homesSlug: 'fort-worth-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'San Antonio, TX', city: 'San Antonio', state: 'TX', homesSlug: 'san-antonio-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Houston, TX', city: 'Houston', state: 'TX', homesSlug: 'houston-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Katy, TX', city: 'Katy', state: 'TX', homesSlug: 'katy-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Sugar Land, TX', city: 'Sugar Land', state: 'TX', homesSlug: 'sugar-land-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Spring, TX', city: 'Spring', state: 'TX', homesSlug: 'spring-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Pearland, TX', city: 'Pearland', state: 'TX', homesSlug: 'pearland-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'The Woodlands, TX', city: 'The Woodlands', state: 'TX', homesSlug: 'the-woodlands-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Cypress, TX', city: 'Cypress', state: 'TX', homesSlug: 'cypress-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Pasadena, TX', city: 'Pasadena', state: 'TX', homesSlug: 'pasadena-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Humble, TX', city: 'Humble', state: 'TX', homesSlug: 'humble-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Friendswood, TX', city: 'Friendswood', state: 'TX', homesSlug: 'friendswood-tx', sourcePriority: ['har', 'homes'] },
+];
+
+const TARGET_MARKET_LOOKUP = new Map<string, TargetMarket>(
+    TARGET_MARKETS.flatMap((market) => [
+        [market.label.toLowerCase(), market],
+        [market.city.toLowerCase(), market],
+    ])
+);
+
+function getDefaultTargetCities(): string[] {
+    return TARGET_MARKETS.map((market) => market.label);
+}
+
+function resolveTargetMarket(input: string): TargetMarket {
+    const trimmed = input.trim();
+    const known = TARGET_MARKET_LOOKUP.get(trimmed.toLowerCase());
+    if (known) return known;
+
+    const [rawCity, rawState] = trimmed.split(',').map((part) => part.trim());
+    const city = rawCity || trimmed;
+    const state = (rawState || '').toUpperCase();
+    const homesSlug = `${city.toLowerCase().replace(/\s+/g, '-')}${state ? `-${state.toLowerCase()}` : ''}`;
+
+    return {
+        label: state ? `${city}, ${state}` : city,
+        city,
+        state,
+        homesSlug,
+        sourcePriority: state === 'TX' ? ['har', 'homes'] : ['homes'],
+    };
+}
+
+function hashString(value: string): number {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+        hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash);
+}
+
+function selectRotatingCities(candidateCities: string[], maxCities: number, now = new Date()): string[] {
+    const unique = [...new Set(candidateCities.map((city) => resolveTargetMarket(city).label))];
+    if (unique.length <= maxCities) return unique;
+
+    const rotationKey = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}-${now.getUTCHours()}`;
+    return unique
+        .map((city) => ({ city, score: hashString(`${rotationKey}:${city}`) }))
+        .sort((a, b) => a.score - b.score || a.city.localeCompare(b.city))
+        .slice(0, maxCities)
+        .map((entry) => entry.city);
+}
 
 
 async function zyteGet(url: string, _city?: string): Promise<{ html?: string; error?: string }> {
@@ -92,14 +176,14 @@ async function zyteGet(url: string, _city?: string): Promise<{ html?: string; er
 // homes.com scraper — uses JSON-LD RealEstateListing schema
 export async function scrapeHomesCity(city: string, maxListings: number = 20): Promise<{ listings?: ScrapedListing[]; rawHtmlSnippet?: string; error?: string }> {
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
-
-    const slug = CITY_SLUGS[city] || city.toLowerCase().replace(/\s+/g, '-');
+    const market = resolveTargetMarket(city);
+    const slug = market.homesSlug;
     // Extract expected 2-letter state from slug (e.g. "phoenix-az" → "AZ")
     const expectedState = slug.split('-').pop()?.toUpperCase() || '';
     const url = `https://www.homes.com/homes-for-sale/${slug}/`;
 
     try {
-        const { html, error } = await zyteGet(url, city);
+        const { html, error } = await zyteGet(url, market.city);
         if (error || !html) return { error: error || 'No HTML' };
 
         const rawHtmlSnippet = html.slice(0, 2000);
@@ -135,7 +219,7 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
 
             const listing: ScrapedListing = {
                 address: addr.streetAddress,
-                city: addr.addressLocality || city,
+                city: addr.addressLocality || market.city,
                 price,
                 daysOnMarket: 0,
                 priceReduced: false,
@@ -160,9 +244,11 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
 // Supports multi-page fetch to maximise listing yield per city
 export async function scrapeHarCity(city: string, maxListings: number = 40, pages: number = 2): Promise<{ listings?: ScrapedListing[]; rawHtmlSnippet?: string; error?: string }> {
     if (!ZYTE_API_KEY) return { error: 'ZYTE_API_KEY not configured' };
+    const market = resolveTargetMarket(city);
+    if (market.state !== 'TX') return { listings: [], error: `HAR unavailable for ${market.label}` };
 
     // No dom filter — scrape ALL active listings so we don't exhaust the pool
-    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`;
+    const baseUrl = `https://www.har.com/search/dosearch?type=residential&minprice=100000&maxprice=700000&status=A&city=${encodeURIComponent(market.city)}`;
 
     // Helper: parse a single HAR page HTML into listing rows
     function parseHarHtml(html: string): any[] {
@@ -185,7 +271,7 @@ export async function scrapeHarCity(city: string, maxListings: number = 40, page
         const pageUrls = Array.from({ length: pages }, (_, i) =>
             i === 0 ? baseUrl : `${baseUrl}&p=${i + 1}`
         );
-        const pageResults = await Promise.all(pageUrls.map(url => zyteGet(url, city)));
+        const pageResults = await Promise.all(pageUrls.map(url => zyteGet(url, market.city)));
 
         const rawHtmlSnippet = pageResults[0]?.html?.slice(0, 2000) || '';
         if (pageResults[0]?.error) return { error: pageResults[0].error };
@@ -218,7 +304,7 @@ export async function scrapeHarCity(city: string, maxListings: number = 40, page
 
             const listing: ScrapedListing = {
                 address: `${item.FULLSTREETADDRESS}, ${item.CITY}, ${item.STATE} ${item.ZIP}`,
-                city: item.CITY || city,
+                city: item.CITY || market.city,
                 price,
                 daysOnMarket: item.DOM || item.DAYSONMARKET || 0,
                 priceReduced: !!priceReduced,
@@ -761,6 +847,80 @@ export async function updateLeadStatus(id: string, status: string, updates?: any
     return { success: true };
 }
 
+function normalizeAgentEmail(email?: string | null): string {
+    return (email || '').trim().toLowerCase();
+}
+
+async function hasRecipientLock(normalizedEmail: string): Promise<{ locked: boolean; error?: string }> {
+    if (!normalizedEmail) return { locked: false };
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase
+        .from('outreach_email_locks')
+        .select('normalized_email')
+        .eq('normalized_email', normalizedEmail)
+        .maybeSingle();
+
+    if (error) return { locked: false, error: error.message };
+    return { locked: !!data };
+}
+
+async function claimRecipientForEmail(input: {
+    agentEmail: string;
+    leadId?: string;
+    address?: string;
+    source?: string;
+}): Promise<{ claimed: boolean; normalizedEmail: string; error?: string }> {
+    const normalizedEmail = normalizeAgentEmail(input.agentEmail);
+    if (!normalizedEmail) return { claimed: false, normalizedEmail, error: 'No agent email' };
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase
+        .from('outreach_email_locks')
+        .insert({
+            normalized_email: normalizedEmail,
+            agent_email: input.agentEmail.trim(),
+            first_lead_id: input.leadId ?? null,
+            first_address: input.address ?? null,
+            source: input.source ?? 'outreach',
+            status: 'claimed',
+            claimed_at: new Date().toISOString(),
+        });
+
+    if (!error) return { claimed: true, normalizedEmail };
+    if (error.code === '23505') return { claimed: false, normalizedEmail };
+    return { claimed: false, normalizedEmail, error: error.message };
+}
+
+async function markRecipientLockSent(input: {
+    normalizedEmail: string;
+    gmailMessageId?: string | null;
+    gmailThreadId?: string | null;
+}): Promise<void> {
+    if (!input.normalizedEmail) return;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    await supabase
+        .from('outreach_email_locks')
+        .update({
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+            gmail_message_id: input.gmailMessageId ?? null,
+            gmail_thread_id: input.gmailThreadId ?? null,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('normalized_email', input.normalizedEmail)
+        .then(null, () => {});
+}
+
+async function markRecipientLockFailed(normalizedEmail: string, reason: string): Promise<void> {
+    if (!normalizedEmail) return;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    await supabase
+        .from('outreach_email_locks')
+        .update({ status: 'failed', failure_reason: reason.slice(0, 1000), updated_at: new Date().toISOString() })
+        .eq('normalized_email', normalizedEmail)
+        .then(null, () => {});
+}
+
 // Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
 // Re-scans existing score>=35 leads that were scraped without a room photo (empty_rooms=[]).
 // Fetches their HAR photos, runs Moondream on each, stages the first stageable room found.
@@ -785,6 +945,19 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
     const errors: string[] = [];
 
     for (const lead of leads) {
+        const agentKey = normalizeAgentEmail(lead.agent_email);
+        const lockCheck = await hasRecipientLock(agentKey);
+        if (lockCheck.error) {
+            failed++;
+            errors.push(`${lead.address}: email lock check failed (${lockCheck.error})`);
+            continue;
+        }
+        if (!agentKey || lockCheck.locked) {
+            await updateLeadStatus(lead.id, 'form_filled');
+            skipped++;
+            continue;
+        }
+
         const photos = await getHarListingPhotos(lead.listing_url, 8);
         if (photos.length < 2) { skipped++; continue; } // no interior photos
 
@@ -814,19 +987,32 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
 export async function submitStagingBatch(limit?: number): Promise<{ submitted: number; failed: number; errors: string[] }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Build the set of agent emails already in the pipeline — don't waste Kie.ai credits on them.
+    // Build two sets of agent emails to distinguish permanent vs temporary blocks.
+    // Permanent (emailed/form_filled): secondary listings for this agent will never be emailed; close them out.
+    // Temporary (staged/sending): primary lead is still in flight; leave secondary as scored so it can take over if the primary fails.
+    const { data: permanentAgents } = await supabase
+        .from('outreach_leads')
+        .select('agent_email')
+        .in('status', ['emailed', 'form_filled'])
+        .not('agent_email', 'is', null);
+    const permanentlyBlockedEmails = new Set<string>((permanentAgents || []).map((r: any) => normalizeAgentEmail(r.agent_email)));
+
     const { data: activeAgents } = await supabase
         .from('outreach_leads')
         .select('agent_email')
-        .in('status', ['staged', 'sending', 'emailed', 'form_filled'])
+        .in('status', ['staged', 'sending'])
         .not('agent_email', 'is', null);
-    const blockedEmails = new Set<string>((activeAgents || []).map((r: any) => (r.agent_email as string).toLowerCase()));
+    const blockedEmails = new Set<string>([
+        ...permanentlyBlockedEmails,
+        ...(activeAgents || []).map((r: any) => normalizeAgentEmail(r.agent_email)),
+    ]);
 
     let query = supabase
         .from('outreach_leads')
         .select('id, address, agent_email, empty_rooms, listing_url, icp_score')
         .in('status', ['scraped', 'scored'])
-        .not('empty_rooms', 'eq', '[]');
+        .not('empty_rooms', 'eq', '[]')
+        .not('agent_email', 'is', null); // never waste Kie.ai credits on leads we can't email
 
     if (typeof limit === 'number') query = query.limit(limit);
 
@@ -841,9 +1027,21 @@ export async function submitStagingBatch(limit?: number): Promise<{ submitted: n
     const batchEmails = new Set<string>();
 
     for (const lead of allPending) {
-        const agentKey = lead.agent_email ? (lead.agent_email as string).toLowerCase() : null;
+        const agentKey = normalizeAgentEmail(lead.agent_email);
 
-        // Skip if this realtor already has a staged/emailed lead, or was already queued in this batch.
+        // Skip if this realtor already has an in-flight or completed lead.
+        // Permanently blocked (already emailed/form_filled): close this lead out so it exits the queue.
+        // Temporarily blocked (staged/sending): leave as scored in case the primary lead fails.
+        const lockCheck = await hasRecipientLock(agentKey);
+        if (lockCheck.error) {
+            failed++;
+            errors.push(`${lead.address}: email lock check failed (${lockCheck.error})`);
+            continue;
+        }
+        if (lockCheck.locked || (agentKey && permanentlyBlockedEmails.has(agentKey))) {
+            await updateLeadStatus(lead.id, 'form_filled');
+            continue;
+        }
         if (agentKey && (blockedEmails.has(agentKey) || batchEmails.has(agentKey))) {
             continue;
         }
@@ -898,7 +1096,9 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
         .from('outreach_leads')
         .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
         .eq('status', 'staged')
-        .not('staging_task_id', 'is', null);
+        .not('staging_task_id', 'is', null)
+        .order('icp_score', { ascending: false })
+        .order('created_at', { ascending: true });
 
     if (typeof limit === 'number') query = query.limit(limit);
 
@@ -954,7 +1154,7 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
         }
 
         if (lead.agent_email) {
-            const agentKey = (lead.agent_email as string).toLowerCase();
+            const agentKey = normalizeAgentEmail(lead.agent_email);
 
             // Never send cold outreach twice to the same realtor — check in-batch Set first, then DB.
             if (batchEmailedAgents.has(agentKey)) {
@@ -991,6 +1191,7 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
             }
 
             const emailResult = await sendOutreachEmail({
+                leadId: lead.id,
                 agentName: lead.agent_name,
                 agentEmail: lead.agent_email,
                 address: lead.address,
@@ -1004,6 +1205,7 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
                 keywords: lead.keywords,
                 roomType: lead.empty_rooms?.[0]?.roomType,
                 listingUrl: lead.listing_url,
+                source: 'pipeline',
             });
             if (emailResult.success) {
                 await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
@@ -1013,6 +1215,9 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
                 // Throttle sends — Gmail flags burst patterns as spam.
                 // 45s gap makes each send look human regardless of batch size.
                 if (emailed < leads.length) await new Promise(r => setTimeout(r, 45_000));
+            } else if (emailResult.duplicate) {
+                await updateLeadStatus(lead.id, 'form_filled');
+                debug.push(`Duplicate blocked by recipient lock: ${lead.agent_email} (${lead.address})`);
             } else {
                 // Revert claim so the lead can be retried next run.
                 await updateLeadStatus(lead.id, 'staged');
@@ -1050,9 +1255,15 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
     const batchEmailedAgents = new Set<string>();
 
     for (const lead of leads) {
-        if (!lead.agent_email) { skipped++; continue; }
+        if (!lead.agent_email) {
+            // Consistent with pollAndEmailStagedLeads: close out no-email leads so they
+            // don't permanently occupy the staged queue and waste poll slots on every drain.
+            await updateLeadStatus(lead.id, 'form_filled');
+            skipped++;
+            continue;
+        }
 
-        const agentKey = (lead.agent_email as string).toLowerCase();
+        const agentKey = normalizeAgentEmail(lead.agent_email);
 
         // Never send cold outreach twice to the same realtor — in-batch Set first, then DB.
         if (batchEmailedAgents.has(agentKey)) {
@@ -1113,6 +1324,7 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
         }
 
         const emailResult = await sendOutreachEmail({
+            leadId: lead.id,
             agentName: lead.agent_name,
             agentEmail: lead.agent_email,
             address: lead.address,
@@ -1126,12 +1338,16 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
             keywords: lead.keywords,
             roomType: lead.empty_rooms?.[0]?.roomType,
             listingUrl: lead.listing_url,
+            source: 'backlog',
         });
 
         if (emailResult.success) {
             await updateLeadStatus(lead.id, 'emailed', { email_sent_at: new Date().toISOString() });
             batchEmailedAgents.add(agentKey);
             emailed++;
+        } else if (emailResult.duplicate) {
+            await updateLeadStatus(lead.id, 'form_filled');
+            skipped++;
         } else {
             // Revert claim so the lead can be retried.
             await updateLeadStatus(lead.id, 'staged');
@@ -1299,6 +1515,7 @@ async function getGmailAccessToken(): Promise<string> {
 }
 
 export async function sendOutreachEmail(lead: {
+    leadId?: string;
     agentName: string;
     agentEmail: string;
     address: string;
@@ -1312,14 +1529,31 @@ export async function sendOutreachEmail(lead: {
     keywords?: string[];
     roomType?: string;
     listingUrl?: string;
-}): Promise<{ success?: boolean; error?: string }> {
+    source?: string;
+}): Promise<{ success?: boolean; skipped?: boolean; duplicate?: boolean; normalizedEmail?: string; error?: string }> {
     if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN) {
         return { error: 'Gmail OAuth credentials not configured' };
     }
-    if (!lead.agentEmail) return { error: 'No agent email' };
+    const normalizedEmail = normalizeAgentEmail(lead.agentEmail);
+    if (!normalizedEmail) return { error: 'No agent email' };
 
     try {
         const accessToken = await getGmailAccessToken();
+        const claim = await claimRecipientForEmail({
+            agentEmail: lead.agentEmail,
+            leadId: lead.leadId,
+            address: lead.address,
+            source: lead.source ?? 'outreach',
+        });
+        if (claim.error) return { error: `Email duplicate lock failed: ${claim.error}`, normalizedEmail };
+        if (!claim.claimed) {
+            return {
+                skipped: true,
+                duplicate: true,
+                normalizedEmail,
+                error: `Duplicate recipient blocked: ${normalizedEmail}`,
+            };
+        }
 
         // Randomized subject lines — varied phrasing to avoid spam pattern detection
         const firstName = lead.agentName?.split(' ')[0] ?? 'there';
@@ -1821,12 +2055,15 @@ export async function sendOutreachEmail(lead: {
 
         if (!sendRes.ok) {
             const err = await sendRes.text();
-            return { error: `Gmail send error ${sendRes.status}: ${err}` };
+            const message = `Gmail send error ${sendRes.status}: ${err}`;
+            await markRecipientLockFailed(normalizedEmail, message);
+            return { error: message, normalizedEmail };
         }
 
         const sentMsg = await sendRes.json();
         const gmailMessageId: string = sentMsg.id ?? null;
         const gmailThreadId: string = sentMsg.threadId ?? null;
+        await markRecipientLockSent({ normalizedEmail, gmailMessageId, gmailThreadId });
 
         // Save thread/message IDs to the lead row so we can track replies
         if ((gmailThreadId || gmailMessageId) && lead.agentEmail) {
@@ -1851,10 +2088,11 @@ export async function sendOutreachEmail(lead: {
             } catch { /* label is best-effort */ }
         }
 
-        return { success: true };
+        return { success: true, normalizedEmail };
 
     } catch (error: any) {
-        return { error: error.message };
+        await markRecipientLockFailed(normalizedEmail, error.message || 'Unknown send error');
+        return { error: error.message, normalizedEmail };
     }
 }
 
@@ -2117,18 +2355,19 @@ export async function runPipelineSession(config: {
     scrapesPerSession: number;
     sessionId?: string;
     minLeads?: number;
-    minEmptyRooms?: number;
 }): Promise<{ processed: number; errors: string[]; debug: string[]; sessionId: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const sessionId = config.sessionId || crypto.randomUUID();
     const errors: string[] = [];
     const debug: string[] = [];
     let processed = 0;
-    const minEmptyRooms = config.minEmptyRooms ?? 5;
     // Scrape enough inventory to fill the session target without overfetching every city.
     // Large sessions used to scrape 4x the session target PER city, which could exceed
     // Vercel's 5-minute function limit. We now distribute the fetch budget across cities.
-    const cityCount = Math.max(config.cities.length, 1);
+    const candidateCities = config.cities.length > 0 ? config.cities : getDefaultTargetCities();
+    const rotatingCityCount = Math.max(6, Math.min(12, Math.ceil(config.scrapesPerSession / 4)));
+    const activeCities = selectRotatingCities(candidateCities, rotatingCityCount);
+    const cityCount = Math.max(activeCities.length, 1);
     const bufferMultiplier = cityCount <= 2 ? 4 : cityCount <= 5 ? 3 : 2;
     const batchSize = Math.max(20, Math.ceil((config.scrapesPerSession * bufferMultiplier) / cityCount));
     const harPages = Math.min(2, Math.max(1, Math.ceil(batchSize / 50)));
@@ -2158,33 +2397,43 @@ export async function runPipelineSession(config: {
     await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_START__' }).then(null, () => {});
 
     await log(`Session ${sessionId} started`);
-    await log(`Scraping ${config.cities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
+    await log(`City pool: ${candidateCities.length} configured markets`);
+    await log(`Rotating into ${activeCities.length} active markets this session: ${activeCities.join(', ')}`);
+    await log(`Scraping ${activeCities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
 
     // ── Step 1: Scrape all cities via HAR (+ homes.com fallback) in parallel ──
     // City lambdas push into local arrays then we log after all resolve
     const cityResults = await Promise.all(
-        config.cities.map(async (city) => {
+        activeCities.map(async (city) => {
             const lines: string[] = [];
-            const harResult = await scrapeHarCity(city, batchSize, harPages);
+            const market = resolveTargetMarket(city);
+            const harResult = market.sourcePriority.includes('har')
+                ? await scrapeHarCity(city, batchSize, harPages)
+                : { listings: [] as ScrapedListing[] };
             if (harResult.listings && harResult.listings.length > 0) {
-                lines.push(`[${city}] HAR: ${harResult.listings.length} listings`);
-                return { city, listings: harResult.listings, lines };
+                lines.push(`[${market.label}] HAR: ${harResult.listings.length} listings`);
+                return { city: market.label, listings: harResult.listings, lines };
             }
-            if (harResult.error) lines.push(`[${city}] HAR error: ${harResult.error}`);
-            else lines.push(`[${city}] HAR: 0 listings — trying homes.com...`);
+            if ((harResult as { error?: string }).error) {
+                lines.push(`[${market.label}] HAR error: ${(harResult as { error?: string }).error}`);
+            } else if (market.sourcePriority.includes('har')) {
+                lines.push(`[${market.label}] HAR: 0 listings - trying homes.com...`);
+            } else {
+                lines.push(`[${market.label}] Using homes.com as primary source`);
+            }
 
             const homesResult = await scrapeHomesCity(city, batchSize);
             if (homesResult.listings && homesResult.listings.length > 0) {
-                lines.push(`[${city}] homes.com: ${homesResult.listings.length} listings`);
-                return { city, listings: homesResult.listings, lines };
+                lines.push(`[${market.label}] homes.com: ${homesResult.listings.length} listings`);
+                return { city: market.label, listings: homesResult.listings, lines };
             }
             if (homesResult.error) {
-                errors.push(`${city}: ${homesResult.error}`);
-                lines.push(`[${city}] homes.com error: ${homesResult.error}`);
+                errors.push(`${market.label}: ${homesResult.error}`);
+                lines.push(`[${market.label}] homes.com error: ${homesResult.error}`);
             } else {
-                lines.push(`[${city}] homes.com: 0 listings`);
+                lines.push(`[${market.label}] homes.com: 0 listings`);
             }
-            return { city, listings: [] as ScrapedListing[], lines };
+            return { city: market.label, listings: [] as ScrapedListing[], lines };
         })
     );
 
@@ -2217,6 +2466,7 @@ export async function runPipelineSession(config: {
     if (newListings.length === 0) {
         await log('All scraped listings already in DB — no new leads this session');
         await flushLog();
+        await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
         return { processed: 0, errors, debug, sessionId };
     }
 
@@ -2254,7 +2504,7 @@ export async function runPipelineSession(config: {
         return bVacant - aVacant || (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0);
     });
 
-    await log(`Target: ${minEmptyRooms} empty rooms (checking up to ${MAX_MOONDREAM} leads with Moondream)`);
+    await log(`Checking up to ${MAX_MOONDREAM} leads with Moondream (no empty-room cap)`);
 
     for (const listing of toProcess) {
         // Check for stop request every 3rd lead to keep DB calls low
@@ -2296,11 +2546,8 @@ export async function runPipelineSession(config: {
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
         let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
 
-        // Run Moondream when:
-        //   (a) still looking for empty rooms, OR
-        //   (b) listing scores 25+ — qualifies for furnished redesign even if empty target is met
-        const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM &&
-            (emptyRoomsFound < minEmptyRooms || listing.score >= 25);
+        // Run Moondream on every lead up to the per-session budget — no cap on empty rooms found.
+        const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM;
 
         if (shouldRunMoondream) {
             moondreamChecked++;
@@ -2316,17 +2563,15 @@ export async function runPipelineSession(config: {
                 if (isEmpty) {
                     emptyRooms.push({ roomType, imageUrl: photo });
                     emptyRoomsFound++;
-                    await log(`  → Empty ${roomType}! Total: ${emptyRoomsFound}/${minEmptyRooms}`);
+                    await log(`  → Empty ${roomType}! Total this session: ${emptyRoomsFound}`);
                     break; // Found confirmed empty stageable room — stop scanning this listing
                 }
                 // Furnished stageable room — record first one found, keep scanning for empty
                 if (!furnishedRoom) furnishedRoom = { roomType, imageUrl: photo };
             }
             if (!foundStageable) await log(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
-        } else if (moondreamChecked >= MAX_MOONDREAM) {
-            await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} limit reached)`);
         } else {
-            await log(`  [${listing.address}] Skipping Moondream (empty target met, score ${listing.score} < 25)`);
+            await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} per-session limit reached)`);
         }
 
         const saveResult = await saveLead({ ...listing, emptyRooms });
@@ -2345,6 +2590,20 @@ export async function runPipelineSession(config: {
 
         const leadId = saveResult.lead?.id;
         if (!leadId) continue;
+
+        const recipientKey = normalizeAgentEmail(listing.agentEmail);
+        const lockCheck = await hasRecipientLock(recipientKey);
+        if (lockCheck.error) {
+            await log(`[${listing.city}] ${listing.address} - email lock check failed: ${lockCheck.error}`);
+            errors.push(`Email lock check failed: ${lockCheck.error}`);
+            await updateLeadStatus(leadId, 'form_filled');
+            continue;
+        }
+        if (!recipientKey || lockCheck.locked) {
+            await updateLeadStatus(leadId, 'form_filled');
+            await log(`[${listing.city}] ${listing.address} - skipped staging (recipient already contacted or no email)`);
+            continue;
+        }
 
         // Mark as scored (ICP score was computed — separate from 'scraped' baseline)
         await updateLeadStatus(leadId, 'scored');
@@ -2381,7 +2640,7 @@ export async function runPipelineSession(config: {
     if (allListings.length === 0) {
         await log('No listings found — check city list and Zyte API key');
     }
-    await log(`Session complete: ${processed} saved, ${emptyRoomsFound}/${minEmptyRooms} empty rooms found`);
+    await log(`Session complete: ${processed} saved, ${emptyRoomsFound} empty rooms found across ${moondreamChecked} Moondream checks`);
     await flushLog();
     await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
     return { processed, errors, debug, sessionId };
@@ -2413,7 +2672,7 @@ export interface PipelineConfig {
 }
 
 
-export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string }> {
+export async function savePipelineConfig(config: PipelineConfig): Promise<{ success?: boolean; error?: string; warning?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     // Gracefully handle columns that may not exist yet in older deployments.
     const row = { id: 1, ...config, updated_at: new Date().toISOString() };
@@ -2422,18 +2681,25 @@ export async function savePipelineConfig(config: PipelineConfig): Promise<{ succ
         const { cron_enabled: _ce, emails_per_day: _epd, ...rowCore } = row;
         const { error: e2 } = await supabase.from('pipeline_config').upsert(rowCore, { onConflict: 'id' });
         if (e2) return { error: e2.message };
+        return {
+            success: true,
+            warning: 'Live database is missing pipeline_config.cron_enabled and/or pipeline_config.emails_per_day. Schedule settings are partially saved; run the pending Supabase migrations to make cron limits and daily email volume work correctly.',
+        };
     } else if (error) return { error: error.message };
     return { success: true };
 }
 
-export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; error?: string }> {
+export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; error?: string; warning?: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.from('pipeline_config').select('*').eq('id', 1).single();
     const defaults: PipelineConfig = {
         sessions_per_day: 3, scrapes_per_session: 10, emails_per_day: 10, cron_enabled: true,
-        cities: ['Houston', 'Katy', 'Sugar Land', 'Spring', 'Pearland', 'The Woodlands', 'Cypress', 'Pasadena', 'Humble', 'Friendswood'],
+        cities: getDefaultTargetCities(),
     };
     if (error || !data) return { config: defaults };
+    const missingModernColumns =
+        !Object.prototype.hasOwnProperty.call(data, 'emails_per_day') ||
+        !Object.prototype.hasOwnProperty.call(data, 'cron_enabled');
     return {
         config: {
             sessions_per_day: data.sessions_per_day,
@@ -2442,6 +2708,9 @@ export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; e
             cities: data.cities,
             cron_enabled: data.cron_enabled ?? true,
         },
+        warning: missingModernColumns
+            ? 'Live database is missing pipeline_config.cron_enabled and/or pipeline_config.emails_per_day. Cron is falling back to defaults, so 50 emails/day is not active in production yet.'
+            : undefined,
     };
 }
 
@@ -2488,7 +2757,7 @@ export async function countTodayCronRuns(): Promise<number> {
 }
 
 // Returns cron schedule health info for the dashboard.
-// Cron fires hourly 13–22 UTC (8am–5pm CDT). Slots expected so far today = hours elapsed in that window.
+// Cron fires hourly 15–23 UTC plus 00 UTC (8am–5pm Pacific during DST).
 export async function getCronStatus(): Promise<{
     cron_enabled: boolean;
     sessions_per_day: number;
@@ -2502,26 +2771,23 @@ export async function getCronStatus(): Promise<{
     const { config } = await loadPipelineConfig();
 
     const now = new Date();
-    const utcHour = now.getUTCHours();
-    // Cron schedule: 13–22 UTC inclusive (10 slots/day)
-    const CRON_HOURS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
-    const passedHours = CRON_HOURS.filter(h => h <= utcHour);
-    const expected_so_far = passedHours.length;
+    const CRON_HOURS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 0];
+    const cronTimes = CRON_HOURS.map(hour => {
+        const candidate = new Date(now);
+        candidate.setUTCMinutes(0, 0, 0);
+        candidate.setUTCHours(hour);
+        if (hour === 0 && now.getUTCHours() !== 0) candidate.setUTCDate(candidate.getUTCDate() + 1);
+        return candidate;
+    }).sort((a, b) => a.getTime() - b.getTime());
 
-    // Next scheduled UTC time
-    const nextHour = CRON_HOURS.find(h => h > utcHour);
-    let next_scheduled_utc: string;
-    if (nextHour !== undefined) {
-        const next = new Date(now);
-        next.setUTCHours(nextHour, 0, 0, 0);
-        next_scheduled_utc = next.toISOString();
-    } else {
-        // Tomorrow at 13 UTC
-        const next = new Date(now);
+    const expected_so_far = cronTimes.filter(time => time.getTime() <= now.getTime()).length;
+
+    const nextCronTime = cronTimes.find(time => time.getTime() > now.getTime()) ?? (() => {
+        const next = new Date(cronTimes[0]);
         next.setUTCDate(next.getUTCDate() + 1);
-        next.setUTCHours(13, 0, 0, 0);
-        next_scheduled_utc = next.toISOString();
-    }
+        return next;
+    })();
+    const next_scheduled_utc = nextCronTime.toISOString();
 
     // Last cron run — try to filter by trigger='cron', fall back to any run
     const today = new Date();
@@ -2561,7 +2827,7 @@ export async function getCronStatus(): Promise<{
         last_cron_run,
         next_scheduled_utc,
         expected_so_far,
-        schedule: 'Hourly 8am–5pm CDT (13–22 UTC)',
+        schedule: 'Hourly 8am–5pm Pacific during DST (15–23 UTC, plus 00 UTC)',
     };
 }
 
@@ -2595,27 +2861,40 @@ export interface SiteTestResult {
     error?: string;
 }
 
-// City-aware URL builders for each site (TX cities)
+// City-aware URL builders for site testing
 const SITE_URL_BUILDERS: Record<string, (city: string) => string | null> = {
-    'har.com': (city) =>
-        `https://www.har.com/search/dosearch?type=residential&minprice=150000&maxprice=700000&status=A&city=${encodeURIComponent(city)}`,
+    'har.com': (city) => {
+        const market = resolveTargetMarket(city);
+        return market.state === 'TX'
+            ? `https://www.har.com/search/dosearch?type=residential&minprice=150000&maxprice=700000&status=A&city=${encodeURIComponent(market.city)}`
+            : null;
+    },
     'homes.com': (city) => {
-        const slug = CITY_SLUGS[city] || `${city.toLowerCase().replace(/\s+/g, '-')}-tx`;
-        return `https://www.homes.com/homes-for-sale/${slug}/`;
+        const market = resolveTargetMarket(city);
+        return `https://www.homes.com/homes-for-sale/${market.homesSlug}/`;
     },
-    'homefinder.com': (city) =>
-        `https://homefinder.com/homes-for-sale/${city.toLowerCase().replace(/\s+/g, '-')}-tx`,
-    'estately.com': (city) =>
-        `https://www.estately.com/TX/${city.replace(/\s+/g, '_')}`,
+    'homefinder.com': (city) => {
+        const market = resolveTargetMarket(city);
+        return `https://homefinder.com/homes-for-sale/${market.city.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+    },
+    'estately.com': (city) => {
+        const market = resolveTargetMarket(city);
+        return `https://www.estately.com/${market.state}/${market.city.replace(/\s+/g, '_')}`;
+    },
     'century21.com': (city) => {
-        const slug = city.toLowerCase().replace(/\s+/g, '-');
-        const code = city.toUpperCase().replace(/\s+/g, '');
-        return `https://www.century21.com/real-estate/${slug}-tx/LCTX${code}/`;
+        const market = resolveTargetMarket(city);
+        const slug = `${market.city.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+        const code = `${market.state}${market.city}`.toUpperCase().replace(/\s+/g, '');
+        return `https://www.century21.com/real-estate/${slug}/LC${code}/`;
     },
-    'coldwellbanker.com': (city) =>
-        `https://www.coldwellbanker.com/for-sale/${city.replace(/\s+/g, '-')}-TX`,
-    'homepath.fanniemae.com': (city) =>
-        `https://homepath.fanniemae.com/listings?location=${encodeURIComponent(`${city}, TX`)}`,
+    'coldwellbanker.com': (city) => {
+        const market = resolveTargetMarket(city);
+        return `https://www.coldwellbanker.com/for-sale/${market.city.replace(/\s+/g, '-')}-${market.state}`;
+    },
+    'homepath.fanniemae.com': (city) => {
+        const market = resolveTargetMarket(city);
+        return `https://homepath.fanniemae.com/listings?location=${encodeURIComponent(`${market.city}, ${market.state}`)}`;
+    },
     'remax.com': (_city) => null, // needs numeric city ID — use fixed test URL
 };
 

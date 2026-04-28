@@ -9,15 +9,19 @@ CREATE TABLE IF NOT EXISTS public.projects (
 -- Enable RLS for Projects
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own projects" ON public.projects;
 CREATE POLICY "Users can view their own projects" ON public.projects
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own projects" ON public.projects;
 CREATE POLICY "Users can insert their own projects" ON public.projects
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own projects" ON public.projects;
 CREATE POLICY "Users can update their own projects" ON public.projects
     FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own projects" ON public.projects;
 CREATE POLICY "Users can delete their own projects" ON public.projects
     FOR DELETE USING (auth.uid() = user_id);
 
@@ -41,11 +45,14 @@ CREATE TABLE IF NOT EXISTS public.assets (
 -- Enable RLS for Assets
 ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own assets" ON public.assets;
 CREATE POLICY "Users can view their own assets" ON public.assets
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own assets" ON public.assets;
 CREATE POLICY "Users can insert their own assets" ON public.assets
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own assets" ON public.assets;
 CREATE POLICY "Users can delete their own assets" ON public.assets
     FOR DELETE USING (auth.uid() = user_id);

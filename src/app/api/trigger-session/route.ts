@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { runPipelineSession, pollAndEmailStagedLeads, submitStagingBatch } from '@/app/actions/outreach';
+import { runPipelineSession, pollAndEmailStagedLeads, submitStagingBatch, loadPipelineConfig } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
 // Vercel Pro max serverless duration — pipeline must complete within 5 min
@@ -42,8 +42,11 @@ export async function POST(request: Request) {
         await submitStagingBatch();
 
         // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones.
-        // Cap at 3 — the 45s inter-send delay means more than ~4 leads risks hitting the 300s Vercel limit.
-        const emailResult = await pollAndEmailStagedLeads(3);
+        // Use emails_per_day / 10 cron slots (same formula as the cron handler), capped at 3 for
+        // manual runs since the 45s inter-send delay means >3 risks the 300s Vercel limit.
+        const { config: cfg } = await loadPipelineConfig();
+        const manualPerRun = Math.min(3, Math.max(1, Math.round((cfg?.emails_per_day ?? 10) / 10)));
+        const emailResult = await pollAndEmailStagedLeads(manualPerRun);
         await logToSession(emailResult.debug);
 
         // Step 3: Scrape + score + stage new leads
@@ -74,6 +77,7 @@ export async function POST(request: Request) {
             errors: result.errors,
         });
     } catch (err: any) {
+        await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
         if (runId) {
             await supabase
                 .from('pipeline_runs')
