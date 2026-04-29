@@ -207,7 +207,7 @@ export async function scrapeHomesCity(city: string, maxListings: number = 20): P
     const slug = market.homesSlug;
     // Extract expected 2-letter state from slug (e.g. "phoenix-az" → "AZ")
     const expectedState = slug.split('-').pop()?.toUpperCase() || '';
-    const url = `https://www.homes.com/homes-for-sale/${slug}/`;
+    const url = `https://www.homes.com/${slug}/`;
 
     try {
         const { html, error } = await zyteGet(url, market.city);
@@ -539,29 +539,60 @@ export async function detectRoom(imageUrl: string): Promise<{
     confidence: number;
     roomType: string;
     isExterior: boolean;
+    moondreamQueries: number;
     error?: string;
 }> {
-    const REJECT = { isEmpty: false, isStageable: false, isInterior: false, confidence: 0, roomType: 'unknown', isExterior: true };
+    const REJECT = { isEmpty: false, isStageable: false, isInterior: false, confidence: 0, roomType: 'unknown', isExterior: true, moondreamQueries: 0 };
     if (!MOONDREAM_API_KEY) return { ...REJECT, error: 'MOONDREAM_API_KEY not configured' };
 
     try {
-        // Moondream requires base64 — fetch with browser-like headers to bypass hotlink protection
-        const imageOrigin = new URL(imageUrl).origin;
-        const imgRes = await fetch(imageUrl, {
-            headers: {
-                'Referer': imageOrigin,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Cache-Control': 'no-cache',
-            },
-        });
-        if (!imgRes.ok) return { ...REJECT, error: `Image fetch failed: ${imgRes.status}` };
+        let moondreamQueries = 0;
+        const fetchImageAsDataUrl = async (url: string): Promise<{ imageData?: string; error?: string }> => {
+            const imageOrigin = new URL(url).origin;
+            const directRes = await fetch(url, {
+                headers: {
+                    'Referer': imageOrigin,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Cache-Control': 'no-cache',
+                },
+            });
 
-        const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
-        const arrayBuffer = await imgRes.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
-        const imageData = `data:${contentType};base64,${base64}`;
+            if (directRes.ok) {
+                const contentType = directRes.headers.get('content-type') || 'image/jpeg';
+                const arrayBuffer = await directRes.arrayBuffer();
+                const base64 = Buffer.from(arrayBuffer).toString('base64');
+                return { imageData: `data:${contentType};base64,${base64}` };
+            }
+
+            // homes.com images are hotlink-protected; Zyte can fetch the raw bytes server-side.
+            if (url.includes('images.homes.com')) {
+                const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
+                });
+                if (!zyteRes.ok) return { error: `Image fetch failed: ${directRes.status}` };
+
+                const zyteData = await zyteRes.json();
+                const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((header: { name?: string; value?: string }) =>
+                    header?.name?.toLowerCase() === 'content-type'
+                );
+                const contentType = contentTypeHeader?.value || 'image/jpeg';
+                if (!zyteData.httpResponseBody) return { error: `Image fetch failed: ${directRes.status}` };
+                return { imageData: `data:${contentType};base64,${zyteData.httpResponseBody}` };
+            }
+
+            return { error: `Image fetch failed: ${directRes.status}` };
+        };
+
+        // Moondream requires base64 — fetch with browser-like headers and fall back to Zyte for hotlinked homes.com images.
+        const { imageData, error: imageErr } = await fetchImageAsDataUrl(imageUrl);
+        if (imageErr || !imageData) return { ...REJECT, error: imageErr || 'Image fetch failed' };
 
         const moonHeaders = {
             'X-Moondream-Auth': MOONDREAM_API_KEY,
@@ -628,8 +659,31 @@ export async function detectRoom(imageUrl: string): Promise<{
         const hasFurniture = emptyAnswer.startsWith('yes');
         const isEmpty = !hasFurniture;
 
-        // Has furniture → not stageable (but is interior, so not a hard reject)
-        if (!isEmpty) return { ...REJECT, isEmpty: false, isExterior: false, isInterior: true };
+        // Has furniture — not stageable for empty-room staging, but may qualify for redesign.
+        // Run Q5 to get the room type so the redesign path has something to work with.
+        if (!isEmpty) {
+            await new Promise(r => setTimeout(r, 400));
+            const furnTypeRes = await fetch('https://api.moondream.ai/v1/query', {
+                method: 'POST',
+                headers: moonHeaders,
+                body: JSON.stringify({
+                    image_url: imageData,
+                    question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, or dining room.',
+                    stream: false,
+                }),
+            });
+            let furnRoomType = 'room';
+            if (furnTypeRes.ok) {
+                const furnTypeData = await furnTypeRes.json();
+                const furnTypeAnswer: string = (furnTypeData.answer || furnTypeData.result || '').toLowerCase().trim();
+                furnRoomType = furnTypeAnswer.includes('bedroom') ? 'bedroom'
+                    : furnTypeAnswer.includes('living') ? 'living room'
+                    : furnTypeAnswer.includes('kitchen') ? 'kitchen'
+                    : furnTypeAnswer.includes('dining') ? 'dining room'
+                    : 'room';
+            }
+            return { ...REJECT, isEmpty: false, isExterior: false, isInterior: true, roomType: furnRoomType };
+        }
 
         // ── Q3: Floor plan rejection ───────────────────────────────────────────
         // Floor plans have no furniture so they pass Q2. Explicitly reject them.
@@ -700,7 +754,8 @@ export async function detectRoom(imageUrl: string): Promise<{
             isInterior: true,
             confidence: 90,
             roomType,
-            isExterior: false
+            isExterior: false,
+            moondreamQueries,
         };
 
     } catch (error: any) {
@@ -948,6 +1003,17 @@ async function markRecipientLockFailed(normalizedEmail: string, reason: string):
         .then(null, () => {});
 }
 
+async function releaseFailedRecipientLock(normalizedEmail: string): Promise<void> {
+    if (!normalizedEmail) return;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    await supabase
+        .from('outreach_email_locks')
+        .delete()
+        .eq('normalized_email', normalizedEmail)
+        .eq('status', 'failed')
+        .then(null, () => {});
+}
+
 // Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
 // Re-scans existing score>=35 leads that were scraped without a room photo (empty_rooms=[]).
 // Fetches their HAR photos, runs Moondream on each, stages the first stageable room found.
@@ -985,7 +1051,7 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
             continue;
         }
 
-        const photos = await getHarListingPhotos(lead.listing_url, 8);
+        const photos = await getListingPhotos(lead.listing_url, 8);
         if (photos.length < 2) { skipped++; continue; } // no interior photos
 
         let stagedThisLead = false;
@@ -1096,11 +1162,17 @@ export async function submitStagingBatch(limit?: number): Promise<{ submitted: n
 
 // Upload a remote image URL to Supabase storage and return the permanent public URL.
 // Kie.ai returns tempfile.aiquickdraw.com URLs that expire — this makes them permanent.
+// Capped at 25s total so a slow Kie.ai CDN response never blocks the email pipeline.
 async function uploadStagedImage(tempUrl: string, leadId: string): Promise<string> {
+    const deadline = new Promise<string>(resolve => setTimeout(() => resolve(tempUrl), 25_000));
+    return Promise.race([_doUploadStagedImage(tempUrl, leadId), deadline]);
+}
+
+async function _doUploadStagedImage(tempUrl: string, leadId: string): Promise<string> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     try {
-        const res = await fetch(tempUrl);
-        if (!res.ok) return tempUrl; // fall back to temp URL if fetch fails
+        const res = await fetch(tempUrl, { signal: AbortSignal.timeout(20_000) });
+        if (!res.ok) return tempUrl;
         const buffer = Buffer.from(await res.arrayBuffer());
         const path = `outreach/staged/${leadId}.jpg`;
         const { error } = await supabase.storage.from('uploads').upload(path, buffer, {
@@ -1113,6 +1185,73 @@ async function uploadStagedImage(tempUrl: string, leadId: string): Promise<strin
     } catch {
         return tempUrl;
     }
+}
+
+async function fetchRemoteImageBuffer(url: string): Promise<{ buffer?: Buffer; contentType?: string; error?: string }> {
+    try {
+        const imageOrigin = new URL(url).origin;
+        const directRes = await fetch(url, {
+            headers: {
+                'Referer': imageOrigin,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            },
+        });
+        if (directRes.ok) {
+            return {
+                buffer: Buffer.from(await directRes.arrayBuffer()),
+                contentType: directRes.headers.get('content-type') || 'image/jpeg',
+            };
+        }
+
+        if (url.includes('images.homes.com') && ZYTE_API_KEY) {
+            const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
+            });
+            if (!zyteRes.ok) return { error: `Image fetch failed: ${directRes.status}` };
+            const zyteData = await zyteRes.json();
+            const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((header: { name?: string; value?: string }) =>
+                header?.name?.toLowerCase() === 'content-type'
+            );
+            if (!zyteData.httpResponseBody) return { error: `Image fetch failed: ${directRes.status}` };
+            return {
+                buffer: Buffer.from(zyteData.httpResponseBody, 'base64'),
+                contentType: contentTypeHeader?.value || 'image/jpeg',
+            };
+        }
+
+        return { error: `Image fetch failed: ${directRes.status}` };
+    } catch (err: any) {
+        return { error: err.message };
+    }
+}
+
+async function uploadSourceImageForStaging(imageUrl: string): Promise<string> {
+    if (!imageUrl.includes('images.homes.com')) return imageUrl;
+    // 25s cap — if Supabase upload is slow, fall back to original URL so staging isn't blocked.
+    const deadline = new Promise<string>(resolve => setTimeout(() => resolve(imageUrl), 25_000));
+    return Promise.race([_doUploadSourceImage(imageUrl), deadline]);
+}
+
+async function _doUploadSourceImage(imageUrl: string): Promise<string> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const fetched = await fetchRemoteImageBuffer(imageUrl);
+    if (!fetched.buffer) return imageUrl;
+
+    const ext = fetched.contentType?.includes('webp') ? 'webp' : 'jpg';
+    const path = `outreach/source/${hashString(imageUrl)}.${ext}`;
+    const { error } = await supabase.storage.from('uploads').upload(path, fetched.buffer, {
+        contentType: fetched.contentType || 'image/jpeg',
+        upsert: true,
+    });
+    if (error) return imageUrl;
+    const { data } = supabase.storage.from('uploads').getPublicUrl(path);
+    return data.publicUrl || imageUrl;
 }
 
 // Poll all staged leads, save the generated image URL, then send outreach email
@@ -1239,9 +1378,8 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
                 batchEmailedAgents.add(agentKey);
                 emailed++;
                 debug.push(`✉ Email sent → ${lead.agent_email} (${lead.address})`);
-                // Throttle sends — Gmail flags burst patterns as spam.
-                // 45s gap makes each send look human regardless of batch size.
-                if (emailed < leads.length) await new Promise(r => setTimeout(r, 45_000));
+                // 8s gap avoids Gmail burst detection while keeping throughput usable.
+                if (emailed < leads.length) await new Promise(r => setTimeout(r, 8_000));
             } else if (emailResult.duplicate) {
                 await updateLeadStatus(lead.id, 'form_filled');
                 debug.push(`Duplicate blocked by recipient lock: ${lead.agent_email} (${lead.address})`);
@@ -1454,9 +1592,10 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string, redesig
     if (!KIE_API_KEY) return { error: 'KIE_AI_API_KEY not configured' };
 
     try {
+        const sourceImageUrl = await uploadSourceImageForStaging(imageUrl);
         const prompt = redesign
-            ? `Professionally restage this ${roomType} with premium contemporary furniture and luxury real estate staging. Replace current furnishings with high-end modern pieces. Keep all structural elements (walls, windows, floor, ceiling, fixtures) completely identical. Magazine-quality, photorealistic real estate photography.`
-            : `Add fully furnished ${roomType} decor in modern contemporary style. Keep all structural elements (walls, windows, floor, ceiling) identical. High quality, photorealistic real estate photography.`;
+            ? `Restyle this ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`
+            : `Virtually stage this empty ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`;
 
         const res = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
             method: 'POST',
@@ -1468,7 +1607,7 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string, redesig
                 model: 'google/nano-banana-edit',
                 input: {
                     prompt,
-                    image_urls: [imageUrl],
+                    image_urls: [sourceImageUrl],
                     aspect_ratio: 'auto',
                 },
             }),
@@ -2084,6 +2223,7 @@ export async function sendOutreachEmail(lead: {
             const err = await sendRes.text();
             const message = `Gmail send error ${sendRes.status}: ${err}`;
             await markRecipientLockFailed(normalizedEmail, message);
+            await releaseFailedRecipientLock(normalizedEmail);
             return { error: message, normalizedEmail };
         }
 
@@ -2119,6 +2259,7 @@ export async function sendOutreachEmail(lead: {
 
     } catch (error: any) {
         await markRecipientLockFailed(normalizedEmail, error.message || 'Unknown send error');
+        await releaseFailedRecipientLock(normalizedEmail);
         return { error: error.message, normalizedEmail };
     }
 }
@@ -2191,11 +2332,125 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     }
 }
 
+function getStageabilitySignals(listing: Partial<ScrapedListing>): {
+    vacancyHits: number;
+    negativeHits: number;
+    likelihoodScore: number;
+} {
+    const text = `${listing.keywords?.join(' ') || ''} ${listing.address || ''}`.toLowerCase();
+    const vacancyKeywords = [
+        'vacant', 'unfurnished', 'empty', 'unoccupied', 'immediate occupancy', 'no furnit',
+        'investor', 'fixer', 'estate sale', 'estate-owned', 'estate owned', 'cash only',
+        'needs work', 'needs tlc', 'handyman', 'rehab', 'remodel', 'renovation',
+        'price reduced', 'motivated seller', 'as-is', 'as is', 'tenant moved'
+    ];
+    const negativeKeywords = [
+        'fully furnished', 'turnkey', 'stunning updated', 'beautifully renovated',
+        'luxury', 'designer', 'move-in ready', 'move in ready', 'resort-style',
+        'virtual staged', 'virtually staged', 'photo(s) has been virtually staged'
+    ];
+    const vacancyHits = vacancyKeywords.filter((keyword) => text.includes(keyword)).length;
+    const negativeHits = negativeKeywords.filter((keyword) => text.includes(keyword)).length;
+    const likelihoodScore =
+        vacancyHits * 4 +
+        Math.min((listing.daysOnMarket || 0) / 15, 4) +
+        ((listing.priceReduced ? 2 : 0)) +
+        (((listing.photoCount || 99) <= 12) ? 2 : 0) -
+        negativeHits * 3;
+
+    return { vacancyHits, negativeHits, likelihoodScore };
+}
+
+async function getHomesListingPhotos(propertyUrl: string, maxPhotos = 10): Promise<string[]> {
+    if (!propertyUrl) return [];
+
+    try {
+        const { html, error } = await zyteGet(propertyUrl);
+        if (error || !html) {
+            console.warn(`[getHomesListingPhotos] Zyte error for ${propertyUrl}: ${error}`);
+            return [];
+        }
+
+        const listingSlug = propertyUrl.match(/\/property\/([^/]+)\//i)?.[1]?.toLowerCase() || '';
+        const urls = [...new Set(
+            [...html.matchAll(/https:\/\/images\.homes\.com\/[^"'\s)]+/g)]
+                .map(m => m[0])
+                .filter((imageUrl) => {
+                    const lower = imageUrl.toLowerCase();
+                    if (!lower.match(/\.(jpg|jpeg|webp)(\?|$)/)) return false;
+                    if (lower.includes('/brands/')) return false;
+                    return !listingSlug || lower.includes(listingSlug);
+                })
+        )];
+
+        return urls.slice(0, maxPhotos);
+    } catch (err: any) {
+        console.warn(`[getHomesListingPhotos] error for ${propertyUrl}: ${err.message}`);
+        return [];
+    }
+}
+
+async function getHomesListingContext(propertyUrl: string, maxPhotos = 10): Promise<{
+    photos: string[];
+    agentEmail?: string;
+    agentPhone?: string;
+    agentName?: string;
+}> {
+    if (!propertyUrl) return { photos: [] };
+
+    try {
+        const { html, error } = await zyteGet(propertyUrl);
+        if (error || !html) {
+            console.warn(`[getHomesListingContext] Zyte error for ${propertyUrl}: ${error}`);
+            return { photos: [] };
+        }
+
+        const listingSlug = propertyUrl.match(/\/property\/([^/]+)\//i)?.[1]?.toLowerCase() || '';
+        const photos = [...new Set(
+            [...html.matchAll(/https:\/\/images\.homes\.com\/[^"'\s)]+/g)]
+                .map(m => m[0])
+                .filter((imageUrl) => {
+                    const lower = imageUrl.toLowerCase();
+                    if (!lower.match(/\.(jpg|jpeg|webp)(\?|$)/)) return false;
+                    if (lower.includes('/brands/')) return false;
+                    return !listingSlug || lower.includes(listingSlug);
+                })
+        )].slice(0, maxPhotos);
+
+        const emailMatches = [...html.matchAll(/"email"\s*:\s*"([^"]+)"/gi)]
+            .map(match => match[1].trim().toLowerCase())
+            .filter(email => email && !email.endsWith('@homes.com'));
+        const phoneMatches = [...html.matchAll(/"telephone"\s*:\s*"([^"]+)"/gi)]
+            .map(match => match[1].trim())
+            .filter(Boolean);
+        const nameMatches = [...html.matchAll(/"name"\s*:\s*"([^"]+)"/gi)]
+            .map(match => match[1].trim())
+            .filter(name => name && !/^homes\.com$/i.test(name));
+
+        return {
+            photos,
+            agentEmail: emailMatches[0],
+            agentPhone: phoneMatches[0],
+            agentName: nameMatches.find(name => !/unit\s+\d+/i.test(name)),
+        };
+    } catch (err: any) {
+        console.warn(`[getHomesListingContext] error for ${propertyUrl}: ${err.message}`);
+        return { photos: [] };
+    }
+}
+
+async function getListingPhotos(propertyUrl: string, maxPhotos = 10): Promise<string[]> {
+    if (propertyUrl.includes('homes.com/')) {
+        return getHomesListingPhotos(propertyUrl, maxPhotos);
+    }
+    return getHarListingPhotos(propertyUrl, maxPhotos);
+}
+
 // Scans photos from a HAR detail page and returns the first confirmed interior photo.
 // Uses Moondream to reject exterior shots (front of house, yard, aerial, etc.).
 // HAR photo order is typically [0]=exterior, then mixed — this guarantees interior.
 async function findInteriorPhoto(listingUrl: string): Promise<string | null> {
-    const photos = await getHarListingPhotos(listingUrl, 10);
+    const photos = await getListingPhotos(listingUrl, 10);
     // Skip photo[0] — HAR always puts the exterior facade shot first
     for (const photo of photos.slice(1, 8)) {
         const { isStageable, error } = await detectRoom(photo);
@@ -2229,7 +2484,7 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
 
     for (const lead of (data || [])) {
         scanned++;
-        const photos = await getHarListingPhotos(lead.listing_url, 5);
+        const photos = await getListingPhotos(lead.listing_url, 5);
         const interiorPhotos = photos.slice(1, 5); // Skip photo[0] — always exterior facade on HAR
         const emptyRooms: { roomType: string; imageUrl: string }[] = [];
 
@@ -2382,6 +2637,7 @@ export async function runPipelineSession(config: {
     scrapesPerSession: number;
     sessionId?: string;
     minLeads?: number;
+    deadlineMs?: number;
 }): Promise<{ processed: number; errors: string[]; debug: string[]; sessionId: string }> {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const sessionId = config.sessionId || crypto.randomUUID();
@@ -2392,7 +2648,7 @@ export async function runPipelineSession(config: {
     // Large sessions used to scrape 4x the session target PER city, which could exceed
     // Vercel's 5-minute function limit. We now distribute the fetch budget across cities.
     const candidateCities = config.cities.length > 0 ? config.cities : getDefaultTargetCities();
-    const rotatingCityCount = Math.max(6, Math.min(12, Math.ceil(config.scrapesPerSession / 4)));
+    const rotatingCityCount = Math.max(3, Math.min(6, Math.ceil(config.scrapesPerSession / 8)));
     // Use total pipeline run count as rotation index so each session picks the next city group
     const { count: runCount } = await supabase.from('pipeline_runs').select('*', { count: 'exact', head: true });
     const activeCities = selectRotatingCities(candidateCities, rotatingCityCount, runCount ?? 0);
@@ -2507,9 +2763,42 @@ export async function runPipelineSession(config: {
             (b.photoCount ?? 0) - (a.photoCount ?? 0)
     );
 
+    const enrichmentLimit = Math.min(newListings.length, Math.max(config.scrapesPerSession * 2, 8));
+    const enrichedCandidates = await Promise.all(
+        newListings.slice(0, enrichmentLimit).map(async (listing) => {
+            if (listing.listingUrl.includes('homes.com/') && !normalizeAgentEmail(listing.agentEmail)) {
+                const detail = await getHomesListingContext(listing.listingUrl, 8);
+                return {
+                    ...listing,
+                    agentEmail: listing.agentEmail || detail.agentEmail || '',
+                    agentPhone: listing.agentPhone || detail.agentPhone || '',
+                    agentName: listing.agentName || detail.agentName || '',
+                    photos: detail.photos.length > 0 ? detail.photos : listing.photos,
+                    photoCount: Math.max(listing.photoCount ?? 0, detail.photos.length),
+                };
+            }
+            return listing;
+        })
+    );
+    const rankedListings = [...enrichedCandidates, ...newListings.slice(enrichmentLimit)];
+    rankedListings.sort((a, b) => {
+        const aSignals = getStageabilitySignals(a);
+        const bSignals = getStageabilitySignals(b);
+        return (
+            Number(!!normalizeAgentEmail(b.agentEmail)) - Number(!!normalizeAgentEmail(a.agentEmail)) ||
+            bSignals.likelihoodScore - aSignals.likelihoodScore ||
+            bSignals.vacancyHits - aSignals.vacancyHits ||
+            (b.score ?? 0) - (a.score ?? 0) ||
+            (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0) ||
+            (aSignals.negativeHits - bSignals.negativeHits) ||
+            (b.photoCount ?? 0) - (a.photoCount ?? 0)
+        );
+    });
+    await log(`Prioritized ${rankedListings.filter((listing) => !!normalizeAgentEmail(listing.agentEmail)).length}/${rankedListings.length} new leads with agent email`);
+
     // Respect exactly what the user configured
-    const maxPerSession = Math.min(newListings.length, config.scrapesPerSession);
-    const toProcess = newListings.slice(0, maxPerSession);
+    const maxPerSession = Math.min(rankedListings.length, config.scrapesPerSession);
+    const toProcess = rankedListings.slice(0, maxPerSession);
     await log(`Processing ${toProcess.length} new leads (target: ${config.scrapesPerSession})...`);
 
     // ── Step 4: Moondream — check listings that have keywords suggesting vacancy ──
@@ -2524,146 +2813,195 @@ export async function runPipelineSession(config: {
     const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
-    const vacancyKeywords = ['vacant', 'unfurnished', 'empty', 'needs staging', 'unoccupied', 'immediate occupancy', 'no furnit'];
     toProcess.sort((a, b) => {
-        const aKw = a.keywords.join(' ').toLowerCase();
-        const bKw = b.keywords.join(' ').toLowerCase();
-        const aVacant = vacancyKeywords.some(k => aKw.includes(k)) ? 1 : 0;
-        const bVacant = vacancyKeywords.some(k => bKw.includes(k)) ? 1 : 0;
-        return bVacant - aVacant || (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0);
+        const aSignals = getStageabilitySignals(a);
+        const bSignals = getStageabilitySignals(b);
+        return (
+            bSignals.likelihoodScore - aSignals.likelihoodScore ||
+            bSignals.vacancyHits - aSignals.vacancyHits ||
+            (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0) ||
+            (aSignals.negativeHits - bSignals.negativeHits)
+        );
     });
 
     await log(`Checking up to ${MAX_MOONDREAM} leads with Moondream (no empty-room cap)`);
 
-    for (const listing of toProcess) {
-        // Check for stop request every 3rd lead to keep DB calls low
-        if (processed > 0 && processed % 3 === 0) {
-            let stopRequested = false;
+    // Process listings in parallel batches of 4 — cuts Moondream wall-clock time by ~4×
+    // compared to the previous sequential loop (16 listings × ~15s → ~60s instead of ~240s).
+    const MOONDREAM_CONCURRENCY = 4;
 
-            const { data: stopData, error: stopError } = await supabase
-                .from('pipeline_session_log')
-                .select('id')
-                .eq('session_id', sessionId)
-                .eq('message', '__STOP_REQUESTED__')
-                .limit(1);
-
-            if (!stopError) {
-                stopRequested = (stopData?.length ?? 0) > 0;
-            } else {
-                const { data: pendingRuns } = await supabase
-                    .from('pipeline_runs')
-                    .select('id, errors')
-                    .eq('processed', -1)
-                    .order('ran_at', { ascending: false })
-                    .limit(20);
-
-                stopRequested = (pendingRuns || []).some((run: { errors?: string[] }) =>
-                    (run.errors || []).includes(`LOG:Session ${sessionId} starting...`) &&
-                    (run.errors || []).includes('LOG:__STOP_REQUESTED__')
-                );
-            }
-
-            if (stopRequested) {
-                await log(`Session stopped by user after ${processed} leads`);
-                await flushLog();
-                await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
-                return { processed, errors, debug, sessionId };
-            }
+    for (let batchStart = 0; batchStart < toProcess.length; batchStart += MOONDREAM_CONCURRENCY) {
+        // Deadline guard — write SESSION_COMPLETE before Vercel's 300s hard kill.
+        if (config.deadlineMs && Date.now() > config.deadlineMs) {
+            await log(`Time budget reached: stopping early (${processed} leads saved so far)`);
+            await flushLog();
+            await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
+            return { processed, errors, debug, sessionId };
         }
 
-        listing.score = await scoreICP(listing);
-        const emptyRooms: { roomType: string; imageUrl: string }[] = [];
-        let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
+        // Stop-request check before each batch (replaces the every-3rd-lead check in the old loop).
+        const { data: stopData, error: stopError } = await supabase
+            .from('pipeline_session_log')
+            .select('id')
+            .eq('session_id', sessionId)
+            .eq('message', '__STOP_REQUESTED__')
+            .limit(1);
 
-        // Run Moondream on every lead up to the per-session budget — no cap on empty rooms found.
-        const shouldRunMoondream = moondreamChecked < MAX_MOONDREAM;
-
-        if (shouldRunMoondream) {
-            moondreamChecked++;
-            const detailPhotos = await getHarListingPhotos(listing.listingUrl, 8);
-            await log(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
-            let foundStageable = false;
-            for (const photo of detailPhotos.slice(1, 7)) { // Skip photo[0] — always exterior facade on HAR
-                const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photo);
-                if (roomErr) { await log(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
-                await log(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
-                if (!isStageable) continue; // floor plan / entryway / stairway / exterior — skip
-                foundStageable = true;
-                if (isEmpty) {
-                    emptyRooms.push({ roomType, imageUrl: photo });
-                    emptyRoomsFound++;
-                    await log(`  → Empty ${roomType}! Total this session: ${emptyRoomsFound}`);
-                    break; // Found confirmed empty stageable room — stop scanning this listing
-                }
-                // Furnished stageable room — record first one found, keep scanning for empty
-                if (!furnishedRoom) furnishedRoom = { roomType, imageUrl: photo };
-            }
-            if (!foundStageable) await log(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
+        let stopRequested = false;
+        if (!stopError) {
+            stopRequested = (stopData?.length ?? 0) > 0;
         } else {
-            await log(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} per-session limit reached)`);
+            const { data: pendingRuns } = await supabase
+                .from('pipeline_runs')
+                .select('id, errors')
+                .eq('processed', -1)
+                .order('ran_at', { ascending: false })
+                .limit(20);
+            stopRequested = (pendingRuns || []).some((run: { errors?: string[] }) =>
+                (run.errors || []).includes(`LOG:Session ${sessionId} starting...`) &&
+                (run.errors || []).includes('LOG:__STOP_REQUESTED__')
+            );
         }
 
-        const saveResult = await saveLead({ ...listing, emptyRooms });
-        if (saveResult.error) {
-            await log(`[${listing.city}] ${listing.address} — save error: ${saveResult.error}`);
-            errors.push(`Save error: ${saveResult.error}`);
-            continue;
+        if (stopRequested) {
+            await log(`Session stopped by user after ${processed} leads`);
+            await flushLog();
+            await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
+            return { processed, errors, debug, sessionId };
         }
 
-        // Lead already exists in DB — do NOT touch its status or re-stage it.
-        // Overwriting status on an already-emailed lead is what caused duplicate sends.
-        if (saveResult.skipped) {
-            await log(`[${listing.city}] ${listing.address} — already in DB (status: ${(saveResult.lead as any)?.status ?? 'unknown'}), skipping`);
-            continue;
-        }
+        const batch = toProcess.slice(batchStart, batchStart + MOONDREAM_CONCURRENCY);
+        const slotsAvailable = MAX_MOONDREAM - moondreamChecked;
 
-        const leadId = saveResult.lead?.id;
-        if (!leadId) continue;
+        // Fan out — all per-listing async work (score, lock check, photos, Moondream) runs in parallel.
+        const batchResults = await Promise.all(batch.map(async (listing, batchIdx) => {
+            const logs: string[] = [];
+            const errs: string[] = [];
+            const emptyRooms: { roomType: string; imageUrl: string }[] = [];
+            let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
 
-        const recipientKey = normalizeAgentEmail(listing.agentEmail);
-        const lockCheck = await hasRecipientLock(recipientKey);
-        if (lockCheck.error) {
-            await log(`[${listing.city}] ${listing.address} - email lock check failed: ${lockCheck.error}`);
-            errors.push(`Email lock check failed: ${lockCheck.error}`);
-            await updateLeadStatus(leadId, 'form_filled');
-            continue;
-        }
-        if (!recipientKey || lockCheck.locked) {
-            await updateLeadStatus(leadId, 'form_filled');
-            await log(`[${listing.city}] ${listing.address} - skipped staging (recipient already contacted or no email)`);
-            continue;
-        }
-
-        // Mark as scored (ICP score was computed — separate from 'scraped' baseline)
-        await updateLeadStatus(leadId, 'scored');
-
-        if (emptyRooms.length > 0) {
-            // Empty room — add furniture
-            const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType, false);
-            if (taskId) {
-                await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Staged (empty room, add furniture) taskId=${taskId}`);
-            } else {
-                await log(`  → Stage FAILED: ${stageErr}`);
+            listing.score = await scoreICP(listing);
+            if (listing.listingUrl.includes('homes.com/') && !normalizeAgentEmail(listing.agentEmail)) {
+                const detail = await getHomesListingContext(listing.listingUrl, 8);
+                listing.agentEmail = listing.agentEmail || detail.agentEmail || '';
+                listing.agentPhone = listing.agentPhone || detail.agentPhone || '';
+                listing.agentName = listing.agentName || detail.agentName || '';
+                if (detail.photos.length > 0) {
+                    listing.photos = detail.photos;
+                    listing.photoCount = Math.max(listing.photoCount ?? 0, detail.photos.length);
+                }
             }
-        } else if (furnishedRoom && listing.score >= 25 && highScoreStaged < MAX_HIGH_SCORE_STAGE) {
-            // Furnished room + score 25+ — redesign existing staging
-            highScoreStaged++;
-            const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
-            if (taskId) {
-                // Store furnished room as before-photo reference so poll/email step can use it
-                await supabase.from('outreach_leads')
-                    .update({ empty_rooms: [{ roomType: furnishedRoom.roomType, imageUrl: furnishedRoom.imageUrl }] })
-                    .eq('id', leadId);
-                await updateLeadStatus(leadId, 'staged', { staging_task_id: taskId });
-                await log(`  → Staged (score ${listing.score} furnished redesign) taskId=${taskId}`);
-            } else {
-                await log(`  → Redesign FAILED: ${stageErr}`);
-            }
-        }
 
-        processed++;
-        await log(`[${listing.city}] ✓ Saved: ${listing.address} (score ${listing.score}, emptyRooms=${emptyRooms.length}, furnishedRoom=${furnishedRoom?.roomType ?? 'none'})`);
+            const recipientKey = normalizeAgentEmail(listing.agentEmail);
+            const lockCheck = await hasRecipientLock(recipientKey);
+            if (lockCheck.error) {
+                logs.push(`[${listing.city}] ${listing.address} - email lock check failed: ${lockCheck.error}`);
+                errs.push(`Email lock check failed: ${lockCheck.error}`);
+                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedMoondream: false, logs, errs };
+            }
+            if (!recipientKey || lockCheck.locked) {
+                logs.push(`[${listing.city}] ${listing.address} - skipped before Moondream (${recipientKey ? 'recipient already contacted' : 'no email'})`);
+                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedMoondream: false, logs, errs };
+            }
+
+            const useMoondream = batchIdx < slotsAvailable;
+            if (useMoondream) {
+                const detailPhotos = await getListingPhotos(listing.listingUrl, 8);
+                logs.push(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
+                let foundStageable = false;
+                for (const photo of detailPhotos.slice(1, 7)) {
+                    const { isStageable, isEmpty, isInterior, roomType, error: roomErr } = await detectRoom(photo);
+                    if (roomErr) { logs.push(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
+                    logs.push(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
+                    if (!isInterior) continue; // skip exterior, floor plans, foyers
+                    if (isStageable && isEmpty) {
+                        emptyRooms.push({ roomType, imageUrl: photo });
+                        logs.push(`  → Empty ${roomType}!`);
+                        foundStageable = true;
+                        break;
+                    }
+                    if (!furnishedRoom && !isEmpty && roomType !== 'room') {
+                        furnishedRoom = { roomType, imageUrl: photo };
+                        logs.push(`  → Furnished ${roomType} (redesign candidate)`);
+                    }
+                }
+                if (!foundStageable && !furnishedRoom) logs.push(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
+            } else {
+                logs.push(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} per-session limit reached)`);
+            }
+
+            // Kick off Kie.ai staging right here in the parallel fan-out — this is the
+            // expensive call (image upload + API). Running it concurrently across listings
+            // prevents it from blocking the sequential DB-write phase that follows.
+            let stagingTaskId: string | undefined;
+            let isRedesign = false;
+            if (emptyRooms.length > 0) {
+                const { taskId, error: stageErr } = await stageEmptyRoom(emptyRooms[0].imageUrl, emptyRooms[0].roomType, false);
+                if (taskId) {
+                    stagingTaskId = taskId;
+                    logs.push(`  → Kie.ai task queued (empty room) taskId=${taskId}`);
+                } else {
+                    logs.push(`  → Stage FAILED: ${stageErr}`);
+                }
+            } else if (furnishedRoom && (listing.score ?? 0) >= 25 && batchIdx < (MAX_HIGH_SCORE_STAGE - highScoreStaged)) {
+                // Redesign budget is checked per-batch using the pre-batch highScoreStaged snapshot
+                const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
+                if (taskId) {
+                    stagingTaskId = taskId;
+                    isRedesign = true;
+                    logs.push(`  → Kie.ai task queued (redesign score ${listing.score}) taskId=${taskId}`);
+                } else {
+                    logs.push(`  → Redesign FAILED: ${stageErr}`);
+                }
+            }
+
+            return { listing, emptyRooms, furnishedRoom, stagingTaskId, isRedesign, skipToFormFilled: false, usedMoondream: useMoondream, logs, errs };
+        }));
+
+        // Merge results sequentially — only fast DB writes remain here (no Kie.ai calls).
+        for (const r of batchResults) {
+            for (const l of r.logs) await log(l);
+            for (const e of r.errs) errors.push(e);
+            if (r.usedMoondream) moondreamChecked++;
+            if (r.emptyRooms.length > 0) emptyRoomsFound++;
+            if (r.isRedesign && r.stagingTaskId) highScoreStaged++;
+
+            const saveResult = await saveLead({ ...r.listing, emptyRooms: r.emptyRooms });
+            if (saveResult.error) {
+                await log(`[${r.listing.city}] ${r.listing.address} — save error: ${saveResult.error}`);
+                errors.push(`Save error: ${saveResult.error}`);
+                continue;
+            }
+
+            // Lead already exists in DB — do NOT touch its status or re-stage it.
+            if (saveResult.skipped) {
+                await log(`[${r.listing.city}] ${r.listing.address} — already in DB (status: ${(saveResult.lead as any)?.status ?? 'unknown'}), skipping`);
+                continue;
+            }
+
+            const leadId = saveResult.lead?.id;
+            if (!leadId) continue;
+
+            if (r.skipToFormFilled) {
+                await updateLeadStatus(leadId, 'form_filled');
+                continue;
+            }
+
+            await updateLeadStatus(leadId, 'scored');
+
+            if (r.stagingTaskId) {
+                if (r.isRedesign) {
+                    await supabase.from('outreach_leads')
+                        .update({ empty_rooms: [{ roomType: r.furnishedRoom!.roomType, imageUrl: r.furnishedRoom!.imageUrl }] })
+                        .eq('id', leadId);
+                }
+                await updateLeadStatus(leadId, 'staged', { staging_task_id: r.stagingTaskId });
+                await log(`  → Staged ${r.isRedesign ? '(redesign)' : '(empty room)'} taskId=${r.stagingTaskId}`);
+            }
+
+            processed++;
+            await log(`[${r.listing.city}] ✓ Saved: ${r.listing.address} (score ${r.listing.score}, emptyRooms=${r.emptyRooms.length}, furnishedRoom=${r.furnishedRoom?.roomType ?? 'none'})`);
+        }
     }
 
     if (allListings.length === 0) {
@@ -2900,7 +3238,7 @@ const SITE_URL_BUILDERS: Record<string, (city: string) => string | null> = {
     },
     'homes.com': (city) => {
         const market = resolveTargetMarket(city);
-        return `https://www.homes.com/homes-for-sale/${market.homesSlug}/`;
+        return `https://www.homes.com/${market.homesSlug}/`;
     },
     'homefinder.com': (city) => {
         const market = resolveTargetMarket(city);

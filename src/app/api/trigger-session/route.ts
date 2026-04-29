@@ -6,7 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
-    const { cities, scrapesPerSession, sessionId } = await request.json();
+    const functionStart = Date.now();
+    const { cities, scrapesPerSession, sessionId, skipPrep } = await request.json();
 
     if (!cities?.length) {
         return NextResponse.json({ error: 'No cities provided' }, { status: 400 });
@@ -38,19 +39,27 @@ export async function POST(request: Request) {
     };
 
     try {
-        // Step 1: Retry any leads that have empty_rooms saved but weren't submitted to Kie.ai
-        await submitStagingBatch();
-
-        // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones.
-        // Use emails_per_day / 10 cron slots (same formula as the cron handler), capped at 3 for
-        // manual runs since the 45s inter-send delay means >3 risks the 300s Vercel limit.
         const { config: cfg } = await loadPipelineConfig();
-        const manualPerRun = Math.min(3, Math.max(1, Math.round((cfg?.emails_per_day ?? 10) / 10)));
-        const emailResult = await pollAndEmailStagedLeads(manualPerRun);
-        await logToSession(emailResult.debug);
+        let emailResult = { emailed: 0, stillProcessing: 0, failed: 0, errors: [] as string[], debug: [] as string[] };
 
-        // Step 3: Scrape + score + stage new leads
-        const result = await runPipelineSession({ cities, scrapesPerSession, sessionId });
+        if (!skipPrep) {
+            // Step 1: Retry leads that are ready for staging but never reached Kie.ai.
+            const stagingResult = await submitStagingBatch(Math.max(1, Math.min(10, cfg?.emails_per_day ?? 10)));
+            await logToSession([
+                `Submit staging batch: ${stagingResult.submitted} submitted, ${stagingResult.failed} failed`,
+                ...stagingResult.errors.map((e) => `Staging batch error: ${e}`),
+            ]);
+
+            // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones.
+            // Fetch up to 10 staged leads — with 8s inter-send delay, 10 emails costs at most 80s.
+            emailResult = await pollAndEmailStagedLeads(10);
+            await logToSession(emailResult.debug);
+        } else {
+            await logToSession(['Skipped prep: staging backlog and poll/email disabled for this manual run']);
+        }
+
+        // Step 3: Scrape + score + stage new leads (deadline: 260s from function start, leaving margin for prep + final writes)
+        const result = await runPipelineSession({ cities, scrapesPerSession, sessionId, deadlineMs: functionStart + 260_000 });
 
         if (runId) {
             await supabase

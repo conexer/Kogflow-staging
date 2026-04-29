@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server';
-import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
-
-// Matches the number of cron entries in vercel.json (slots 15–23 UTC plus 00 UTC).
-const CRON_RUNS_PER_DAY = 10;
+import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, scanAndStageHighScoreBacklog, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 300; // Vercel Pro max
 
 // 10 cron entries fire hourly 15–23 UTC plus 00 UTC (8am–5pm Pacific during DST).
 // Each trigger: (1) emails leads staged in prior session, (2) scrapes + stages new leads.
 export async function GET(request: Request) {
+    const functionStart = Date.now();
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        // Log unauthorized calls to DB so the dashboard can show whether the cron IS firing
+        // but failing auth (vs. never being called at all).
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+        await supabase.from('pipeline_runs').insert({
+            ran_at: new Date().toISOString(),
+            processed: 0,
+            errors: [`CRON_AUTH_FAIL: header="${(authHeader ?? 'none').slice(0, 40)}" CRON_SECRET_SET=${!!process.env.CRON_SECRET}`],
+            trigger: 'cron',
+        }).then(null, () => {});
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -25,14 +33,25 @@ export async function GET(request: Request) {
         return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
     }
 
+    const debug: string[] = [];
+
     // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
     // Runs before poll so staged leads appear in step 2 on the NEXT cron call.
-    await submitStagingBatch();
+    const stagingBatch = await submitStagingBatch(Math.max(1, Math.min(10, config.emails_per_day)));
+    debug.push(`Submit staging batch: ${stagingBatch.submitted} submitted, ${stagingBatch.failed} failed`);
+    debug.push(...stagingBatch.errors.map((e) => `Staging batch error: ${e}`));
+
+    // Step 1b: The scraper can save viable high-score leads as scored when staging
+    // was missed or deferred. Keep feeding those back into Kie.ai so the email
+    // queue does not dry up at "scored".
+    const backlog = await scanAndStageHighScoreBacklog(2);
+    debug.push(`Backlog staging: ${backlog.staged} staged, ${backlog.skipped} skipped, ${backlog.failed} failed`);
+    debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
     // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
-    // Per-run limit = emails_per_day ÷ 10 cron slots, capped at 6 (6 × 45s = 270s < 300s Vercel limit).
-    const perRun = Math.min(6, Math.max(1, Math.round(config.emails_per_day / CRON_RUNS_PER_DAY)));
-    const emailResult = await pollAndEmailStagedLeads(perRun);
+    // Fetch up to 20 staged leads so a still-processing lead doesn't block all others.
+    // With 8s inter-send delay, sending up to 20 costs at most 160s — within the 300s limit.
+    const emailResult = await pollAndEmailStagedLeads(20);
 
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();
@@ -40,7 +59,11 @@ export async function GET(request: Request) {
         await logPipelineRun({
             processed: 0,
             errors: [],
-            debug: [`Cron skipped: already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`],
+            debug: [
+                ...debug,
+                ...emailResult.debug,
+                `Cron skipped: already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,
+            ],
             trigger: 'cron',
         });
         return NextResponse.json({
@@ -50,16 +73,17 @@ export async function GET(request: Request) {
         });
     }
 
-    // Step 4: Scrape + stage new leads.
+    // Step 4: Scrape + stage new leads (deadline: 260s from function start, leaving margin for prep + final writes).
     const result = await runPipelineSession({
         cities: config.cities,
         scrapesPerSession: config.scrapes_per_session,
+        deadlineMs: functionStart + 260_000,
     });
 
     // Merge email debug lines into the run log so they appear in the activity log.
     await logPipelineRun({
         ...result,
-        debug: [...emailResult.debug, ...result.debug],
+        debug: [...debug, ...emailResult.debug, ...result.debug],
         trigger: 'cron',
     });
 
