@@ -547,62 +547,40 @@ export async function detectRoom(imageUrl: string): Promise<{
 
     try {
         let moondreamQueries = 0;
-        const fetchImageAsDataUrl = async (url: string): Promise<{ imageData?: string; error?: string }> => {
-            const imageOrigin = new URL(url).origin;
-            const directRes = await fetch(url, {
-                headers: {
-                    'Referer': imageOrigin,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Cache-Control': 'no-cache',
-                },
-            });
-
-            if (directRes.ok) {
-                const contentType = directRes.headers.get('content-type') || 'image/jpeg';
-                const arrayBuffer = await directRes.arrayBuffer();
-                const base64 = Buffer.from(arrayBuffer).toString('base64');
-                return { imageData: `data:${contentType};base64,${base64}` };
-            }
-
-            // homes.com images are hotlink-protected; Zyte can fetch the raw bytes server-side.
-            if (url.includes('images.homes.com')) {
-                const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ url, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
-                });
-                if (!zyteRes.ok) return { error: `Image fetch failed: ${directRes.status}` };
-
-                const zyteData = await zyteRes.json();
-                const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((header: { name?: string; value?: string }) =>
-                    header?.name?.toLowerCase() === 'content-type'
-                );
-                const contentType = contentTypeHeader?.value || 'image/jpeg';
-                if (!zyteData.httpResponseBody) return { error: `Image fetch failed: ${directRes.status}` };
-                return { imageData: `data:${contentType};base64,${zyteData.httpResponseBody}` };
-            }
-
-            return { error: `Image fetch failed: ${directRes.status}` };
-        };
-
-        // Moondream requires base64 — fetch with browser-like headers and fall back to Zyte for hotlinked homes.com images.
-        const { imageData, error: imageErr } = await fetchImageAsDataUrl(imageUrl);
-        if (imageErr || !imageData) return { ...REJECT, error: imageErr || 'Image fetch failed' };
 
         const moonHeaders = {
             'X-Moondream-Auth': MOONDREAM_API_KEY,
             'Content-Type': 'application/json',
         };
 
+        // Helper: fetch image as base64 via Zyte (fallback when Moondream can't reach the URL directly)
+        const fetchViaZyte = async (url: string): Promise<string | null> => {
+            if (!ZYTE_API_KEY) return null;
+            const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
+            });
+            if (!zyteRes.ok) return null;
+            const zyteData = await zyteRes.json();
+            if (!zyteData.httpResponseBody) return null;
+            const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((h: { name?: string }) => h?.name?.toLowerCase() === 'content-type');
+            const contentType = contentTypeHeader?.value || 'image/jpeg';
+            return `data:${contentType};base64,${zyteData.httpResponseBody}`;
+        };
+
+        // Pass the image URL directly to Moondream — their servers fetch it.
+        // If they can't reach it (e.g. hotlink-protected homes.com images), they return non-ok;
+        // we then fetch via Zyte and retry once with a base64 data URL.
+        let imageData: string = imageUrl;
+
         // ── Q1: Interior check (positive gate) ───────────────────────────────────
         // Ask positively "is this interior?" — more reliable than asking "is this NOT exterior?"
         // Exterior photos (yard, facade, driveway) should answer "no" to this.
-        const interiorRes = await fetch('https://api.moondream.ai/v1/query', {
+        let interiorRes = await fetch('https://api.moondream.ai/v1/query', {
             method: 'POST',
             headers: moonHeaders,
             body: JSON.stringify({
@@ -612,8 +590,23 @@ export async function detectRoom(imageUrl: string): Promise<{
             }),
         });
         if (!interiorRes.ok) {
-            const err = await interiorRes.text();
-            return { ...REJECT, error: `Moondream interior check error ${interiorRes.status}: ${err}` };
+            // Moondream couldn't fetch the URL directly — try Zyte as a proxy and retry once.
+            const b64 = await fetchViaZyte(imageUrl);
+            if (!b64) return { ...REJECT, error: `Moondream Q1 failed and Zyte fallback unavailable` };
+            imageData = b64;
+            interiorRes = await fetch('https://api.moondream.ai/v1/query', {
+                method: 'POST',
+                headers: moonHeaders,
+                body: JSON.stringify({
+                    image_url: imageData,
+                    question: 'Is this photo taken inside a building, showing an indoor room with walls, floor, and ceiling visible? Answer only "yes" or "no".',
+                    stream: false,
+                }),
+            });
+            if (!interiorRes.ok) {
+                const err = await interiorRes.text();
+                return { ...REJECT, error: `Moondream interior check error ${interiorRes.status}: ${err}` };
+            }
         }
         const interiorData = await interiorRes.json();
         const interiorAnswer: string = (interiorData.answer || interiorData.result || '').toLowerCase().trim();
@@ -2763,24 +2756,9 @@ export async function runPipelineSession(config: {
             (b.photoCount ?? 0) - (a.photoCount ?? 0)
     );
 
-    const enrichmentLimit = Math.min(newListings.length, Math.max(config.scrapesPerSession * 2, 8));
-    const enrichedCandidates = await Promise.all(
-        newListings.slice(0, enrichmentLimit).map(async (listing) => {
-            if (listing.listingUrl.includes('homes.com/') && !normalizeAgentEmail(listing.agentEmail)) {
-                const detail = await getHomesListingContext(listing.listingUrl, 8);
-                return {
-                    ...listing,
-                    agentEmail: listing.agentEmail || detail.agentEmail || '',
-                    agentPhone: listing.agentPhone || detail.agentPhone || '',
-                    agentName: listing.agentName || detail.agentName || '',
-                    photos: detail.photos.length > 0 ? detail.photos : listing.photos,
-                    photoCount: Math.max(listing.photoCount ?? 0, detail.photos.length),
-                };
-            }
-            return listing;
-        })
-    );
-    const rankedListings = [...enrichedCandidates, ...newListings.slice(enrichmentLimit)];
+    // Email + photo enrichment is now deferred to the Moondream batch loop (only for leads that
+    // will actually be vision-checked), eliminating ~15-20 upfront Zyte browserHtml calls per session.
+    const rankedListings = newListings;
     rankedListings.sort((a, b) => {
         const aSignals = getStageabilitySignals(a);
         const bSignals = getStageabilitySignals(b);
@@ -2809,7 +2787,7 @@ export async function runPipelineSession(config: {
     let emptyRoomsFound = 0;
     let moondreamChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 8;
+    const MAX_MOONDREAM = 16;
     const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
@@ -2881,15 +2859,23 @@ export async function runPipelineSession(config: {
             let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
 
             listing.score = await scoreICP(listing);
-            if (listing.listingUrl.includes('homes.com/') && !normalizeAgentEmail(listing.agentEmail)) {
-                const detail = await getHomesListingContext(listing.listingUrl, 8);
-                listing.agentEmail = listing.agentEmail || detail.agentEmail || '';
-                listing.agentPhone = listing.agentPhone || detail.agentPhone || '';
-                listing.agentName = listing.agentName || detail.agentName || '';
-                if (detail.photos.length > 0) {
-                    listing.photos = detail.photos;
-                    listing.photoCount = Math.max(listing.photoCount ?? 0, detail.photos.length);
+
+            const useMoondream = batchIdx < slotsAvailable;
+
+            // Fetch email + photos together for Moondream-bound homes.com leads (one Zyte call).
+            // Non-Moondream leads skip all Zyte fetching — saves ~15-20 browserHtml calls/session.
+            let detailPhotos: string[] = [];
+            if (useMoondream) {
+                if (listing.listingUrl.includes('homes.com/')) {
+                    const ctx = await getHomesListingContext(listing.listingUrl, 8);
+                    detailPhotos = ctx.photos;
+                    listing.agentEmail = listing.agentEmail || ctx.agentEmail || '';
+                    listing.agentPhone = listing.agentPhone || ctx.agentPhone || '';
+                    listing.agentName = listing.agentName || ctx.agentName || '';
+                } else {
+                    detailPhotos = await getHarListingPhotos(listing.listingUrl, 8);
                 }
+                logs.push(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
             }
 
             const recipientKey = normalizeAgentEmail(listing.agentEmail);
@@ -2904,10 +2890,7 @@ export async function runPipelineSession(config: {
                 return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedMoondream: false, logs, errs };
             }
 
-            const useMoondream = batchIdx < slotsAvailable;
             if (useMoondream) {
-                const detailPhotos = await getListingPhotos(listing.listingUrl, 8);
-                logs.push(`  [${listing.address}] ${detailPhotos.length} photos (url: ${listing.listingUrl})`);
                 let foundStageable = false;
                 for (const photo of detailPhotos.slice(1, 7)) {
                     const { isStageable, isEmpty, isInterior, roomType, error: roomErr } = await detectRoom(photo);
