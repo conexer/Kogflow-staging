@@ -49,9 +49,10 @@ export async function GET(request: Request) {
     debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
     // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
-    // Fetch up to 20 staged leads so a still-processing lead doesn't block all others.
-    // With 8s inter-send delay, sending up to 20 costs at most 160s — within the 300s limit.
-    const emailResult = await pollAndEmailStagedLeads(20);
+    // Cap at emails_per_day / sessions_per_day (≈ per-run share), max 20 to stay within 300s budget.
+    // With 8s inter-send delay, 20 emails costs at most 160s.
+    const emailsPerRun = Math.min(20, Math.max(1, Math.ceil((config.emails_per_day ?? 20) / (config.sessions_per_day ?? 10))));
+    const emailResult = await pollAndEmailStagedLeads(emailsPerRun);
 
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();

@@ -1248,27 +1248,27 @@ export default function OutreachPage() {
                                         Sessions per day
                                         <span className="text-primary font-bold">{sessionsPerDay} <span className="text-muted-foreground font-normal text-xs">≈ every {Math.round(24 / sessionsPerDay)}h</span></span>
                                     </label>
-                                    <input type="range" min={1} max={10} value={sessionsPerDay} onChange={e => setSessionsPerDay(Number(e.target.value))} className="w-full accent-primary" />
-                                    <div className="flex justify-between text-xs text-muted-foreground"><span>1/day</span><span>10/day (max)</span></div>
+                                    <input type="range" min={1} max={20} value={sessionsPerDay} onChange={e => setSessionsPerDay(Number(e.target.value))} className="w-full accent-primary" />
+                                    <div className="flex justify-between text-xs text-muted-foreground"><span>1/day</span><span>20/day (max)</span></div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium flex items-center justify-between">
                                         Scrapes per session
                                         <span className="text-primary font-bold">{scrapesPerSession} listings</span>
                                     </label>
-                                    <input type="range" min={5} max={50} step={5} value={scrapesPerSession} onChange={e => setScrapesPerSession(Number(e.target.value))} className="w-full accent-primary" />
+                                    <input type="range" min={5} max={100} step={5} value={scrapesPerSession} onChange={e => setScrapesPerSession(Number(e.target.value))} className="w-full accent-primary" />
                                     <p className="text-xs text-muted-foreground">Zyte handles proxy/anti-bot — spacing between scrapes doesn't affect ban risk. This controls cost per session.</p>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium flex items-center justify-between">
                                         Emails per day
                                         <span className="text-primary font-bold">
-                                            {emailsPerDay} <span className="text-muted-foreground font-normal text-xs">≈ {Math.min(6, Math.max(1, Math.round(emailsPerDay / 10)))} per cron run</span>
+                                            {emailsPerDay} <span className="text-muted-foreground font-normal text-xs">≈ {Math.max(1, Math.round(emailsPerDay / sessionsPerDay))} per cron run</span>
                                         </span>
                                     </label>
-                                    <input type="range" min={5} max={60} step={5} value={emailsPerDay} onChange={e => setEmailsPerDay(Number(e.target.value))} className="w-full accent-primary" />
-                                    <div className="flex justify-between text-xs text-muted-foreground"><span>5/day</span><span>60/day (max)</span></div>
-                                    <p className="text-xs text-muted-foreground">Spread evenly across 10 daily cron slots. Keep low while warming Gmail sender reputation.</p>
+                                    <input type="range" min={5} max={300} step={5} value={emailsPerDay} onChange={e => setEmailsPerDay(Number(e.target.value))} className="w-full accent-primary" />
+                                    <div className="flex justify-between text-xs text-muted-foreground"><span>5/day</span><span>300/day (max)</span></div>
+                                    <p className="text-xs text-muted-foreground">Spread evenly across daily cron slots. Keep low while warming Gmail sender reputation.</p>
                                 </div>
                             </div>
                         </div>
