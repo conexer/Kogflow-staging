@@ -2578,17 +2578,54 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
     const fullUrl = propertyUrl.startsWith('http') ? propertyUrl : `https://www.har.com${propertyUrl}`;
 
     try {
-        // Must use Zyte — HAR.com blocks Vercel datacenter IPs for direct fetch
-        const { html, error } = await zyteGet(fullUrl);
-        if (error || !html) {
-            console.warn(`[getHarListingPhotos] Zyte error for ${fullUrl}: ${error}`);
+        // Use Zyte browser rendering with scroll actions to trigger lazy-loaded photo gallery.
+        // HAR.com uses intersection-observer lazy loading — without scrolling, only above-fold
+        // content is captured and photo src attributes are empty or missing.
+        const res = await fetch('https://api.zyte.com/v1/extract', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                url: fullUrl,
+                browserHtml: true,
+                geolocation: 'US',
+                actions: [
+                    { action: 'waitForTimeout', timeout: 1500 },
+                    { action: 'scrollBottom' },
+                    { action: 'waitForTimeout', timeout: 1000 },
+                ],
+            }),
+        });
+        if (!res.ok) {
+            console.warn(`[getHarListingPhotos] Zyte error for ${fullUrl}: ${res.status}`);
             return [];
         }
+        const data = await res.json();
+        const html: string = data.browserHtml || '';
+        if (!html) return [];
 
-        // Match both CDN domains: photos.harstatic.com (current) and mediahar.harstatic.com (legacy)
+        // Primary: extract from __NEXT_DATA__ JSON blob (most reliable — full untruncated list)
+        const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (nextDataMatch) {
+            try {
+                const nextData = JSON.parse(nextDataMatch[1]);
+                const json = JSON.stringify(nextData);
+                const fromJson = [
+                    ...new Set(
+                        [...json.matchAll(/https:\\?\/\\?\/(?:photos|mediahar)\.harstatic\.com\\?\/[^"\\]+\.jpe?g/gi)]
+                            .map(m => m[0].replace(/\\u002F/g, '/').replace(/\\\//g, '/'))
+                    ),
+                ];
+                if (fromJson.length > 0) return fromJson.slice(0, maxPhotos);
+            } catch { /* fall through to regex scan */ }
+        }
+
+        // Fallback: regex over full rendered HTML
         const urls = [
             ...new Set(
-                [...html.matchAll(/https:\/\/(?:photos|mediahar)\.harstatic\.com\/[^"'\s]+\.jpe?g/gi)]
+                [...html.matchAll(/https:\/\/(?:photos|mediahar)\.harstatic\.com\/[^"'\s\\]+\.jpe?g/gi)]
                     .map(m => m[0])
             ),
         ];
