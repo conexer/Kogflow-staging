@@ -24,7 +24,12 @@ export async function POST(req: NextRequest) {
             address,
             beforeImageUrl,
             stagedImageUrl,
+            source: 'admin-test',
         });
+
+        if (result.duplicate) {
+            return NextResponse.json({ error: result.error, duplicate: true }, { status: 409 });
+        }
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 500 });

@@ -10,17 +10,18 @@ import {
     ChevronRight, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndEmailStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, backfillScoredStatus, checkAndReplyToOutreach, getOutreachReplies, markReplyReviewed, type SiteTestResult } from '@/app/actions/outreach';
+import { getLeadStats, getLeads, runPipelineSession, logPipelineRun, detectRoom, sendOutreachEmail, updateLeadStatus, savePipelineConfig, loadPipelineConfig, getRecentRuns, testAllSites, getSiteStats, getSessionLog, submitStagingBatch, pollAndQueueStagedLeads, drainEmailBacklog, sendTestEmail, scanAndStageHighScoreBacklog, scanForEmptyRooms, getRecentActivityLog, getActiveSession, requestSessionStop, getCronStatus, backfillScoredStatus, checkAndReplyToOutreach, getOutreachReplies, markReplyReviewed, type SiteTestResult } from '@/app/actions/outreach';
 import { toast } from 'sonner';
 
 const ALLOWED_EMAILS = ['conexer@gmail.com', 'rocsolid01@gmail.com'];
 
-type LeadStatus = 'scraped' | 'scored' | 'staged' | 'form_filled' | 'emailed';
+type LeadStatus = 'scraped' | 'scored' | 'staged' | 'queued' | 'form_filled' | 'emailed';
 
 const STATUS_COLORS: Record<string, string> = {
     scraped: 'bg-slate-500/20 text-slate-400',
     scored: 'bg-blue-500/20 text-blue-400',
     staged: 'bg-violet-500/20 text-violet-400',
+    queued: 'bg-cyan-500/20 text-cyan-400',
     form_filled: 'bg-amber-500/20 text-amber-400',
     emailed: 'bg-green-500/20 text-green-400',
 };
@@ -29,6 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
     scraped: 'Scraped',
     scored: 'Scored',
     staged: 'Staged',
+    queued: 'Queued',
     form_filled: 'Form Filled',
     emailed: 'Emailed',
 };
@@ -104,8 +106,8 @@ CREATE POLICY "Service role full access" ON public.outreach_email_locks
 -- Pipeline config (single row, id = 1)
 CREATE TABLE IF NOT EXISTS public.pipeline_config (
   id INTEGER PRIMARY KEY DEFAULT 1,
-  sessions_per_day INTEGER NOT NULL DEFAULT 3,
-  scrapes_per_session INTEGER NOT NULL DEFAULT 10,
+  sessions_per_day INTEGER NOT NULL DEFAULT 20,
+  scrapes_per_session INTEGER NOT NULL DEFAULT 100,
   cities TEXT[] NOT NULL DEFAULT ARRAY['Phoenix, AZ','Scottsdale, AZ','Las Vegas, NV','Denver, CO','Atlanta, GA','Charlotte, NC','Nashville, TN','Tampa, FL','Orlando, FL','Sacramento, CA','Dallas, TX','Houston, TX'],
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -132,7 +134,7 @@ ALTER TABLE public.pipeline_runs ADD COLUMN IF NOT EXISTS trigger TEXT DEFAULT '
 
 -- Add cron_enabled to pipeline_config (idempotent)
 ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS cron_enabled BOOLEAN DEFAULT TRUE;
-ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS emails_per_day INTEGER DEFAULT 10;
+ALTER TABLE public.pipeline_config ADD COLUMN IF NOT EXISTS emails_per_day INTEGER DEFAULT 300;
 
 -- Site scrape log (one row per site per pipeline run)
 CREATE TABLE IF NOT EXISTS public.site_scrape_log (
@@ -172,7 +174,7 @@ export default function OutreachPage() {
     const [dbReady, setDbReady] = useState<boolean | null>(null);
 
     // Stats
-    const [stats, setStats] = useState({ total: 0, scraped: 0, scored: 0, staged: 0, stagedEver: 0, form_filled: 0, emailed: 0, avgScore: 0, totalPhotos: 0, leadsWithPhotos: 0, emptyRoomsFound: 0 });
+    const [stats, setStats] = useState({ total: 0, scraped: 0, scored: 0, staged: 0, queued: 0, stagedEver: 0, form_filled: 0, emailed: 0, avgScore: 0, totalPhotos: 0, leadsWithPhotos: 0, emptyRoomsFound: 0 });
     const [leads, setLeads] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
@@ -183,9 +185,9 @@ export default function OutreachPage() {
     const [resettingStats, setResettingStats] = useState(false);
 
     // Pipeline config
-    const [sessionsPerDay, setSessionsPerDay] = useState(3);
-    const [scrapesPerSession, setScrapesPerSession] = useState(10);
-    const [emailsPerDay, setEmailsPerDay] = useState(10);
+    const [sessionsPerDay, setSessionsPerDay] = useState(20);
+    const [scrapesPerSession, setScrapesPerSession] = useState(100);
+    const [emailsPerDay, setEmailsPerDay] = useState(300);
     const [selectedCities, setSelectedCities] = useState<string[]>(CITIES.flatMap(region => region.cities));
     const [pipelineRunning, setPipelineRunning] = useState(false);
     const [runningSession, setRunningSession] = useState(false);
@@ -428,7 +430,7 @@ export default function OutreachPage() {
             const result = await submitStagingBatch(3);
             toast.dismiss('stagebatch');
             if (result.submitted > 0) {
-                toast.success(`${result.submitted} leads submitted to Kie.ai — wait ~2 min then click "Poll & Email"`);
+                toast.success(`${result.submitted} leads submitted to Kie.ai - wait ~2 min then queue ready emails`);
                 loadData();
             } else if (result.errors[0]?.toLowerCase().includes('credit')) {
                 toast.error('Kie.ai credits insufficient — top up at kie.ai');
@@ -442,12 +444,12 @@ export default function OutreachPage() {
     };
 
     const handlePollAndEmail = async () => {
-        toast.loading('Polling Kie.ai and sending emails...', { id: 'pollemail' });
+        toast.loading('Polling Kie.ai and queueing ready emails...', { id: 'pollemail' });
         try {
-            const result = await pollAndEmailStagedLeads();
+            const result = await pollAndQueueStagedLeads();
             toast.dismiss('pollemail');
-            if (result.emailed > 0) {
-                toast.success(`${result.emailed} emails sent!`);
+            if (result.queued > 0) {
+                toast.success(`${result.queued} emails queued for spaced sending`);
                 loadData();
             } else if (result.stillProcessing > 0) {
                 toast.info(`${result.stillProcessing} still generating — try again in a minute`);
@@ -489,7 +491,7 @@ export default function OutreachPage() {
             if (result.skipped > 0) parts.push(`${result.skipped} skipped (no room found)`);
             if (result.failed > 0) parts.push(`${result.failed} failed`);
             if (result.total === 0) toast.info('No score 35+ leads without rooms found');
-            else if (result.staged > 0) toast.success(`${parts.join(' · ')} — run "Send Backlog Emails" once Kie.ai finishes (~2 min)`);
+            else if (result.staged > 0) toast.success(`${parts.join(' · ')} - queue ready emails once Kie.ai finishes (~2 min)`);
             else toast.info(parts.join(' · ') || 'No rooms found in any of these leads');
             if (result.staged > 0) loadData();
         } catch (e: any) {
@@ -502,12 +504,12 @@ export default function OutreachPage() {
     const [drainingBacklog, setDrainingBacklog] = useState(false);
     const handleDrainBacklog = async () => {
         setDrainingBacklog(true);
-        toast.loading('Sending backlog emails slowly (8s between each)...', { id: 'drain' });
+        toast.loading('Queueing ready backlog emails...', { id: 'drain' });
         try {
             const result = await drainEmailBacklog(8000);
             toast.dismiss('drain');
             const parts = [];
-            if (result.emailed > 0) parts.push(`${result.emailed} emailed`);
+            if (result.emailed > 0) parts.push(`${result.emailed} queued`);
             if (result.stillProcessing > 0) parts.push(`${result.stillProcessing} still generating`);
             if (result.skipped > 0) parts.push(`${result.skipped} skipped (no email)`);
             if (result.failed > 0) parts.push(`${result.failed} failed`);
@@ -799,7 +801,7 @@ export default function OutreachPage() {
                                         onClick={handlePollAndEmail}
                                         className="flex-1 text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
                                     >
-                                        Poll &amp; Email
+                                        Poll &amp; Queue
                                     </button>
                                     <button
                                         onClick={handleStageHighScore}
@@ -813,7 +815,7 @@ export default function OutreachPage() {
                                         disabled={drainingBacklog}
                                         className="w-full text-xs px-2 py-1.5 rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
                                     >
-                                        {drainingBacklog ? <><div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> Sending slowly...</> : <><Mail className="w-3 h-3" /> Send Backlog Emails</>}
+                                        {drainingBacklog ? <><div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> Queueing...</> : <><Mail className="w-3 h-3" /> Queue Backlog Emails</>}
                                     </button>
                                 </div>
                             </div>
@@ -839,7 +841,7 @@ export default function OutreachPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
-                                {(['scraped', 'scored', 'staged', 'form_filled', 'emailed'] as const).map((stage, i, arr) => (
+                                {(['scraped', 'scored', 'staged', 'queued', 'form_filled', 'emailed'] as const).map((stage, i, arr) => (
                                     <div key={stage} className="flex items-center gap-2">
                                         <div className={cn("px-4 py-2 rounded-lg text-sm font-medium", STATUS_COLORS[stage])}>
                                             <span className="font-bold">{stats[stage] ?? 0}</span> {STATUS_LABELS[stage]}
@@ -853,7 +855,7 @@ export default function OutreachPage() {
                         {/* ICP Scoring */}
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                             <h2 className="font-bold text-lg flex items-center gap-2"><Star className="w-5 h-5 text-amber-400" /> ICP Scoring System</h2>
-                            <p className="text-sm text-muted-foreground">Leads scoring <span className="text-violet-400 font-semibold">25+</span> are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.</p>
+                            <p className="text-sm text-muted-foreground">Leads scoring <span className="text-violet-400 font-semibold">15+</span> are automatically staged and emailed — empty rooms get virtual furniture added, furnished rooms get a professional redesign.</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {[
                                     { factor: 'Vacant / Unfurnished', points: '+40', reason: 'High visual need — adds furniture to empty rooms' },

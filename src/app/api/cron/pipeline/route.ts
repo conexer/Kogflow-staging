@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndEmailStagedLeads, scanAndStageHighScoreBacklog, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndQueueStagedLeads, scanAndStageHighScoreBacklog, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 300; // Vercel Pro max
 
-// 10 cron entries fire hourly 15–23 UTC plus 00 UTC (8am–5pm Pacific during DST).
+// Cron fires every 30 minutes from 15:00–00:30 UTC (8am–5:30pm Pacific during DST).
 // Each trigger: (1) emails leads staged in prior session, (2) scrapes + stages new leads.
 export async function GET(request: Request) {
     const functionStart = Date.now();
@@ -37,22 +37,19 @@ export async function GET(request: Request) {
 
     // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
     // Runs before poll so staged leads appear in step 2 on the NEXT cron call.
-    const stagingBatch = await submitStagingBatch(Math.max(1, Math.min(10, config.emails_per_day)));
+    const stagingBatch = await submitStagingBatch(Math.max(1, Math.min(20, config.emails_per_day)));
     debug.push(`Submit staging batch: ${stagingBatch.submitted} submitted, ${stagingBatch.failed} failed`);
     debug.push(...stagingBatch.errors.map((e) => `Staging batch error: ${e}`));
 
     // Step 1b: The scraper can save viable high-score leads as scored when staging
     // was missed or deferred. Keep feeding those back into Kie.ai so the email
     // queue does not dry up at "scored".
-    const backlog = await scanAndStageHighScoreBacklog(2);
+    const backlog = await scanAndStageHighScoreBacklog(10);
     debug.push(`Backlog staging: ${backlog.staged} staged, ${backlog.skipped} skipped, ${backlog.failed} failed`);
     debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
-    // Step 2: Poll Kie.ai + send emails for leads staged in a previous session.
-    // Cap at emails_per_day / sessions_per_day (≈ per-run share), max 20 to stay within 300s budget.
-    // With 8s inter-send delay, 20 emails costs at most 160s.
-    const emailsPerRun = Math.min(20, Math.max(1, Math.ceil((config.emails_per_day ?? 20) / (config.sessions_per_day ?? 10))));
-    const emailResult = await pollAndEmailStagedLeads(emailsPerRun);
+    // Step 2: Poll Kie.ai and move ready leads into the durable email queue.
+    const queueResult = await pollAndQueueStagedLeads(20);
 
     // Step 3: Check if we've already hit today's cron session limit (manual runs don't count).
     const todayCronRuns = await countTodayCronRuns();
@@ -62,7 +59,7 @@ export async function GET(request: Request) {
             errors: [],
             debug: [
                 ...debug,
-                ...emailResult.debug,
+                ...queueResult.debug,
                 `Cron skipped: already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,
             ],
             trigger: 'cron',
@@ -70,7 +67,7 @@ export async function GET(request: Request) {
         return NextResponse.json({
             skipped: true,
             reason: `Already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,
-            emailed: emailResult.emailed,
+            queued: queueResult.queued,
         });
     }
 
@@ -78,21 +75,21 @@ export async function GET(request: Request) {
     const result = await runPipelineSession({
         cities: config.cities,
         scrapesPerSession: config.scrapes_per_session,
-        deadlineMs: functionStart + 260_000,
+        deadlineMs: functionStart + 230_000,
     });
 
-    // Merge email debug lines into the run log so they appear in the activity log.
+    // Merge queue debug lines into the run log so they appear in the activity log.
     await logPipelineRun({
         ...result,
-        debug: [...debug, ...emailResult.debug, ...result.debug],
+        debug: [...debug, ...queueResult.debug, ...result.debug],
         trigger: 'cron',
     });
 
     return NextResponse.json({
         success: true,
         processed: result.processed,
-        emailed: emailResult.emailed,
-        stillProcessing: emailResult.stillProcessing,
+        queued: queueResult.queued,
+        stillProcessing: queueResult.stillProcessing,
         errors: result.errors,
     });
 }

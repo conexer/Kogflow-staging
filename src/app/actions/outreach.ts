@@ -7,6 +7,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const ZYTE_API_KEY = process.env.ZYTE_API_KEY!;
 const MOONDREAM_API_KEY = (process.env.MOONDREAM_API_KEY || '').trim();
+const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
 const CAPMONSTER_API_KEY = process.env.CAPMONSTER_API_KEY!;
 const KIE_API_KEY = process.env.KIE_AI_API_KEY!;
 
@@ -50,14 +51,26 @@ interface TargetMarket {
 export async function scoreICP(listing: Partial<ScrapedListing>): Promise<number> {
     let score = 0;
     const kw = listing.keywords?.join(' ').toLowerCase() || '';
+    const agentText = `${listing.agentName || ''} ${listing.agentEmail || ''}`.toLowerCase();
+
+    const hasAny = (terms: string[]) => terms.some(term => kw.includes(term));
 
     if (kw.includes('vacant') || kw.includes('unfurnished') || kw.includes('immediate occupancy')) score += 40;
+    if (hasAny(['empty', 'unoccupied', 'no furniture', 'not furnished', 'blank canvas'])) score += 30;
+    if (hasAny(['needs tlc', 'needs work', 'fixer', 'fixer upper', 'handyman', 'rehab', 'renovation opportunity', 'investor special'])) score += 30;
+    if (hasAny(['investor opportunity', 'value-add', 'value add', 'rental opportunity', 'flip opportunity'])) score += 25;
+    if (hasAny(['priced below market', 'new price', 'price improvement', 'recent price drop', 'motivated seller', 'bring all offers'])) score += 20;
+    if (hasAny(['bring your vision', 'make it your own', 'tons of potential', 'great potential', 'cosmetic updates', 'as-is', 'as is', 'estate sale'])) score += 15;
     if (listing.priceReduced) score += 25;
     if ((listing.daysOnMarket || 0) >= 60) score += 20;
     else if ((listing.daysOnMarket || 0) >= 30) score += 5;
     if ((listing.photoCount || 99) < 15) score += 10;
+    if ((listing.photoCount || 99) < 8) score += 5;
+    if (normalizeAgentEmail(listing.agentEmail)) score += 10;
+    if (agentText.includes('builder') || agentText.includes('new home') || agentText.includes('sales office')) score -= 20;
+    if ((listing.price || 0) >= 200000 && (listing.price || 0) <= 650000) score += 5;
 
-    return score;
+    return Math.max(0, score);
 }
 
 // ─────────────────────────────────────────────
@@ -543,212 +556,120 @@ export async function detectRoom(imageUrl: string): Promise<{
     error?: string;
 }> {
     const REJECT = { isEmpty: false, isStageable: false, isInterior: false, confidence: 0, roomType: 'unknown', isExterior: true, moondreamQueries: 0 };
-    if (!MOONDREAM_API_KEY) return { ...REJECT, error: 'MOONDREAM_API_KEY not configured' };
+    if (!GEMINI_API_KEY) return { ...REJECT, error: 'GEMINI_API_KEY not configured' };
 
     try {
-        let moondreamQueries = 0;
-
-        const moonHeaders = {
-            'X-Moondream-Auth': MOONDREAM_API_KEY,
-            'Content-Type': 'application/json',
-        };
-
-        // Helper: fetch image as base64 via Zyte (fallback when Moondream can't reach the URL directly)
-        const fetchViaZyte = async (url: string): Promise<string | null> => {
-            if (!ZYTE_API_KEY) return null;
-            const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
-            });
-            if (!zyteRes.ok) return null;
-            const zyteData = await zyteRes.json();
-            if (!zyteData.httpResponseBody) return null;
-            const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((h: { name?: string }) => h?.name?.toLowerCase() === 'content-type');
-            const contentType = contentTypeHeader?.value || 'image/jpeg';
-            return `data:${contentType};base64,${zyteData.httpResponseBody}`;
-        };
-
-        // Pass the image URL directly to Moondream — their servers fetch it.
-        // If they can't reach it (e.g. hotlink-protected homes.com images), they return non-ok;
-        // we then fetch via Zyte and retry once with a base64 data URL.
-        let imageData: string = imageUrl;
-
-        // ── Q1: Interior check (positive gate) ───────────────────────────────────
-        // Ask positively "is this interior?" — more reliable than asking "is this NOT exterior?"
-        // Exterior photos (yard, facade, driveway) should answer "no" to this.
-        let interiorRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'Is this photo taken inside a building, showing an indoor room with walls, floor, and ceiling visible? Answer only "yes" or "no".',
-                stream: false,
-            }),
-        });
-        if (!interiorRes.ok) {
-            // Moondream couldn't fetch the URL directly — try Zyte as a proxy and retry once.
-            const b64 = await fetchViaZyte(imageUrl);
-            if (!b64) return { ...REJECT, error: `Moondream Q1 failed and Zyte fallback unavailable` };
-            imageData = b64;
-            interiorRes = await fetch('https://api.moondream.ai/v1/query', {
-                method: 'POST',
-                headers: moonHeaders,
-                body: JSON.stringify({
-                    image_url: imageData,
-                    question: 'Is this photo taken inside a building, showing an indoor room with walls, floor, and ceiling visible? Answer only "yes" or "no".',
-                    stream: false,
-                }),
-            });
-            if (!interiorRes.ok) {
-                const err = await interiorRes.text();
-                return { ...REJECT, error: `Moondream interior check error ${interiorRes.status}: ${err}` };
+        // Fetch the image as base64 — Gemini requires inline data for arbitrary CDN URLs.
+        // Falls back to Zyte if the direct fetch is blocked (e.g. hotlink-protected).
+        const fetched = await fetchRemoteImageBuffer(imageUrl);
+        if (!fetched.buffer) {
+            // Zyte fallback for hotlink-blocked images
+            if (ZYTE_API_KEY) {
+                const zyteRes = await fetch('https://api.zyte.com/v1/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${Buffer.from(`${ZYTE_API_KEY}:`).toString('base64')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: imageUrl, httpResponseBody: true, httpResponseHeaders: true, geolocation: 'US' }),
+                });
+                if (!zyteRes.ok) return { ...REJECT, error: `Image fetch failed and Zyte fallback failed` };
+                const zyteData = await zyteRes.json();
+                if (!zyteData.httpResponseBody) return { ...REJECT, error: `Zyte returned no image body` };
+                const contentTypeHeader = (zyteData.httpResponseHeaders || []).find((h: { name?: string }) => h?.name?.toLowerCase() === 'content-type');
+                const mimeType = contentTypeHeader?.value?.split(';')[0]?.trim() || 'image/jpeg';
+                fetched.buffer = Buffer.from(zyteData.httpResponseBody, 'base64');
+                fetched.contentType = mimeType;
+            } else {
+                return { ...REJECT, error: `Image fetch failed: ${fetched.error}` };
             }
         }
-        const interiorData = await interiorRes.json();
-        const interiorAnswer: string = (interiorData.answer || interiorData.result || '').toLowerCase().trim();
-        if (!interiorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true }; // exterior — reject immediately
 
-        // ── Q1b: Explicit Exterior Negative Check ──────────────────────────────
-        // Ask negatively to catch yards, pools, facades that pass the interior check
-        await new Promise(r => setTimeout(r, 400));
-        const exteriorRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'Does this photo show a backyard, swimming pool, front yard, garden, driveway, or the outside of a house? Answer only "yes" or "no".',
-                stream: false,
-            }),
+        const mimeType = fetched.contentType?.split(';')[0]?.trim() || 'image/jpeg';
+        const base64Image = fetched.buffer.toString('base64');
+
+        // Single Gemini call covering all 5 qualification questions at once.
+        // Use an example-driven prompt — Gemini responds more reliably to examples than to <placeholder> templates.
+        const prompt = `Look at this real estate listing photo and return a JSON object. Return ONLY the JSON, no other text.
+
+Example output format:
+{"isInterior": true, "isExterior": false, "isFloorPlan": false, "isHallway": false, "hasFurniture": false, "roomType": "living room"}
+
+Rules:
+- isInterior: true if photo is taken inside a building with walls/floor/ceiling visible
+- isExterior: true if photo shows yard, pool, driveway, garden, or outside of building
+- isFloorPlan: true if image is a 2D floor plan, blueprint, or diagram
+- isHallway: true if photo shows a staircase, hallway, foyer, entryway, or corridor
+- hasFurniture: true if any furniture, appliances, personal items, or belongings are visible
+- roomType: must be exactly one of: "bedroom", "living room", "kitchen", "dining room", "other"
+
+Now analyze the photo and return the JSON:`;
+
+        const geminiBody = JSON.stringify({
+            contents: [{ parts: [
+                { inlineData: { mimeType, data: base64Image } },
+                { text: prompt },
+            ]}],
+            generationConfig: { temperature: 0, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
         });
-        if (exteriorRes.ok) {
-            const exteriorData = await exteriorRes.json();
-            const exteriorAnswer: string = (exteriorData.answer || exteriorData.result || '').toLowerCase().trim();
-            if (exteriorAnswer.startsWith('yes')) return { ...REJECT, isExterior: true };
+
+        // Retry up to 3 times on 503 (temporary overload) with exponential backoff.
+        let geminiRes: Response | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) await new Promise(r => setTimeout(r, 1500 * attempt));
+            geminiRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: geminiBody }
+            );
+            if (geminiRes.status !== 503) break;
         }
 
-        // ── Q2: Empty room check ───────────────────────────────────────────────
-        // Now that we know it's interior, check if it's empty/unfurnished
-        await new Promise(r => setTimeout(r, 400));
-        const emptyRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'Are there any objects, furniture, appliances, personal items, decorations, or belongings visible in this room? Answer only "yes" or "no".',
-                stream: false,
-            }),
-        });
-        if (!emptyRes.ok) {
-            const err = await emptyRes.text();
-            return { ...REJECT, error: `Moondream empty check error ${emptyRes.status}: ${err}` };
-        }
-        const emptyData = await emptyRes.json();
-        const emptyAnswer: string = (emptyData.answer || emptyData.result || '').toLowerCase().trim();
-        // Question asks "is there furniture?" — "yes" = furnished (not empty), "no" = empty
-        const hasFurniture = emptyAnswer.startsWith('yes');
-        const isEmpty = !hasFurniture;
-
-        // Has furniture — not stageable for empty-room staging, but may qualify for redesign.
-        // Run Q5 to get the room type so the redesign path has something to work with.
-        if (!isEmpty) {
-            await new Promise(r => setTimeout(r, 400));
-            const furnTypeRes = await fetch('https://api.moondream.ai/v1/query', {
-                method: 'POST',
-                headers: moonHeaders,
-                body: JSON.stringify({
-                    image_url: imageData,
-                    question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, or dining room.',
-                    stream: false,
-                }),
-            });
-            let furnRoomType = 'room';
-            if (furnTypeRes.ok) {
-                const furnTypeData = await furnTypeRes.json();
-                const furnTypeAnswer: string = (furnTypeData.answer || furnTypeData.result || '').toLowerCase().trim();
-                furnRoomType = furnTypeAnswer.includes('bedroom') ? 'bedroom'
-                    : furnTypeAnswer.includes('living') ? 'living room'
-                    : furnTypeAnswer.includes('kitchen') ? 'kitchen'
-                    : furnTypeAnswer.includes('dining') ? 'dining room'
-                    : 'room';
-            }
-            return { ...REJECT, isEmpty: false, isExterior: false, isInterior: true, roomType: furnRoomType };
+        if (!geminiRes!.ok) {
+            const err = await geminiRes!.text();
+            return { ...REJECT, error: `Gemini API error ${geminiRes!.status}: ${err}` };
         }
 
-        // ── Q3: Floor plan rejection ───────────────────────────────────────────
-        // Floor plans have no furniture so they pass Q2. Explicitly reject them.
-        await new Promise(r => setTimeout(r, 400));
-        const planRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'Does this image show a 2D floor plan, architectural blueprint, or room diagram with labels or dimension lines? Answer only "yes" or "no".',
-                stream: false,
-            }),
-        });
-        if (planRes.ok) {
-            const planData = await planRes.json();
-            const planAnswer: string = (planData.answer || planData.result || '').toLowerCase().trim();
-            if (planAnswer.startsWith('yes')) return { ...REJECT }; // floor plan — reject
+        const geminiData = await geminiRes!.json();
+        const rawText: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+        // Extract JSON: pull the first {...} block to handle markdown fences and extra text
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        const jsonText = jsonMatch ? jsonMatch[0] : rawText.trim();
+        let parsed: {
+            isInterior?: boolean;
+            isExterior?: boolean;
+            isFloorPlan?: boolean;
+            isHallway?: boolean;
+            hasFurniture?: boolean;
+            roomType?: string;
+        };
+        try {
+            parsed = JSON.parse(jsonText);
+        } catch {
+            return { ...REJECT, error: `Gemini returned unparseable JSON: ${rawText.slice(0, 200)}` };
         }
 
-        // ── Q4: Foyer/stairway/hallway rejection ───────────────────────────────
-        // Entryways and staircases are not stageable rooms even when empty.
-        await new Promise(r => setTimeout(r, 400));
-        const foyerRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'Does this image show a staircase, hallway, entryway, foyer, or corridor? Answer only "yes" or "no".',
-                stream: false,
-            }),
-        });
-        if (foyerRes.ok) {
-            const foyerData = await foyerRes.json();
-            const foyerAnswer: string = (foyerData.answer || foyerData.result || '').toLowerCase().trim();
-            if (foyerAnswer.startsWith('yes')) return { ...REJECT }; // not a stageable room — reject
-        }
+        // Apply the same qualification gates as before, now from a single call
+        if (!parsed.isInterior) return { ...REJECT, isExterior: true };
+        if (parsed.isExterior) return { ...REJECT, isExterior: true };
+        if (parsed.isFloorPlan) return { ...REJECT };
+        if (parsed.isHallway) return { ...REJECT };
 
-        // ── Q5: Room type (only for confirmed interior, empty rooms) ─────────
-        await new Promise(r => setTimeout(r, 400));
-        const typeRes = await fetch('https://api.moondream.ai/v1/query', {
-            method: 'POST',
-            headers: moonHeaders,
-            body: JSON.stringify({
-                image_url: imageData,
-                question: 'What type of room is this? Answer with one of: bedroom, living room, kitchen, or dining room.',
-                stream: false,
-            }),
-        });
-        let roomType = 'room';
-        if (typeRes.ok) {
-            const typeData = await typeRes.json();
-            const typeAnswer: string = (typeData.answer || typeData.result || '').toLowerCase().trim();
-            roomType = typeAnswer.includes('bedroom') ? 'bedroom'
-                : typeAnswer.includes('living') ? 'living room'
-                : typeAnswer.includes('kitchen') ? 'kitchen'
-                : typeAnswer.includes('dining') ? 'dining room'
-                : 'room';
-        }
-
-        // Final Check: Must have identified a SPECIFIC room type to be stageable.
-        // Ambiguous "room" or "unknown" is not high-enough quality for automated outreach.
+        const isEmpty = !parsed.hasFurniture;
         const VALID_ROOM_TYPES = ['bedroom', 'living room', 'kitchen', 'dining room'];
+        // Normalize underscore variants (e.g. "living_room" -> "living room") Gemini sometimes returns
+        const normalizedRoomType = (parsed.roomType || '').toLowerCase().replace(/_/g, ' ').trim();
+        const roomType = VALID_ROOM_TYPES.includes(normalizedRoomType) ? normalizedRoomType : 'room';
         const isKnownRoom = VALID_ROOM_TYPES.includes(roomType);
 
         return {
-            isEmpty: isEmpty,
-            isStageable: isKnownRoom, // Stricter gate
+            isEmpty,
+            isStageable: isKnownRoom,
             isInterior: true,
             confidence: 90,
             roomType,
             isExterior: false,
-            moondreamQueries,
+            moondreamQueries: 0, // kept for API compatibility
         };
 
     } catch (error: any) {
@@ -825,7 +746,7 @@ export async function saveLead(listing: ScrapedListing & { emptyRooms?: { roomTy
         // pipeline fields overwritten — especially empty_rooms, which stores the staged
         // image URL after Kie.ai completes. Overwriting it would re-trigger staging on
         // the next cron run and cause duplicate emails to the same agent.
-        const isPipelined = ['staged', 'sending', 'emailed', 'form_filled'].includes(existing.status);
+        const isPipelined = ['staged', 'queued', 'sending', 'emailed', 'form_filled'].includes(existing.status);
 
         const duplicateUpdates: {
             city: string;
@@ -1007,8 +928,8 @@ async function releaseFailedRecipientLock(normalizedEmail: string): Promise<void
         .then(null, () => {});
 }
 
-// Submit a batch to Kie.ai — only leads with Moondream-confirmed empty rooms
-// Re-scans existing score>=35 leads that were scraped without a room photo (empty_rooms=[]).
+// Submit a batch to Kie.ai — leads with a confirmed room photo, including 10+ redesign candidates.
+// Re-scans existing score>=10 leads that were scraped without a room photo (empty_rooms=[]).
 // Fetches their HAR photos, runs Moondream on each, stages the first stageable room found.
 // These leads were scraped before the furnished-redesign logic existed and have no staging_task_id.
 export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged: number; skipped: number; failed: number; total: number; errors: string[] }> {
@@ -1018,7 +939,7 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
         .from('outreach_leads')
         .select('id, address, listing_url, icp_score, agent_email')
         .in('status', ['scraped', 'scored'])
-        .gte('icp_score', 25)
+        .gte('icp_score', 15)
         .eq('empty_rooms', '[]')
         .not('listing_url', 'is', null)
         .order('icp_score', { ascending: false })
@@ -1056,8 +977,9 @@ export async function scanAndStageHighScoreBacklog(limit = 10): Promise<{ staged
             const { taskId, error: stageErr } = await stageEmptyRoom(photo, roomType, !isEmpty);
             if (!taskId) { errors.push(`${lead.address}: ${stageErr}`); failed++; break; }
 
+            const permanentBeforeUrl = await uploadBeforeImage(photo, lead.id);
             await supabase.from('outreach_leads')
-                .update({ empty_rooms: [{ roomType, imageUrl: photo }] })
+                .update({ empty_rooms: [{ roomType, imageUrl: permanentBeforeUrl, redesign: !isEmpty }] })
                 .eq('id', lead.id);
             await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
             staged++;
@@ -1132,10 +1054,12 @@ export async function submitStagingBatch(limit?: number): Promise<{ submitted: n
             continue;
         }
 
-        const imageUrl: string = lead.empty_rooms[0].imageUrl;
-        const roomType: string = lead.empty_rooms[0].roomType || 'room';
+        const room = lead.empty_rooms[0];
+        const imageUrl: string = room.imageUrl;
+        const roomType: string = room.roomType || 'room';
+        const isRedesign = room.redesign === true;
 
-        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, false);
+        const { taskId, error: stageErr } = await stageEmptyRoom(imageUrl, roomType, isRedesign);
         if (taskId) {
             await updateLeadStatus(lead.id, 'staged', { staging_task_id: taskId });
             if (agentKey) batchEmails.add(agentKey);
@@ -1154,6 +1078,26 @@ export async function submitStagingBatch(limit?: number): Promise<{ submitted: n
 }
 
 // Upload a remote image URL to Supabase storage and return the permanent public URL.
+// Uploads the raw listing photo to Supabase so email clients can display it (external CDNs hotlink-block).
+async function uploadBeforeImage(imageUrl: string, leadId: string): Promise<string> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    try {
+        const fetched = await fetchRemoteImageBuffer(imageUrl);
+        if (!fetched.buffer) return imageUrl;
+        const ext = fetched.contentType?.includes('webp') ? 'webp' : 'jpg';
+        const path = `outreach/before/${leadId}.${ext}`;
+        const { error } = await supabase.storage.from('uploads').upload(path, fetched.buffer, {
+            contentType: fetched.contentType || 'image/jpeg',
+            upsert: true,
+        });
+        if (error) return imageUrl;
+        const { data } = supabase.storage.from('uploads').getPublicUrl(path);
+        return data.publicUrl || imageUrl;
+    } catch {
+        return imageUrl;
+    }
+}
+
 // Kie.ai returns tempfile.aiquickdraw.com URLs that expire — this makes them permanent.
 // Capped at 25s total so a slow Kie.ai CDN response never blocks the email pipeline.
 async function uploadStagedImage(tempUrl: string, leadId: string): Promise<string> {
@@ -1393,9 +1337,191 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
     return { emailed, stillProcessing, failed, errors, debug };
 }
 
+async function getNextQueueSendAfter(supabase: any): Promise<string> {
+    const now = Date.now();
+    let nextMs = now;
+
+    const { data: pending } = await supabase
+        .from('outreach_email_queue')
+        .select('send_after')
+        .in('status', ['queued', 'sending'])
+        .order('send_after', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const pendingRow = pending as { send_after?: string } | null;
+    const pendingMs = pendingRow?.send_after ? new Date(pendingRow.send_after).getTime() : 0;
+    if (pendingMs > now) nextMs = pendingMs + 60_000;
+
+    const { data: lastSent } = await supabase
+        .from('outreach_email_queue')
+        .select('sent_at')
+        .eq('status', 'sent')
+        .not('sent_at', 'is', null)
+        .order('sent_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const lastSentRow = lastSent as { sent_at?: string } | null;
+    const lastSentMs = lastSentRow?.sent_at ? new Date(lastSentRow.sent_at).getTime() + 60_000 : 0;
+    nextMs = Math.max(nextMs, lastSentMs);
+
+    return new Date(nextMs).toISOString();
+}
+
+async function enqueueReadyOutreachEmail(lead: {
+    id: string;
+    address: string;
+    agent_email?: string | null;
+}): Promise<{ queued: boolean; skipped?: boolean; duplicate?: boolean; sendAfter?: string; error?: string }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const normalizedEmail = normalizeAgentEmail(lead.agent_email);
+    if (!normalizedEmail || !lead.agent_email) {
+        await updateLeadStatus(lead.id, 'form_filled');
+        return { queued: false, skipped: true, error: 'No agent email' };
+    }
+
+    const lockCheck = await hasRecipientLock(normalizedEmail);
+    if (lockCheck.error) return { queued: false, error: lockCheck.error };
+    if (lockCheck.locked) {
+        await updateLeadStatus(lead.id, 'form_filled');
+        return { queued: false, skipped: true, duplicate: true, error: `Recipient already contacted: ${normalizedEmail}` };
+    }
+
+    const { data: existingQueue } = await supabase
+        .from('outreach_email_queue')
+        .select('id, lead_id, status, send_after')
+        .eq('normalized_email', normalizedEmail)
+        .in('status', ['queued', 'sending', 'sent'])
+        .limit(1)
+        .maybeSingle();
+
+    if (existingQueue) {
+        if (existingQueue.lead_id === lead.id && existingQueue.status !== 'sent') {
+            await updateLeadStatus(lead.id, 'queued');
+            return { queued: true, sendAfter: existingQueue.send_after };
+        }
+        await updateLeadStatus(lead.id, 'form_filled');
+        return { queued: false, skipped: true, duplicate: true, error: `Recipient already queued: ${normalizedEmail}` };
+    }
+
+    const sendAfter = await getNextQueueSendAfter(supabase);
+    const { error } = await supabase.from('outreach_email_queue').insert({
+        lead_id: lead.id,
+        normalized_email: normalizedEmail,
+        agent_email: lead.agent_email.trim(),
+        status: 'queued',
+        source: 'pipeline',
+        ready_at: new Date().toISOString(),
+        send_after: sendAfter,
+    });
+
+    if (error) {
+        if (error.code === '23505') {
+            await updateLeadStatus(lead.id, 'queued');
+            return { queued: true, sendAfter };
+        }
+        return { queued: false, error: error.message };
+    }
+
+    await updateLeadStatus(lead.id, 'queued');
+    return { queued: true, sendAfter };
+}
+
+// Poll staged leads, save the generated image URL, then queue fully ready emails.
+// The actual Gmail sender runs separately and sends one queued email per invocation.
+export async function pollAndQueueStagedLeads(limit?: number): Promise<{ queued: number; stillProcessing: number; failed: number; errors: string[]; debug: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let query = supabase
+        .from('outreach_leads')
+        .select('id, address, listing_url, agent_name, agent_email, empty_rooms, staging_task_id, city, price, days_on_market, price_reduced, photo_count, keywords')
+        .eq('status', 'staged')
+        .not('staging_task_id', 'is', null)
+        .order('icp_score', { ascending: false })
+        .order('created_at', { ascending: true });
+
+    if (typeof limit === 'number') query = query.limit(limit);
+
+    const { data, error } = await query;
+
+    if (error) return { queued: 0, stillProcessing: 0, failed: 0, errors: [error.message], debug: [] };
+
+    let queued = 0;
+    let stillProcessing = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    const debug: string[] = [];
+
+    const leads = data || [];
+    debug.push(`Poll & queue: checking ${leads.length} staged lead(s)`);
+
+    for (const lead of leads) {
+        const result = await checkStagingResult(lead.staging_task_id);
+
+        if (result.status === 'processing') {
+            stillProcessing++;
+            debug.push(`Still generating: ${lead.address}`);
+            continue;
+        }
+
+        if (result.status === 'error') {
+            debug.push(`Kie.ai error (will retry): ${lead.address} - ${result.error}`);
+            continue;
+        }
+
+        if (result.status === 'failed') {
+            await updateLeadStatus(lead.id, 'scored', { staging_task_id: null });
+            failed++;
+            errors.push(`Generation failed ${lead.address}: ${result.error}`);
+            debug.push(`Generation failed ${lead.address}: ${result.error}`);
+            continue;
+        }
+
+        const permanentUrl = result.url ? await uploadStagedImage(result.url, lead.id) : undefined;
+
+        if (permanentUrl) {
+            const updatedRooms = [...(lead.empty_rooms || [])];
+            if (updatedRooms[0]) updatedRooms[0].stagedUrl = permanentUrl;
+            await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+        } else {
+            debug.push(`No staged URL returned for ${lead.address} - queueing email without image`);
+        }
+
+        const queueResult = await enqueueReadyOutreachEmail(lead);
+        if (queueResult.queued) {
+            queued++;
+            debug.push(`Queued email -> ${lead.agent_email} (${lead.address}) send_after=${queueResult.sendAfter}`);
+        } else if (queueResult.duplicate) {
+            debug.push(`Duplicate skipped before queue: ${lead.agent_email} (${lead.address})`);
+        } else if (queueResult.skipped) {
+            debug.push(`Skipped queue: ${lead.address} - ${queueResult.error}`);
+        } else {
+            failed++;
+            errors.push(`Queue failed ${lead.address}: ${queueResult.error}`);
+            debug.push(`Queue failed ${lead.address}: ${queueResult.error}`);
+        }
+    }
+
+    debug.push(`Poll complete: ${queued} queued, ${stillProcessing} still generating, ${failed} failed`);
+    return { queued, stillProcessing, failed, errors, debug };
+}
+
 // Finds all staged leads that were never emailed and sends slowly with a delay between each.
 // Handles both: Kie.ai task still pending (polls first) and task already completed.
 export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: number; skipped: number; stillProcessing: number; failed: number; total: number; errors: string[] }> {
+    void delayMs;
+    const result = await pollAndQueueStagedLeads(100);
+    return {
+        emailed: result.queued,
+        skipped: 0,
+        stillProcessing: result.stillProcessing,
+        failed: result.failed,
+        total: result.queued + result.stillProcessing + result.failed,
+        errors: result.errors,
+    };
+
+    /*
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data, error } = await supabase
@@ -1518,6 +1644,7 @@ export async function drainEmailBacklog(delayMs = 8000): Promise<{ emailed: numb
     }
 
     return { emailed, skipped, stillProcessing, failed, total: leads.length, errors };
+    */
 }
 
 export async function getLeadStats(since?: string) {
@@ -1565,6 +1692,7 @@ export async function getLeadStats(since?: string) {
         scraped: leads.filter(l => l.status === 'scraped').length,
         scored: leads.filter(l => l.status === 'scored').length,
         staged: currentStaged,
+        queued: leads.filter(l => l.status === 'queued').length,
         stagedEver,
         form_filled: leads.filter(l => l.status === 'form_filled').length,
         emailed: leads.filter(l => l.status === 'emailed' || !!l.email_sent_at).length,
@@ -2257,6 +2385,151 @@ export async function sendOutreachEmail(lead: {
     }
 }
 
+export async function sendNextQueuedOutreachEmail(): Promise<{ sent: number; skipped: number; failed: number; reason?: string; errors: string[]; debug: string[] }> {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const debug: string[] = [];
+    const errors: string[] = [];
+
+    const { config } = await loadPipelineConfig();
+    const dailyLimit = config?.emails_per_day ?? 300;
+    const windowStart = getPipelineCronWindowStart(new Date());
+    const { count: sentToday, error: countError } = await supabase
+        .from('outreach_leads')
+        .select('*', { count: 'exact', head: true })
+        .gte('email_sent_at', windowStart.toISOString());
+
+    if (countError) {
+        errors.push(`Daily email count failed: ${countError.message}`);
+        return { sent: 0, skipped: 0, failed: 1, errors, debug };
+    }
+
+    if ((sentToday ?? 0) >= dailyLimit) {
+        const reason = `Daily email cap reached (${sentToday}/${dailyLimit})`;
+        debug.push(reason);
+        return { sent: 0, skipped: 1, failed: 0, reason, errors, debug };
+    }
+
+    await supabase
+        .from('outreach_email_queue')
+        .update({ status: 'queued', locked_at: null, updated_at: new Date().toISOString() })
+        .eq('status', 'sending')
+        .lt('locked_at', new Date(Date.now() - 10 * 60_000).toISOString())
+        .then(null, () => {});
+
+    const { data: claimedRows, error: claimError } = await supabase.rpc('claim_next_outreach_email_queue_item');
+    if (claimError) {
+        errors.push(`Queue claim failed: ${claimError.message}`);
+        return { sent: 0, skipped: 0, failed: 1, errors, debug };
+    }
+
+    const queueItem = Array.isArray(claimedRows) ? claimedRows[0] : claimedRows;
+    if (!queueItem) {
+        debug.push('No queued email ready to send');
+        return { sent: 0, skipped: 0, failed: 0, reason: 'No queued email ready', errors, debug };
+    }
+
+    const { data: lead, error: leadError } = await supabase
+        .from('outreach_leads')
+        .select('id, status, address, listing_url, agent_name, agent_email, empty_rooms, city, price, days_on_market, price_reduced, photo_count, keywords')
+        .eq('id', queueItem.lead_id)
+        .maybeSingle();
+
+    if (leadError || !lead) {
+        const message = leadError?.message || 'Lead not found';
+        await supabase
+            .from('outreach_email_queue')
+            .update({ status: 'failed', last_error: message, locked_at: null, updated_at: new Date().toISOString() })
+            .eq('id', queueItem.id);
+        errors.push(`Queued lead lookup failed: ${message}`);
+        return { sent: 0, skipped: 0, failed: 1, errors, debug };
+    }
+
+    if (!lead.agent_email) {
+        await supabase
+            .from('outreach_email_queue')
+            .update({ status: 'skipped', last_error: 'No agent email', locked_at: null, updated_at: new Date().toISOString() })
+            .eq('id', queueItem.id);
+        await updateLeadStatus(lead.id, 'form_filled');
+        debug.push(`Skipped queued email for ${lead.address}: no agent email`);
+        return { sent: 0, skipped: 1, failed: 0, errors, debug };
+    }
+
+    if (['emailed', 'form_filled'].includes(lead.status)) {
+        await supabase
+            .from('outreach_email_queue')
+            .update({ status: 'skipped', last_error: `Lead already ${lead.status}`, locked_at: null, updated_at: new Date().toISOString() })
+            .eq('id', queueItem.id);
+        debug.push(`Skipped queued email for ${lead.address}: lead already ${lead.status}`);
+        return { sent: 0, skipped: 1, failed: 0, errors, debug };
+    }
+
+    let storedBeforeUrl = lead.empty_rooms?.[0]?.imageUrl;
+    // Re-upload if still an external URL (e.g. old leads stored raw Movoto URLs before this fix)
+    if (storedBeforeUrl && !storedBeforeUrl.includes('supabase.co')) {
+        storedBeforeUrl = await uploadBeforeImage(storedBeforeUrl, lead.id);
+        const updatedRooms = [...(lead.empty_rooms || [])];
+        if (updatedRooms[0]) updatedRooms[0] = { ...updatedRooms[0], imageUrl: storedBeforeUrl };
+        await supabase.from('outreach_leads').update({ empty_rooms: updatedRooms }).eq('id', lead.id);
+    }
+    const stagedUrl = lead.empty_rooms?.[0]?.stagedUrl;
+    const emailResult = await sendOutreachEmail({
+        leadId: lead.id,
+        agentName: lead.agent_name,
+        agentEmail: lead.agent_email,
+        address: lead.address,
+        stagedImageUrl: stagedUrl,
+        beforeImageUrl: storedBeforeUrl,
+        city: lead.city,
+        price: lead.price,
+        daysOnMarket: lead.days_on_market,
+        priceReduced: lead.price_reduced,
+        photoCount: lead.photo_count,
+        keywords: lead.keywords,
+        roomType: lead.empty_rooms?.[0]?.roomType,
+        listingUrl: lead.listing_url,
+        source: 'queue',
+    });
+
+    if (emailResult.success) {
+        const sentAt = new Date().toISOString();
+        await supabase
+            .from('outreach_email_queue')
+            .update({ status: 'sent', sent_at: sentAt, locked_at: null, last_error: null, updated_at: sentAt })
+            .eq('id', queueItem.id);
+        await updateLeadStatus(lead.id, 'emailed', { email_sent_at: sentAt });
+        debug.push(`Email sent from queue -> ${lead.agent_email} (${lead.address})`);
+        return { sent: 1, skipped: 0, failed: 0, errors, debug };
+    }
+
+    if (emailResult.duplicate) {
+        await supabase
+            .from('outreach_email_queue')
+            .update({ status: 'skipped', last_error: emailResult.error || 'Duplicate recipient', locked_at: null, updated_at: new Date().toISOString() })
+            .eq('id', queueItem.id);
+        await updateLeadStatus(lead.id, 'form_filled');
+        debug.push(`Duplicate blocked from queue: ${lead.agent_email} (${lead.address})`);
+        return { sent: 0, skipped: 1, failed: 0, errors, debug };
+    }
+
+    const attempts = Number(queueItem.attempts ?? 1);
+    const finalFailure = attempts >= 3;
+    await supabase
+        .from('outreach_email_queue')
+        .update({
+            status: finalFailure ? 'failed' : 'queued',
+            send_after: finalFailure ? queueItem.send_after : new Date(Date.now() + 15 * 60_000).toISOString(),
+            locked_at: null,
+            last_error: emailResult.error || 'Email failed',
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id', queueItem.id);
+    await updateLeadStatus(lead.id, 'queued');
+
+    errors.push(`Queued email failed ${lead.address}: ${emailResult.error}`);
+    debug.push(`Queued email failed ${lead.address}: ${emailResult.error}`);
+    return { sent: 0, skipped: 0, failed: 1, errors, debug };
+}
+
 // Sends a test email to the given address and returns the raw result.
 // Use this to confirm Gmail OAuth is wired up correctly before relying on the pipeline.
 export async function sendTestEmail(toEmail: string): Promise<{ success?: boolean; error?: string; detail?: string }> {
@@ -2312,9 +2585,10 @@ async function getHarListingPhotos(propertyUrl: string, maxPhotos = 10): Promise
             return [];
         }
 
+        // Match both CDN domains: photos.harstatic.com (current) and mediahar.harstatic.com (legacy)
         const urls = [
             ...new Set(
-                [...html.matchAll(/https:\/\/mediahar\.harstatic\.com\/[^"'\s]+\/lr\/[^"'\s]+\.jpeg/g)]
+                [...html.matchAll(/https:\/\/(?:photos|mediahar)\.harstatic\.com\/[^"'\s]+\.jpe?g/gi)]
                     .map(m => m[0])
             ),
         ];
@@ -2494,8 +2768,8 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
         if (emptyRooms.length > 0) {
             await supabase.from('outreach_leads').update({ empty_rooms: emptyRooms }).eq('id', lead.id);
             found++;
-        } else if ((lead.icp_score ?? 0) >= 40 && interiorPhotos[0]) {
-            // High ICP score (stricter 40+ threshold) but no empty room found.
+        } else if ((lead.icp_score ?? 0) >= 15 && interiorPhotos[0]) {
+            // Score 15+ but no empty room found.
             // Check the first interior photo for REDESIGN staging.
             const { isStageable: s2, roomType: rt2, isExterior: ex2 } = await detectRoom(interiorPhotos[0]);
             // ONLY proceed if it's confirmed stageable AND NOT exterior.
@@ -2787,8 +3061,10 @@ export async function runPipelineSession(config: {
     let emptyRoomsFound = 0;
     let moondreamChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 16;
-    const MAX_HIGH_SCORE_STAGE = 10; // max redesigns per session to control Kie.ai credits
+    const MAX_MOONDREAM = 32;
+    const MIN_REDESIGN_SCORE = 15;
+    const MAX_HIGH_SCORE_STAGE = 20; // max redesigns per session to control Kie.ai credits
+    const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 90_000;
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
     toProcess.sort((a, b) => {
@@ -2810,7 +3086,7 @@ export async function runPipelineSession(config: {
 
     for (let batchStart = 0; batchStart < toProcess.length; batchStart += MOONDREAM_CONCURRENCY) {
         // Deadline guard — write SESSION_COMPLETE before Vercel's 300s hard kill.
-        if (config.deadlineMs && Date.now() > config.deadlineMs) {
+        if (config.deadlineMs && Date.now() + MIN_TIME_FOR_NEXT_VISION_BATCH_MS > config.deadlineMs) {
             await log(`Time budget reached: stopping early (${processed} leads saved so far)`);
             await flushLog();
             await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
@@ -2857,6 +3133,7 @@ export async function runPipelineSession(config: {
             const errs: string[] = [];
             const emptyRooms: { roomType: string; imageUrl: string }[] = [];
             let furnishedRoom: { roomType: string; imageUrl: string } | null = null;
+            let visionScoreBoost = 0;
 
             listing.score = await scoreICP(listing);
 
@@ -2900,13 +3177,23 @@ export async function runPipelineSession(config: {
                     if (isStageable && isEmpty) {
                         emptyRooms.push({ roomType, imageUrl: photo });
                         logs.push(`  → Empty ${roomType}!`);
+                        visionScoreBoost = Math.max(visionScoreBoost, 25);
                         foundStageable = true;
                         break;
                     }
                     if (!furnishedRoom && !isEmpty && roomType !== 'room') {
                         furnishedRoom = { roomType, imageUrl: photo };
                         logs.push(`  → Furnished ${roomType} (redesign candidate)`);
+                        visionScoreBoost = Math.max(visionScoreBoost, 15);
+                        if (((listing.score ?? 0) + visionScoreBoost) >= MIN_REDESIGN_SCORE) {
+                            foundStageable = true;
+                            break;
+                        }
                     }
+                }
+                if (visionScoreBoost > 0) {
+                    listing.score = Math.max(0, (listing.score ?? 0) + visionScoreBoost);
+                    logs.push(`  → ICP score boosted +${visionScoreBoost} from Gemini room fit (score ${listing.score})`);
                 }
                 if (!foundStageable && !furnishedRoom) logs.push(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
             } else {
@@ -2926,13 +3213,13 @@ export async function runPipelineSession(config: {
                 } else {
                     logs.push(`  → Stage FAILED: ${stageErr}`);
                 }
-            } else if (furnishedRoom && (listing.score ?? 0) >= 25 && batchIdx < (MAX_HIGH_SCORE_STAGE - highScoreStaged)) {
+            } else if (furnishedRoom && (listing.score ?? 0) >= MIN_REDESIGN_SCORE && batchIdx < (MAX_HIGH_SCORE_STAGE - highScoreStaged)) {
                 // Redesign budget is checked per-batch using the pre-batch highScoreStaged snapshot
                 const { taskId, error: stageErr } = await stageEmptyRoom(furnishedRoom.imageUrl, furnishedRoom.roomType, true);
                 if (taskId) {
                     stagingTaskId = taskId;
                     isRedesign = true;
-                    logs.push(`  → Kie.ai task queued (redesign score ${listing.score}) taskId=${taskId}`);
+                    logs.push(`  → Kie.ai task queued (redesign score ${listing.score}, threshold ${MIN_REDESIGN_SCORE}) taskId=${taskId}`);
                 } else {
                     logs.push(`  → Redesign FAILED: ${stageErr}`);
                 }
@@ -2975,7 +3262,7 @@ export async function runPipelineSession(config: {
             if (r.stagingTaskId) {
                 if (r.isRedesign) {
                     await supabase.from('outreach_leads')
-                        .update({ empty_rooms: [{ roomType: r.furnishedRoom!.roomType, imageUrl: r.furnishedRoom!.imageUrl }] })
+                        .update({ empty_rooms: [{ roomType: r.furnishedRoom!.roomType, imageUrl: r.furnishedRoom!.imageUrl, redesign: true }] })
                         .eq('id', leadId);
                 }
                 await updateLeadStatus(leadId, 'staged', { staging_task_id: r.stagingTaskId });
@@ -3043,7 +3330,7 @@ export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; e
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.from('pipeline_config').select('*').eq('id', 1).single();
     const defaults: PipelineConfig = {
-        sessions_per_day: 3, scrapes_per_session: 10, emails_per_day: 10, cron_enabled: true,
+        sessions_per_day: 20, scrapes_per_session: 100, emails_per_day: 300, cron_enabled: true,
         cities: getDefaultTargetCities(),
     };
     if (error || !data) return { config: defaults };
@@ -3054,12 +3341,12 @@ export async function loadPipelineConfig(): Promise<{ config?: PipelineConfig; e
         config: {
             sessions_per_day: data.sessions_per_day,
             scrapes_per_session: data.scrapes_per_session,
-            emails_per_day: data.emails_per_day ?? 10,
+            emails_per_day: data.emails_per_day ?? 300,
             cities: data.cities,
             cron_enabled: data.cron_enabled ?? true,
         },
         warning: missingModernColumns
-            ? 'Live database is missing pipeline_config.cron_enabled and/or pipeline_config.emails_per_day. Cron is falling back to defaults, so 50 emails/day is not active in production yet.'
+            ? 'Live database is missing pipeline_config.cron_enabled and/or pipeline_config.emails_per_day. Cron is falling back to defaults, so 300 emails/day is not active in production yet.'
             : undefined,
     };
 }
@@ -3089,13 +3376,12 @@ export async function logPipelineRun(result: { processed: number; errors: string
 // Count cron-only runs today (manual UI runs don't count toward the daily limit).
 export async function countTodayCronRuns(): Promise<number> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const windowStart = getPipelineCronWindowStart(new Date());
     // Try to filter by trigger='cron'; fall back to all runs if column missing
     const { count, error } = await supabase
         .from('pipeline_runs')
         .select('*', { count: 'exact', head: true })
-        .gte('ran_at', today.toISOString())
+        .gte('ran_at', windowStart.toISOString())
         .neq('processed', -1)
         .eq('trigger', 'cron');
     if (error?.message?.includes('trigger')) {
@@ -3106,8 +3392,16 @@ export async function countTodayCronRuns(): Promise<number> {
     return count ?? 0;
 }
 
+function getPipelineCronWindowStart(now: Date): Date {
+    const start = new Date(now);
+    start.setUTCMinutes(0, 0, 0);
+    start.setUTCHours(15);
+    if (now.getUTCHours() < 15) start.setUTCDate(start.getUTCDate() - 1);
+    return start;
+}
+
 // Returns cron schedule health info for the dashboard.
-// Cron fires hourly 15–23 UTC plus 00 UTC (8am–5pm Pacific during DST).
+// Cron fires every 30 minutes from 15:00–00:30 UTC (8am–5:30pm Pacific during DST).
 export async function getCronStatus(): Promise<{
     cron_enabled: boolean;
     sessions_per_day: number;
@@ -3121,10 +3415,14 @@ export async function getCronStatus(): Promise<{
     const { config } = await loadPipelineConfig();
 
     const now = new Date();
-    const CRON_HOURS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 0];
-    const cronTimes = CRON_HOURS.map(hour => {
+    const CRON_SLOTS = [
+        ...[15, 16, 17, 18, 19, 20, 21, 22, 23].flatMap(hour => [{ hour, minute: 0 }, { hour, minute: 30 }]),
+        { hour: 0, minute: 0 },
+        { hour: 0, minute: 30 },
+    ];
+    const cronTimes = CRON_SLOTS.map(({ hour, minute }) => {
         const candidate = new Date(now);
-        candidate.setUTCMinutes(0, 0, 0);
+        candidate.setUTCMinutes(minute, 0, 0);
         candidate.setUTCHours(hour);
         if (hour === 0 && now.getUTCHours() !== 0) candidate.setUTCDate(candidate.getUTCDate() + 1);
         return candidate;
@@ -3140,8 +3438,7 @@ export async function getCronStatus(): Promise<{
     const next_scheduled_utc = nextCronTime.toISOString();
 
     // Last cron run — try to filter by trigger='cron', fall back to any run
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const today = getPipelineCronWindowStart(now);
     const { data: cronRuns, error } = await supabase
         .from('pipeline_runs')
         .select('ran_at, processed')
@@ -3172,12 +3469,12 @@ export async function getCronStatus(): Promise<{
 
     return {
         cron_enabled: config?.cron_enabled ?? true,
-        sessions_per_day: config?.sessions_per_day ?? 3,
+        sessions_per_day: config?.sessions_per_day ?? 20,
         today_cron_runs,
         last_cron_run,
         next_scheduled_utc,
         expected_so_far,
-        schedule: 'Hourly 8am–5pm Pacific during DST (15–23 UTC, plus 00 UTC)',
+        schedule: 'Every 30 minutes 8am–5:30pm Pacific during DST (15:00–00:30 UTC)',
     };
 }
 

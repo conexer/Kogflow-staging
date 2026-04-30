@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { runPipelineSession, pollAndEmailStagedLeads, submitStagingBatch, loadPipelineConfig } from '@/app/actions/outreach';
+import { runPipelineSession, pollAndQueueStagedLeads, submitStagingBatch, loadPipelineConfig } from '@/app/actions/outreach';
 import { createClient } from '@supabase/supabase-js';
 
 // Vercel Pro max serverless duration — pipeline must complete within 5 min
@@ -40,26 +40,25 @@ export async function POST(request: Request) {
 
     try {
         const { config: cfg } = await loadPipelineConfig();
-        let emailResult = { emailed: 0, stillProcessing: 0, failed: 0, errors: [] as string[], debug: [] as string[] };
+        let queueResult = { queued: 0, stillProcessing: 0, failed: 0, errors: [] as string[], debug: [] as string[] };
 
         if (!skipPrep) {
             // Step 1: Retry leads that are ready for staging but never reached Kie.ai.
-            const stagingResult = await submitStagingBatch(Math.max(1, Math.min(10, cfg?.emails_per_day ?? 10)));
+            const stagingResult = await submitStagingBatch(Math.max(1, Math.min(20, cfg?.emails_per_day ?? 300)));
             await logToSession([
                 `Submit staging batch: ${stagingResult.submitted} submitted, ${stagingResult.failed} failed`,
                 ...stagingResult.errors.map((e) => `Staging batch error: ${e}`),
             ]);
 
-            // Step 2: Poll Kie.ai for leads staged in previous sessions and email the ready ones.
-            // Fetch up to 10 staged leads — with 8s inter-send delay, 10 emails costs at most 80s.
-            emailResult = await pollAndEmailStagedLeads(10);
-            await logToSession(emailResult.debug);
+            // Step 2: Poll Kie.ai for leads staged in previous sessions and queue the ready ones.
+            queueResult = await pollAndQueueStagedLeads(20);
+            await logToSession(queueResult.debug);
         } else {
             await logToSession(['Skipped prep: staging backlog and poll/email disabled for this manual run']);
         }
 
         // Step 3: Scrape + score + stage new leads (deadline: 260s from function start, leaving margin for prep + final writes)
-        const result = await runPipelineSession({ cities, scrapesPerSession, sessionId, deadlineMs: functionStart + 260_000 });
+        const result = await runPipelineSession({ cities, scrapesPerSession, sessionId, deadlineMs: functionStart + 230_000 });
 
         if (runId) {
             await supabase
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
                     processed: result.processed,
                     errors: [
                         ...(result.errors || []),
-                        ...emailResult.debug.map((d: string) => `LOG:${d}`),
+                        ...queueResult.debug.map((d: string) => `LOG:${d}`),
                         ...result.debug.map((d: string) => `LOG:${d}`),
                     ],
                 })
@@ -81,8 +80,8 @@ export async function POST(request: Request) {
             sessionId,
             runId,
             processed: result.processed,
-            emailed: emailResult.emailed,
-            stillProcessing: emailResult.stillProcessing,
+            queued: queueResult.queued,
+            stillProcessing: queueResult.stillProcessing,
             errors: result.errors,
         });
     } catch (err: any) {
