@@ -9,7 +9,6 @@ export const maxDuration = 300; // Vercel Pro max
 // Returns 202 immediately so cron-job.org (30s timeout) doesn't mark it as failed;
 // actual pipeline work runs via after() which continues after the response is sent.
 export async function GET(request: Request) {
-    const functionStart = Date.now();
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         // Log unauthorized calls to DB so the dashboard can show whether the cron IS firing
@@ -36,7 +35,9 @@ export async function GET(request: Request) {
     }
 
     // Schedule the long-running work to run after the 202 response is sent.
+    // functionStart is captured here so the 270s deadline counts from when actual work begins.
     after(async () => {
+        const functionStart = Date.now();
         const debug: string[] = [];
 
         // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
         const result = await runPipelineSession({
             cities: config.cities,
             scrapesPerSession: config.scrapes_per_session,
-            deadlineMs: functionStart + 230_000,
+            deadlineMs: functionStart + 270_000,
         });
 
         await logPipelineRun({

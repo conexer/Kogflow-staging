@@ -3101,7 +3101,7 @@ export async function runPipelineSession(config: {
     const MAX_MOONDREAM = 32;
     const MIN_REDESIGN_SCORE = 15;
     const MAX_HIGH_SCORE_STAGE = 20; // max redesigns per session to control Kie.ai credits
-    const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 90_000;
+    const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 40_000;
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
     toProcess.sort((a, b) => {
@@ -3206,7 +3206,7 @@ export async function runPipelineSession(config: {
 
             if (useMoondream) {
                 let foundStageable = false;
-                for (const photo of detailPhotos.slice(1, 7)) {
+                for (const photo of detailPhotos.slice(1, 4)) {
                     const { isStageable, isEmpty, isInterior, roomType, error: roomErr } = await detectRoom(photo);
                     if (roomErr) { logs.push(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
                     logs.push(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
