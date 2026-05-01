@@ -3090,15 +3090,11 @@ export async function runPipelineSession(config: {
     const toProcess = rankedListings.slice(0, maxPerSession);
     await log(`Processing ${toProcess.length} new leads (target: ${config.scrapesPerSession})...`);
 
-    // ── Step 4: Moondream — check listings that have keywords suggesting vacancy ──
-    // HAR search results only return 1 photo (PHOTOPRIMARY), so we filter by keywords first:
-    // "vacant", "unfurnished", "empty", "needs staging" → high likelihood of empty rooms
-    // Fallback: check any listing with DOM >= 60 (motivated seller, may be vacant)
-    // Limit: 8 Moondream checks max (~8 × 30s = 240s, fits within 300s Vercel limit)
+    // ── Step 4: Gemini 2.5 Flash vision — check listings for stageable/empty rooms ──
     let emptyRoomsFound = 0;
-    let moondreamChecked = 0;
+    let visionChecked = 0;
     let highScoreStaged = 0;
-    const MAX_MOONDREAM = 32;
+    const MAX_VISION_CHECKS = 32;
     const MIN_REDESIGN_SCORE = 15;
     const MAX_HIGH_SCORE_STAGE = 20; // max redesigns per session to control Kie.ai credits
     const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 40_000;
@@ -3115,13 +3111,12 @@ export async function runPipelineSession(config: {
         );
     });
 
-    await log(`Checking up to ${MAX_MOONDREAM} leads with Moondream (no empty-room cap)`);
+    await log(`Checking up to ${MAX_VISION_CHECKS} leads with Gemini vision`);
 
-    // Process listings in parallel batches of 4 — cuts Moondream wall-clock time by ~4×
-    // compared to the previous sequential loop (16 listings × ~15s → ~60s instead of ~240s).
-    const MOONDREAM_CONCURRENCY = 4;
+    // Process listings in parallel batches of 4 — cuts wall-clock time by ~4× vs sequential.
+    const VISION_CONCURRENCY = 4;
 
-    for (let batchStart = 0; batchStart < toProcess.length; batchStart += MOONDREAM_CONCURRENCY) {
+    for (let batchStart = 0; batchStart < toProcess.length; batchStart += VISION_CONCURRENCY) {
         // Deadline guard — write SESSION_COMPLETE before Vercel's 300s hard kill.
         if (config.deadlineMs && Date.now() + MIN_TIME_FOR_NEXT_VISION_BATCH_MS > config.deadlineMs) {
             await log(`Time budget reached: stopping early (${processed} leads saved so far)`);
@@ -3161,10 +3156,10 @@ export async function runPipelineSession(config: {
             return { processed, errors, debug, sessionId };
         }
 
-        const batch = toProcess.slice(batchStart, batchStart + MOONDREAM_CONCURRENCY);
-        const slotsAvailable = MAX_MOONDREAM - moondreamChecked;
+        const batch = toProcess.slice(batchStart, batchStart + VISION_CONCURRENCY);
+        const slotsAvailable = MAX_VISION_CHECKS - visionChecked;
 
-        // Fan out — all per-listing async work (score, lock check, photos, Moondream) runs in parallel.
+        // Fan out — all per-listing async work (score, lock check, photos, Gemini vision) runs in parallel.
         const batchResults = await Promise.all(batch.map(async (listing, batchIdx) => {
             const logs: string[] = [];
             const errs: string[] = [];
@@ -3174,12 +3169,12 @@ export async function runPipelineSession(config: {
 
             listing.score = await scoreICP(listing);
 
-            const useMoondream = batchIdx < slotsAvailable;
+            const useVision = batchIdx < slotsAvailable;
 
-            // Fetch email + photos together for Moondream-bound homes.com leads (one Zyte call).
-            // Non-Moondream leads skip all Zyte fetching — saves ~15-20 browserHtml calls/session.
+            // Fetch email + photos together for vision-bound homes.com leads (one Zyte call).
+            // Non-vision leads skip all Zyte fetching — saves ~15-20 browserHtml calls/session.
             let detailPhotos: string[] = [];
-            if (useMoondream) {
+            if (useVision) {
                 if (listing.listingUrl.includes('homes.com/')) {
                     const ctx = await getHomesListingContext(listing.listingUrl, 8);
                     detailPhotos = ctx.photos;
@@ -3197,18 +3192,18 @@ export async function runPipelineSession(config: {
             if (lockCheck.error) {
                 logs.push(`[${listing.city}] ${listing.address} - email lock check failed: ${lockCheck.error}`);
                 errs.push(`Email lock check failed: ${lockCheck.error}`);
-                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedMoondream: false, logs, errs };
+                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedVision: false, logs, errs };
             }
             if (!recipientKey || lockCheck.locked) {
-                logs.push(`[${listing.city}] ${listing.address} - skipped before Moondream (${recipientKey ? 'recipient already contacted' : 'no email'})`);
-                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedMoondream: false, logs, errs };
+                logs.push(`[${listing.city}] ${listing.address} - skipped before vision (${recipientKey ? 'recipient already contacted' : 'no email'})`);
+                return { listing, emptyRooms: [] as { roomType: string; imageUrl: string }[], furnishedRoom: null, skipToFormFilled: true, usedVision: false, logs, errs };
             }
 
-            if (useMoondream) {
+            if (useVision) {
                 let foundStageable = false;
                 for (const photo of detailPhotos.slice(1, 4)) {
                     const { isStageable, isEmpty, isInterior, roomType, error: roomErr } = await detectRoom(photo);
-                    if (roomErr) { logs.push(`  [${listing.address}] Moondream error: ${roomErr}`); continue; }
+                    if (roomErr) { logs.push(`  [${listing.address}] Vision error: ${roomErr}`); continue; }
                     logs.push(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
                     if (!isInterior) continue; // skip exterior, floor plans, foyers
                     if (isStageable && isEmpty) {
@@ -3234,7 +3229,7 @@ export async function runPipelineSession(config: {
                 }
                 if (!foundStageable && !furnishedRoom) logs.push(`  [${listing.address}] No stageable room found (all floor plans / entryways / exterior)`);
             } else {
-                logs.push(`  [${listing.address}] Skipping Moondream (${MAX_MOONDREAM} per-session limit reached)`);
+                logs.push(`  [${listing.address}] Skipping vision (${MAX_VISION_CHECKS} per-session limit reached)`);
             }
 
             // Kick off Kie.ai staging right here in the parallel fan-out — this is the
@@ -3262,14 +3257,14 @@ export async function runPipelineSession(config: {
                 }
             }
 
-            return { listing, emptyRooms, furnishedRoom, stagingTaskId, isRedesign, skipToFormFilled: false, usedMoondream: useMoondream, logs, errs };
+            return { listing, emptyRooms, furnishedRoom, stagingTaskId, isRedesign, skipToFormFilled: false, usedVision: useVision, logs, errs };
         }));
 
         // Merge results sequentially — only fast DB writes remain here (no Kie.ai calls).
         for (const r of batchResults) {
             for (const l of r.logs) await log(l);
             for (const e of r.errs) errors.push(e);
-            if (r.usedMoondream) moondreamChecked++;
+            if (r.usedVision) visionChecked++;
             if (r.emptyRooms.length > 0) emptyRoomsFound++;
             if (r.isRedesign && r.stagingTaskId) highScoreStaged++;
 
@@ -3314,7 +3309,7 @@ export async function runPipelineSession(config: {
     if (allListings.length === 0) {
         await log('No listings found — check city list and Zyte API key');
     }
-    await log(`Session complete: ${processed} saved, ${emptyRoomsFound} empty rooms found across ${moondreamChecked} Moondream checks`);
+    await log(`Session complete: ${processed} saved, ${emptyRoomsFound} empty rooms found across ${visionChecked} Gemini vision checks`);
     await flushLog();
     await supabase.from('pipeline_session_log').insert({ session_id: sessionId, message: '__SESSION_COMPLETE__' }).then(null, () => {});
     return { processed, errors, debug, sessionId };
