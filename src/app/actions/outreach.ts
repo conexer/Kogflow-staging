@@ -133,6 +133,129 @@ const TARGET_MARKETS: TargetMarket[] = [
     { label: 'Durham, NC', city: 'Durham', state: 'NC', homesSlug: 'durham-nc', sourcePriority: ['homes'] },
     { label: 'Greensboro, NC', city: 'Greensboro', state: 'NC', homesSlug: 'greensboro-nc', sourcePriority: ['homes'] },
     { label: 'St. Louis, MO', city: 'St. Louis', state: 'MO', homesSlug: 'st-louis-mo', sourcePriority: ['homes'] },
+    // --- Expanded markets batch 2 ---
+    { label: 'Bakersfield, CA', city: 'Bakersfield', state: 'CA', homesSlug: 'bakersfield-ca', sourcePriority: ['homes'] },
+    { label: 'Riverside, CA', city: 'Riverside', state: 'CA', homesSlug: 'riverside-ca', sourcePriority: ['homes'] },
+    { label: 'San Bernardino, CA', city: 'San Bernardino', state: 'CA', homesSlug: 'san-bernardino-ca', sourcePriority: ['homes'] },
+    { label: 'Stockton, CA', city: 'Stockton', state: 'CA', homesSlug: 'stockton-ca', sourcePriority: ['homes'] },
+    { label: 'Modesto, CA', city: 'Modesto', state: 'CA', homesSlug: 'modesto-ca', sourcePriority: ['homes'] },
+    { label: 'Spokane, WA', city: 'Spokane', state: 'WA', homesSlug: 'spokane-wa', sourcePriority: ['homes'] },
+    { label: 'Tacoma, WA', city: 'Tacoma', state: 'WA', homesSlug: 'tacoma-wa', sourcePriority: ['homes'] },
+    { label: 'Omaha, NE', city: 'Omaha', state: 'NE', homesSlug: 'omaha-ne', sourcePriority: ['homes'] },
+    { label: 'Wichita, KS', city: 'Wichita', state: 'KS', homesSlug: 'wichita-ks', sourcePriority: ['homes'] },
+    { label: 'Tulsa, OK', city: 'Tulsa', state: 'OK', homesSlug: 'tulsa-ok', sourcePriority: ['homes'] },
+    { label: 'Little Rock, AR', city: 'Little Rock', state: 'AR', homesSlug: 'little-rock-ar', sourcePriority: ['homes'] },
+    { label: 'Jackson, MS', city: 'Jackson', state: 'MS', homesSlug: 'jackson-ms', sourcePriority: ['homes'] },
+    { label: 'Mobile, AL', city: 'Mobile', state: 'AL', homesSlug: 'mobile-al', sourcePriority: ['homes'] },
+    { label: 'Montgomery, AL', city: 'Montgomery', state: 'AL', homesSlug: 'montgomery-al', sourcePriority: ['homes'] },
+    { label: 'Huntsville, AL', city: 'Huntsville', state: 'AL', homesSlug: 'huntsville-al', sourcePriority: ['homes'] },
+    { label: 'Savannah, GA', city: 'Savannah', state: 'GA', homesSlug: 'savannah-ga', sourcePriority: ['homes'] },
+    { label: 'Augusta, GA', city: 'Augusta', state: 'GA', homesSlug: 'augusta-ga', sourcePriority: ['homes'] },
+    { label: 'Columbia, SC', city: 'Columbia', state: 'SC', homesSlug: 'columbia-sc', sourcePriority: ['homes'] },
+    { label: 'Greenville, SC', city: 'Greenville', state: 'SC', homesSlug: 'greenville-sc', sourcePriority: ['homes'] },
+    { label: 'Knoxville, TN', city: 'Knoxville', state: 'TN', homesSlug: 'knoxville-tn', sourcePriority: ['homes'] },
+    { label: 'Chattanooga, TN', city: 'Chattanooga', state: 'TN', homesSlug: 'chattanooga-tn', sourcePriority: ['homes'] },
+    { label: 'Winston-Salem, NC', city: 'Winston-Salem', state: 'NC', homesSlug: 'winston-salem-nc', sourcePriority: ['homes'] },
+    { label: 'Fayetteville, NC', city: 'Fayetteville', state: 'NC', homesSlug: 'fayetteville-nc', sourcePriority: ['homes'] },
+    { label: 'Wilmington, NC', city: 'Wilmington', state: 'NC', homesSlug: 'wilmington-nc', sourcePriority: ['homes'] },
+    { label: 'Lexington, KY', city: 'Lexington', state: 'KY', homesSlug: 'lexington-ky', sourcePriority: ['homes'] },
+    { label: 'Dayton, OH', city: 'Dayton', state: 'OH', homesSlug: 'dayton-oh', sourcePriority: ['homes'] },
+    { label: 'Akron, OH', city: 'Akron', state: 'OH', homesSlug: 'akron-oh', sourcePriority: ['homes'] },
+    { label: 'Toledo, OH', city: 'Toledo', state: 'OH', homesSlug: 'toledo-oh', sourcePriority: ['homes'] },
+    { label: 'Cleveland, OH', city: 'Cleveland', state: 'OH', homesSlug: 'cleveland-oh', sourcePriority: ['homes'] },
+    { label: 'Pittsburgh, PA', city: 'Pittsburgh', state: 'PA', homesSlug: 'pittsburgh-pa', sourcePriority: ['homes'] },
+    { label: 'Buffalo, NY', city: 'Buffalo', state: 'NY', homesSlug: 'buffalo-ny', sourcePriority: ['homes'] },
+    { label: 'Syracuse, NY', city: 'Syracuse', state: 'NY', homesSlug: 'syracuse-ny', sourcePriority: ['homes'] },
+    { label: 'Albany, NY', city: 'Albany', state: 'NY', homesSlug: 'albany-ny', sourcePriority: ['homes'] },
+    { label: 'Hartford, CT', city: 'Hartford', state: 'CT', homesSlug: 'hartford-ct', sourcePriority: ['homes'] },
+    { label: 'Providence, RI', city: 'Providence', state: 'RI', homesSlug: 'providence-ri', sourcePriority: ['homes'] },
+    { label: 'Worcester, MA', city: 'Worcester', state: 'MA', homesSlug: 'worcester-ma', sourcePriority: ['homes'] },
+    { label: 'Springfield, MA', city: 'Springfield', state: 'MA', homesSlug: 'springfield-ma', sourcePriority: ['homes'] },
+    { label: 'El Paso, TX', city: 'El Paso', state: 'TX', homesSlug: 'el-paso-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Laredo, TX', city: 'Laredo', state: 'TX', homesSlug: 'laredo-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Lubbock, TX', city: 'Lubbock', state: 'TX', homesSlug: 'lubbock-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Amarillo, TX', city: 'Amarillo', state: 'TX', homesSlug: 'amarillo-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Waco, TX', city: 'Waco', state: 'TX', homesSlug: 'waco-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Corpus Christi, TX', city: 'Corpus Christi', state: 'TX', homesSlug: 'corpus-christi-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'McAllen, TX', city: 'McAllen', state: 'TX', homesSlug: 'mcallen-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Beaumont, TX', city: 'Beaumont', state: 'TX', homesSlug: 'beaumont-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Midland, TX', city: 'Midland', state: 'TX', homesSlug: 'midland-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Odessa, TX', city: 'Odessa', state: 'TX', homesSlug: 'odessa-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Tyler, TX', city: 'Tyler', state: 'TX', homesSlug: 'tyler-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Abilene, TX', city: 'Abilene', state: 'TX', homesSlug: 'abilene-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Killeen, TX', city: 'Killeen', state: 'TX', homesSlug: 'killeen-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Denton, TX', city: 'Denton', state: 'TX', homesSlug: 'denton-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Garland, TX', city: 'Garland', state: 'TX', homesSlug: 'garland-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Irving, TX', city: 'Irving', state: 'TX', homesSlug: 'irving-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Plano, TX', city: 'Plano', state: 'TX', homesSlug: 'plano-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Arlington, TX', city: 'Arlington', state: 'TX', homesSlug: 'arlington-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Frisco, TX', city: 'Frisco', state: 'TX', homesSlug: 'frisco-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'McKinney, TX', city: 'McKinney', state: 'TX', homesSlug: 'mckinney-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Round Rock, TX', city: 'Round Rock', state: 'TX', homesSlug: 'round-rock-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Cedar Park, TX', city: 'Cedar Park', state: 'TX', homesSlug: 'cedar-park-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Georgetown, TX', city: 'Georgetown', state: 'TX', homesSlug: 'georgetown-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'New Braunfels, TX', city: 'New Braunfels', state: 'TX', homesSlug: 'new-braunfels-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'San Marcos, TX', city: 'San Marcos', state: 'TX', homesSlug: 'san-marcos-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'League City, TX', city: 'League City', state: 'TX', homesSlug: 'league-city-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Conroe, TX', city: 'Conroe', state: 'TX', homesSlug: 'conroe-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Baytown, TX', city: 'Baytown', state: 'TX', homesSlug: 'baytown-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Mesquite, TX', city: 'Mesquite', state: 'TX', homesSlug: 'mesquite-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Lewisville, TX', city: 'Lewisville', state: 'TX', homesSlug: 'lewisville-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Carrollton, TX', city: 'Carrollton', state: 'TX', homesSlug: 'carrollton-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Flower Mound, TX', city: 'Flower Mound', state: 'TX', homesSlug: 'flower-mound-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Richardson, TX', city: 'Richardson', state: 'TX', homesSlug: 'richardson-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Mansfield, TX', city: 'Mansfield', state: 'TX', homesSlug: 'mansfield-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Allen, TX', city: 'Allen', state: 'TX', homesSlug: 'allen-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Wylie, TX', city: 'Wylie', state: 'TX', homesSlug: 'wylie-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Pflugerville, TX', city: 'Pflugerville', state: 'TX', homesSlug: 'pflugerville-tx', sourcePriority: ['har', 'homes'] },
+    { label: 'Chandler, AZ', city: 'Chandler', state: 'AZ', homesSlug: 'chandler-az', sourcePriority: ['homes'] },
+    { label: 'Gilbert, AZ', city: 'Gilbert', state: 'AZ', homesSlug: 'gilbert-az', sourcePriority: ['homes'] },
+    { label: 'Glendale, AZ', city: 'Glendale', state: 'AZ', homesSlug: 'glendale-az', sourcePriority: ['homes'] },
+    { label: 'Tempe, AZ', city: 'Tempe', state: 'AZ', homesSlug: 'tempe-az', sourcePriority: ['homes'] },
+    { label: 'Peoria, AZ', city: 'Peoria', state: 'AZ', homesSlug: 'peoria-az', sourcePriority: ['homes'] },
+    { label: 'Surprise, AZ', city: 'Surprise', state: 'AZ', homesSlug: 'surprise-az', sourcePriority: ['homes'] },
+    { label: 'Goodyear, AZ', city: 'Goodyear', state: 'AZ', homesSlug: 'goodyear-az', sourcePriority: ['homes'] },
+    { label: 'Avondale, AZ', city: 'Avondale', state: 'AZ', homesSlug: 'avondale-az', sourcePriority: ['homes'] },
+    { label: 'North Las Vegas, NV', city: 'North Las Vegas', state: 'NV', homesSlug: 'north-las-vegas-nv', sourcePriority: ['homes'] },
+    { label: 'Reno, NV', city: 'Reno', state: 'NV', homesSlug: 'reno-nv', sourcePriority: ['homes'] },
+    { label: 'Lakewood, CO', city: 'Lakewood', state: 'CO', homesSlug: 'lakewood-co', sourcePriority: ['homes'] },
+    { label: 'Thornton, CO', city: 'Thornton', state: 'CO', homesSlug: 'thornton-co', sourcePriority: ['homes'] },
+    { label: 'Arvada, CO', city: 'Arvada', state: 'CO', homesSlug: 'arvada-co', sourcePriority: ['homes'] },
+    { label: 'Westminster, CO', city: 'Westminster', state: 'CO', homesSlug: 'westminster-co', sourcePriority: ['homes'] },
+    { label: 'Pueblo, CO', city: 'Pueblo', state: 'CO', homesSlug: 'pueblo-co', sourcePriority: ['homes'] },
+    { label: 'Fort Collins, CO', city: 'Fort Collins', state: 'CO', homesSlug: 'fort-collins-co', sourcePriority: ['homes'] },
+    { label: 'Cape Coral, FL', city: 'Cape Coral', state: 'FL', homesSlug: 'cape-coral-fl', sourcePriority: ['homes'] },
+    { label: 'St. Petersburg, FL', city: 'St. Petersburg', state: 'FL', homesSlug: 'st-petersburg-fl', sourcePriority: ['homes'] },
+    { label: 'Hialeah, FL', city: 'Hialeah', state: 'FL', homesSlug: 'hialeah-fl', sourcePriority: ['homes'] },
+    { label: 'Port St. Lucie, FL', city: 'Port St. Lucie', state: 'FL', homesSlug: 'port-st-lucie-fl', sourcePriority: ['homes'] },
+    { label: 'Fort Lauderdale, FL', city: 'Fort Lauderdale', state: 'FL', homesSlug: 'fort-lauderdale-fl', sourcePriority: ['homes'] },
+    { label: 'Pembroke Pines, FL', city: 'Pembroke Pines', state: 'FL', homesSlug: 'pembroke-pines-fl', sourcePriority: ['homes'] },
+    { label: 'Tallahassee, FL', city: 'Tallahassee', state: 'FL', homesSlug: 'tallahassee-fl', sourcePriority: ['homes'] },
+    { label: 'Gainesville, FL', city: 'Gainesville', state: 'FL', homesSlug: 'gainesville-fl', sourcePriority: ['homes'] },
+    { label: 'Clearwater, FL', city: 'Clearwater', state: 'FL', homesSlug: 'clearwater-fl', sourcePriority: ['homes'] },
+    { label: 'Lakeland, FL', city: 'Lakeland', state: 'FL', homesSlug: 'lakeland-fl', sourcePriority: ['homes'] },
+    { label: 'North Charleston, SC', city: 'North Charleston', state: 'SC', homesSlug: 'north-charleston-sc', sourcePriority: ['homes'] },
+    { label: 'Myrtle Beach, SC', city: 'Myrtle Beach', state: 'SC', homesSlug: 'myrtle-beach-sc', sourcePriority: ['homes'] },
+    { label: 'Chesapeake, VA', city: 'Chesapeake', state: 'VA', homesSlug: 'chesapeake-va', sourcePriority: ['homes'] },
+    { label: 'Norfolk, VA', city: 'Norfolk', state: 'VA', homesSlug: 'norfolk-va', sourcePriority: ['homes'] },
+    { label: 'Newport News, VA', city: 'Newport News', state: 'VA', homesSlug: 'newport-news-va', sourcePriority: ['homes'] },
+    { label: 'Hampton, VA', city: 'Hampton', state: 'VA', homesSlug: 'hampton-va', sourcePriority: ['homes'] },
+    { label: 'Shreveport, LA', city: 'Shreveport', state: 'LA', homesSlug: 'shreveport-la', sourcePriority: ['homes'] },
+    { label: 'Baton Rouge, LA', city: 'Baton Rouge', state: 'LA', homesSlug: 'baton-rouge-la', sourcePriority: ['homes'] },
+    { label: 'Metairie, LA', city: 'Metairie', state: 'LA', homesSlug: 'metairie-la', sourcePriority: ['homes'] },
+    { label: 'Lincoln, NE', city: 'Lincoln', state: 'NE', homesSlug: 'lincoln-ne', sourcePriority: ['homes'] },
+    { label: 'Sioux Falls, SD', city: 'Sioux Falls', state: 'SD', homesSlug: 'sioux-falls-sd', sourcePriority: ['homes'] },
+    { label: 'Des Moines, IA', city: 'Des Moines', state: 'IA', homesSlug: 'des-moines-ia', sourcePriority: ['homes'] },
+    { label: 'Madison, WI', city: 'Madison', state: 'WI', homesSlug: 'madison-wi', sourcePriority: ['homes'] },
+    { label: 'Milwaukee, WI', city: 'Milwaukee', state: 'WI', homesSlug: 'milwaukee-wi', sourcePriority: ['homes'] },
+    { label: 'Minneapolis, MN', city: 'Minneapolis', state: 'MN', homesSlug: 'minneapolis-mn', sourcePriority: ['homes'] },
+    { label: 'St. Paul, MN', city: 'St. Paul', state: 'MN', homesSlug: 'st-paul-mn', sourcePriority: ['homes'] },
+    { label: 'Billings, MT', city: 'Billings', state: 'MT', homesSlug: 'billings-mt', sourcePriority: ['homes'] },
+    { label: 'Allentown, PA', city: 'Allentown', state: 'PA', homesSlug: 'allentown-pa', sourcePriority: ['homes'] },
+    { label: 'Lancaster, PA', city: 'Lancaster', state: 'PA', homesSlug: 'lancaster-pa', sourcePriority: ['homes'] },
+    { label: 'Trenton, NJ', city: 'Trenton', state: 'NJ', homesSlug: 'trenton-nj', sourcePriority: ['homes'] },
+    { label: 'Jersey City, NJ', city: 'Jersey City', state: 'NJ', homesSlug: 'jersey-city-nj', sourcePriority: ['homes'] },
+    { label: 'Paterson, NJ', city: 'Paterson', state: 'NJ', homesSlug: 'paterson-nj', sourcePriority: ['homes'] },
 ];
 
 const TARGET_MARKET_LOOKUP = new Map<string, TargetMarket>(
@@ -2988,69 +3111,99 @@ export async function runPipelineSession(config: {
     await log(`Session ${sessionId} started`);
     await log(`City pool: ${candidateCities.length} configured markets`);
     await log(`Rotating into ${activeCities.length} active markets this session: ${activeCities.join(', ')}`);
-    await log(`Scraping ${activeCities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
 
-    // ── Step 1: Scrape all cities via HAR (+ homes.com fallback) in parallel ──
-    // City lambdas push into local arrays then we log after all resolve
-    const cityResults = await Promise.all(
-        activeCities.map(async (city) => {
-            const lines: string[] = [];
-            const market = resolveTargetMarket(city);
-            const harResult = market.sourcePriority.includes('har')
-                ? await scrapeHarCity(city, batchSize, harPages)
-                : { listings: [] as ScrapedListing[] };
-            if (harResult.listings && harResult.listings.length > 0) {
-                lines.push(`[${market.label}] HAR: ${harResult.listings.length} listings`);
-                return { city: market.label, listings: harResult.listings, lines };
-            }
-            if ((harResult as { error?: string }).error) {
-                lines.push(`[${market.label}] HAR error: ${(harResult as { error?: string }).error}`);
-            } else if (market.sourcePriority.includes('har')) {
-                lines.push(`[${market.label}] HAR: 0 listings - trying homes.com...`);
-            } else {
-                lines.push(`[${market.label}] Using homes.com as primary source`);
-            }
-
-            const homesResult = await scrapeHomesCity(city, batchSize);
-            if (homesResult.listings && homesResult.listings.length > 0) {
-                lines.push(`[${market.label}] homes.com: ${homesResult.listings.length} listings`);
-                return { city: market.label, listings: homesResult.listings, lines };
-            }
-            if (homesResult.error) {
-                errors.push(`${market.label}: ${homesResult.error}`);
-                lines.push(`[${market.label}] homes.com error: ${homesResult.error}`);
-            } else {
-                lines.push(`[${market.label}] homes.com: 0 listings`);
-            }
-            return { city: market.label, listings: [] as ScrapedListing[], lines };
-        })
-    );
-
-    // Flush city logs to DB in one batch
-    for (const { lines } of cityResults) {
-        for (const line of lines) await log(line);
+    // ── Step 1: Scrape cities, looping into extras until scrapesPerSession NEW listings found ──
+    // Load DB addresses once up front so we can filter without extra queries mid-loop.
+    // Paginate to avoid Supabase's 1000-row default cap (DB grows past that quickly).
+    const existingAddresses = new Set<string>();
+    for (let page = 0; ; page++) {
+        const { data: pageData } = await supabase
+            .from('outreach_leads')
+            .select('address')
+            .range(page * 1000, page * 1000 + 999);
+        if (!pageData || pageData.length === 0) break;
+        for (const r of pageData) existingAddresses.add(r.address);
+        if (pageData.length < 1000) break;
     }
 
-    // Deduplicate by address
+    async function scrapeCity(city: string): Promise<{ city: string; listings: ScrapedListing[]; lines: string[] }> {
+        const lines: string[] = [];
+        const market = resolveTargetMarket(city);
+        const harResult = market.sourcePriority.includes('har')
+            ? await scrapeHarCity(city, batchSize, harPages)
+            : { listings: [] as ScrapedListing[] };
+        if (harResult.listings && harResult.listings.length > 0) {
+            lines.push(`[${market.label}] HAR: ${harResult.listings.length} listings`);
+            return { city: market.label, listings: harResult.listings, lines };
+        }
+        if ((harResult as { error?: string }).error) {
+            lines.push(`[${market.label}] HAR error: ${(harResult as { error?: string }).error}`);
+        } else if (market.sourcePriority.includes('har')) {
+            lines.push(`[${market.label}] HAR: 0 listings - trying homes.com...`);
+        } else {
+            lines.push(`[${market.label}] Using homes.com as primary source`);
+        }
+        const homesResult = await scrapeHomesCity(city, batchSize);
+        if (homesResult.listings && homesResult.listings.length > 0) {
+            lines.push(`[${market.label}] homes.com: ${homesResult.listings.length} listings`);
+            return { city: market.label, listings: homesResult.listings, lines };
+        }
+        if (homesResult.error) {
+            errors.push(`${market.label}: ${homesResult.error}`);
+            lines.push(`[${market.label}] homes.com error: ${homesResult.error}`);
+        } else {
+            lines.push(`[${market.label}] homes.com: 0 listings`);
+        }
+        return { city: market.label, listings: [] as ScrapedListing[], lines };
+    }
+
+    // Scrape initial city batch in parallel
+    await log(`Scraping ${activeCities.length} cities in parallel (${batchSize} listings each, ${harPages} HAR pages)...`);
     const seenAddresses = new Set<string>();
-    const allListings: ScrapedListing[] = [];
-    for (const { listings } of cityResults) {
+    const newListings: ScrapedListing[] = [];
+
+    const initialResults = await Promise.all(activeCities.map(scrapeCity));
+    for (const { lines } of initialResults) { for (const line of lines) await log(line); }
+    let totalScraped = 0;
+    for (const { listings } of initialResults) {
         for (const l of listings) {
             if (!seenAddresses.has(l.address)) {
                 seenAddresses.add(l.address);
-                allListings.push(l);
+                totalScraped++;
+                if (!existingAddresses.has(l.address)) newListings.push(l);
             }
         }
     }
-    await log(`Total unique scraped: ${allListings.length}`);
+    await log(`Initial scrape: ${totalScraped} unique | Already in DB: ${totalScraped - newListings.length} | New: ${newListings.length}`);
 
-    // ── Step 2: Pre-filter already-in-DB (one batch query, not N individual checks) ──
-    const { data: existingData } = await supabase
-        .from('outreach_leads')
-        .select('address');
-    const existingAddresses = new Set((existingData || []).map((r: any) => r.address));
-    const newListings = allListings.filter(l => !existingAddresses.has(l.address));
-    await log(`Already in DB: ${allListings.length - newListings.length} | New: ${newListings.length}`);
+    // If still short of target, pull extra cities one at a time until we hit the target or run out
+    if (newListings.length < config.scrapesPerSession) {
+        const alreadyUsed = new Set<string>(activeCities.map(c => c.toLowerCase()));
+        // Build a pool of remaining candidate cities in rotation order, starting after the initial batch
+        const extraPool = candidateCities.filter(c => !alreadyUsed.has(c.toLowerCase()));
+        let extraIdx = 0;
+        while (newListings.length < config.scrapesPerSession && extraIdx < extraPool.length) {
+            // Stop if we're running low on time
+            if (config.deadlineMs && Date.now() + 60_000 > config.deadlineMs) {
+                await log(`Time budget low — stopping city expansion early`);
+                break;
+            }
+            const extraCity = extraPool[extraIdx++];
+            await log(`Still need ${config.scrapesPerSession - newListings.length} more new leads — scraping extra city: ${extraCity}`);
+            const { listings, lines } = await scrapeCity(extraCity);
+            for (const line of lines) await log(line);
+            let extraNew = 0;
+            for (const l of listings) {
+                if (!seenAddresses.has(l.address)) {
+                    seenAddresses.add(l.address);
+                    totalScraped++;
+                    if (!existingAddresses.has(l.address)) { newListings.push(l); extraNew++; }
+                }
+            }
+            await log(`[${extraCity}] extra scrape: ${listings.length} total, ${extraNew} new`);
+        }
+        await log(`After expansion: ${totalScraped} unique scraped | ${newListings.length} new leads`);
+    }
 
     if (newListings.length === 0) {
         await log('All scraped listings already in DB — no new leads this session');
@@ -3306,7 +3459,7 @@ export async function runPipelineSession(config: {
         }
     }
 
-    if (allListings.length === 0) {
+    if (newListings.length === 0) {
         await log('No listings found — check city list and Zyte API key');
     }
     await log(`Session complete: ${processed} saved, ${emptyRoomsFound} empty rooms found across ${visionChecked} Gemini vision checks`);
