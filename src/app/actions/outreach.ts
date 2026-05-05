@@ -783,11 +783,10 @@ Now analyze the photo and return the JSON:`;
         // Normalize underscore variants (e.g. "living_room" -> "living room") Gemini sometimes returns
         const normalizedRoomType = (parsed.roomType || '').toLowerCase().replace(/_/g, ' ').trim();
         const roomType = VALID_ROOM_TYPES.includes(normalizedRoomType) ? normalizedRoomType : 'room';
-        const isKnownRoom = VALID_ROOM_TYPES.includes(roomType);
 
         return {
             isEmpty,
-            isStageable: isKnownRoom,
+            isStageable: true, // any interior non-hallway/floorplan/exterior room is stageable
             isInterior: true,
             confidence: 90,
             roomType,
@@ -2918,7 +2917,6 @@ export async function scanForEmptyRooms(limit = 3): Promise<{ scanned: number; f
         for (const photoUrl of interiorPhotos) {
             const { isStageable, isEmpty, roomType, error: roomErr } = await detectRoom(photoUrl);
             if (roomErr) { errors.push(`${lead.address}: ${roomErr}`); continue; }
-            // Must be a confirmed stageable room (bedroom/living/kitchen/dining/bath) AND empty
             if (isStageable && isEmpty) {
                 emptyRooms.push({ roomType, imageUrl: photoUrl });
                 break;
@@ -3366,7 +3364,7 @@ export async function runPipelineSession(config: {
                         foundStageable = true;
                         break;
                     }
-                    if (!furnishedRoom && !isEmpty && roomType !== 'room') {
+                    if (!furnishedRoom && !isEmpty) {
                         furnishedRoom = { roomType, imageUrl: photo };
                         logs.push(`  → Furnished ${roomType} (redesign candidate)`);
                         visionScoreBoost = Math.max(visionScoreBoost, 15);
