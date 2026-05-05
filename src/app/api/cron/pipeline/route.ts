@@ -46,9 +46,8 @@ export async function GET(request: Request) {
         debug.push(...stagingBatch.errors.map((e) => `Staging batch error: ${e}`));
 
         // Step 1b: Feed high-score backlog back into Kie.ai so the email queue doesn't dry up.
-        // Limit to 2 leads — each sequential Zyte call takes ~15-20s; 10 leads would eat 200s
-        // of the 270s budget before runPipelineSession even starts.
-        const backlog = await scanAndStageHighScoreBacklog(2);
+        // 5 leads × ~15s Zyte = ~75s, leaving ~195s for runPipelineSession.
+        const backlog = await scanAndStageHighScoreBacklog(5);
         debug.push(`Backlog staging: ${backlog.staged} staged, ${backlog.skipped} skipped, ${backlog.failed} failed`);
         debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
