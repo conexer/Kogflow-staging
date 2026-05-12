@@ -553,73 +553,151 @@ async function getBestStagedImagePair(): Promise<{ beforeUrl: string; afterUrl: 
 // BUILD EMAIL BODY
 // ─────────────────────────────────────────────
 
-function buildTCEmailBody(lead: TCLead, images: { beforeUrl: string; afterUrl: string; address: string; roomType: string } | null): string {
+function buildTCEmailBody(
+    lead: TCLead,
+    images: { beforeUrl: string; afterUrl: string; address: string; roomType: string } | null,
+): { subject: string; html: string } {
     const firstName = lead.owner_name?.split(' ')[0] || lead.contact_name?.split(' ')[0] || 'there';
     const company = lead.company_name;
     const services = (lead.services || []);
     const statesServed = (lead.states_served || []);
     const description = lead.description || '';
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-    // Pick a personalized hook based on scraped data
-    let hook = '';
-    if (services.includes('investor transactions') || description.toLowerCase().includes('investor')) {
-        hook = `Investors hate paying for professional staging — it can run $2,000–$5,000 per property. AI staging is a fraction of that cost and looks just as polished. A lot of agent clients are starting to offer it as a differentiator when they pitch vacant listings.`;
-    } else if (services.includes('commercial') || (lead.team_size || 0) >= 5) {
-        hook = `When you're coordinating a high volume of transactions, anything that helps agents sell faster is a win for everyone. AI virtual staging helps vacant listings stand out in photos — buyers actually stop scrolling — which tends to shorten the time on market.`;
-    } else if (statesServed.length > 1) {
-        hook = `With clients across multiple states, I imagine you work with agents who regularly have vacant listings sitting longer than they'd like. AI staging can take an empty room to a fully furnished presentation in 24-48 hours, at about $15–$30 per image.`;
-    } else if (services.includes('listing coordination')) {
-        hook = `One thing that keeps coming up with listing coordination clients is the vacant property problem — empty rooms photograph badly, buyers scroll past, and the listing sits. AI staging fixes that fast, without the $3k staging bill.`;
-    } else {
-        hook = `A lot of agents you coordinate for probably have vacant listings that are sitting longer than expected. AI staging can take an empty room to a fully furnished, professional presentation in 24-48 hours — at a fraction of traditional staging costs.`;
-    }
+    // ── Subject lines ────────────────────────────────────────────────────────
+    const subject = pick([
+        `${firstName}, a quick idea for ${company} that could help your agent clients`,
+        `${firstName}, this might help the agents at ${company} close faster`,
+        `${firstName}, something I put together that's relevant to ${company}`,
+        `${firstName}, I think this would resonate with the agents you coordinate for`,
+        `${company} + AI virtual staging — worth a quick look, ${firstName}`,
+        `${firstName}, a before/after example your agent clients would appreciate`,
+        `${firstName}, thought this could be useful for ${company}`,
+    ]);
 
-    // Personalized opener based on scraped details
+    // ── Personalized opener ──────────────────────────────────────────────────
     let opener = `I came across ${company} while looking into TC services`;
     if (lead.city) opener += ` in ${lead.city}`;
     if (lead.years_in_business && parseInt(lead.years_in_business) <= 2015) {
         opener += ` — impressive that you've been running this since ${lead.years_in_business}`;
     } else if ((lead.team_size || 0) >= 5) {
         opener += ` — a ${lead.team_size}-person team is serious scale for a TC operation`;
-    } else if (lead.description?.toLowerCase().includes('raving fan')) {
+    } else if (description.toLowerCase().includes('raving fan')) {
         opener += ` — I love the "Raving Fans" approach`;
     } else if (statesServed.length > 1) {
         opener += ` — coordinating transactions across ${statesServed.slice(0, 2).join(' and ')} is no small thing`;
     }
     opener += '.';
 
-    const subjectVariants = [
-        `${firstName}, a quick idea for ${company} that could help your agent clients`,
-        `${firstName}, this might help the agents at ${company} close faster`,
-        `${firstName}, something I put together that's relevant to ${company}`,
-        `${firstName}, I think this would resonate with the agents you coordinate for`,
-        `${company} + AI virtual staging — worth a quick look, ${firstName}`,
-    ];
-    const subject = subjectVariants[Math.floor(Math.random() * subjectVariants.length)];
+    // ── Value lines (pick 1 of 10 based on TC profile) ───────────────────────
+    const valueLine = pick(
+        services.includes('investor transactions') || description.toLowerCase().includes('investor') ? [
+            `Investors hate paying for professional staging — it can run $2,000–$5,000 per property. AI staging is a fraction of that cost and looks just as polished. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a lot of agent clients are starting to offer it as a differentiator when they pitch vacant listings.`,
+            `Investor clients are always looking to cut costs without cutting presentation quality. I created this with <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI staging at $15–$30 per image versus $2k+ for traditional staging. Agents you coordinate for could offer it as a value-add on every vacant deal.`,
+        ] : services.includes('commercial') || (lead.team_size || 0) >= 5 ? [
+            `When you're coordinating a high volume of transactions, anything that helps agents sell faster is a win for everyone. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI virtual staging helps vacant listings stand out in photos so buyers stop scrolling, which tends to shorten time on market.`,
+            `At the volume you're working at, vacant listings that sit create extra work for everyone. I made this with <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks to go from empty room to fully furnished photo. Something you could easily pass along to any agent with a vacant listing.`,
+        ] : statesServed.length > 1 ? [
+            `With clients across multiple states, I imagine you work with agents who regularly have vacant listings sitting longer than they'd like. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI staging takes an empty room to a fully furnished presentation in 24-48 hours, at about $15–$30 per image.`,
+            `Coordinating across multiple markets means you see a lot of vacant listings. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI virtual staging that works on any listing photo, takes a few clicks, and gives agents a polished furnished version to use in MLS.`,
+        ] : services.includes('listing coordination') ? [
+            `One thing that keeps coming up with listing coordination clients is the vacant property problem — empty rooms photograph badly, buyers scroll past, and the listing sits. I made this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI staging fixes that fast, without the $3k staging bill.`,
+            `Listing coordination and vacant properties go hand in hand. I built this with <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — it turns an empty room into a fully staged photo in under a minute. Something easy to pass along when an agent has a vacant listing that needs a boost.`,
+        ] : [
+            `A lot of agents you coordinate for probably have vacant listings sitting longer than expected. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI staging takes an empty room to a fully furnished, professional presentation in 24-48 hours at a fraction of traditional staging costs.`,
+            `Vacant listings are one of the trickiest things to photograph well. I made this with <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks to go from empty room to polished staged photo. Buyers actually stop scrolling, which tends to drive more showings.`,
+            `Empty rooms photograph badly and buyers scroll past them fast. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — AI virtual staging gives agents a furnished, professional photo in under a minute. Great thing to offer clients with vacant listings.`,
+            `Staged listings get more saves, more clicks, and more showing requests. I put this together using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — the agents you coordinate for could use it on any vacant listing, in a few clicks, free to start.`,
+        ]
+    );
 
-    const beforeAfterSection = images
-        ? `Here's a real example — an empty ${images.roomType} I staged with AI for a listing:\n\n[BEFORE — empty ${images.roomType}]\n[AFTER — AI staged]\n\n(See attached images)`
-        : `I'd be happy to share a before/after example — just reply and I'll send one over.`;
+    // ── Video walkthrough lines ───────────────────────────────────────────────
+    const videoLine = pick([
+        `Same app also builds <strong>virtual video walkthroughs</strong> in a few clicks — buyers can explore the staged property remotely before committing to a showing.`,
+        `<a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> also generates <strong>virtual video walkthroughs</strong> from any staged photo — great for listings with out-of-town buyers.`,
+        `Beyond photos, the same app turns staged rooms into <strong>virtual video walkthroughs</strong> — buyers get an immersive tour from their phone before ever visiting.`,
+        `It also creates <strong>virtual video walkthroughs</strong> from the staged image — useful for any agent whose clients are making decisions remotely.`,
+    ]);
 
-    const body = [
-        `Hi ${firstName},`,
-        '',
-        opener,
-        '',
-        `I run Kogflow (https://bit.ly/kogflow), an AI virtual staging tool. ${hook}`,
-        '',
-        beforeAfterSection,
-        '',
-        `If you ever have an agent client sitting on a vacant listing — I'm happy to do a free staged sample for them. No strings, just a good example they can use.`,
-        '',
-        `Worth passing along to them?`,
-        '',
-        `Minh`,
-        `Kogflow — https://bit.ly/kogflow`,
-        `kogflow.media@gmail.com`,
-    ].join('\n');
+    // ── Closing lines ─────────────────────────────────────────────────────────
+    const closingLine = pick([
+        `Either way, happy to help — just reply if you want more rooms done. You can also try it free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> anytime.`,
+        `If you ever have an agent client sitting on a vacant listing — I'm happy to do a free staged sample for them. No strings, just a good example they can pass along. Worth sharing?`,
+        `Happy to do a free sample for any agent you're currently coordinating for — no pitch, no pressure. Free to try at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> if they want to run it themselves.`,
+        `No obligation — if you want a free sample done for one of your agent clients, just reply with a listing photo and I'll take care of it. Or they can try it free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>.`,
+        `Worth passing along to any agent with a vacant listing? I'm happy to do a free sample — or they can start free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> themselves.`,
+    ]);
 
-    return JSON.stringify({ subject, body });
+    // ── Sign-offs ─────────────────────────────────────────────────────────────
+    const signoff = pick([
+        `Best,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+        `– Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+        `Thanks,<br>Minh @ Kogflow<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+        `– Minh at Kogflow<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+        `Talk soon,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+        `– Minh<br>Kogflow — AI Virtual Staging<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+    ]);
+
+    // ── Before/after image block (inline URLs, same as original outreach) ─────
+    const imagesHtml = images ? `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+          <tr>
+            <td align="center" style="padding:0 0 12px 0;">
+              <p style="margin:0 0 6px 0;font-size:13px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:1px;">BEFORE</p>
+              <a href="${images.beforeUrl}" target="_blank" style="display:block;"><img src="${images.beforeUrl}" alt="Before" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:1px solid #e5e7eb;" /></a>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0;">
+              <p style="margin:0 0 6px 0;font-size:13px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:1px;">VIRTUALLY STAGED BY KOGFLOW</p>
+              <a href="${images.afterUrl}" target="_blank" style="display:block;"><img src="${images.afterUrl}" alt="Virtually staged room" width="540" style="display:block;width:100%;max-width:540px;height:auto;border-radius:6px;border:2px solid #7c3aed;" /></a>
+            </td>
+          </tr>
+        </table>` : '';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr>
+          <td style="background:#7c3aed;padding:20px 32px;">
+            <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p>
+            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">${opener}</p>
+            ${imagesHtml}
+            <p style="margin:16px 0 16px;font-size:15px;color:#374151;line-height:1.6;">${valueLine}</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">${videoLine}</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">${closingLine}</p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td style="background:#7c3aed;border-radius:8px;padding:12px 24px;">
+                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0;font-size:15px;color:#374151;">${signoff}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f3f4f6;padding:16px 32px;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">You received this because ${company} is publicly listed as a transaction coordination service. Reply "unsubscribe" to opt out.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    return { subject, html };
 }
 
 // ─────────────────────────────────────────────
@@ -642,60 +720,16 @@ export async function sendTCOutreachEmail(lead: TCLead): Promise<{ success?: boo
     try {
         const accessToken = await getGmailAccessToken();
         const images = await getBestStagedImagePair();
-        const emailData = JSON.parse(buildTCEmailBody(lead, images));
-        const { subject, body } = emailData;
-
-        // Build multipart email with inline images
-        const boundary = `kogflow_${Date.now()}`;
-        const parts: string[] = [];
-
-        parts.push([
-            `--${boundary}`,
-            'Content-Type: text/plain; charset=UTF-8',
-            '',
-            body,
-        ].join('\r\n'));
-
-        if (images) {
-            // Fetch before image
-            const beforeRes = await fetch(images.beforeUrl);
-            if (beforeRes.ok) {
-                const beforeBuf = Buffer.from(await beforeRes.arrayBuffer()).toString('base64');
-                parts.push([
-                    `--${boundary}`,
-                    'Content-Type: image/jpeg',
-                    'Content-Transfer-Encoding: base64',
-                    `Content-Disposition: attachment; filename="before-${images.roomType.replace(' ', '-')}.jpg"`,
-                    '',
-                    beforeBuf,
-                ].join('\r\n'));
-            }
-
-            // Fetch after image
-            const afterRes = await fetch(images.afterUrl);
-            if (afterRes.ok) {
-                const afterBuf = Buffer.from(await afterRes.arrayBuffer()).toString('base64');
-                parts.push([
-                    `--${boundary}`,
-                    'Content-Type: image/jpeg',
-                    'Content-Transfer-Encoding: base64',
-                    `Content-Disposition: attachment; filename="after-staged-${images.roomType.replace(' ', '-')}.jpg"`,
-                    '',
-                    afterBuf,
-                ].join('\r\n'));
-            }
-        }
-
-        parts.push(`--${boundary}--`);
+        const { subject, html } = buildTCEmailBody(lead, images);
 
         const rawEmail = [
             `From: Kogflow <kogflow.media@gmail.com>`,
             `To: ${lead.email}`,
             `Subject: ${subject}`,
             `MIME-Version: 1.0`,
-            `Content-Type: multipart/mixed; boundary="${boundary}"`,
+            `Content-Type: text/html; charset=utf-8`,
             '',
-            ...parts,
+            html,
         ].join('\r\n');
 
         const encoded = Buffer.from(rawEmail).toString('base64url');
