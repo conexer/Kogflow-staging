@@ -40,16 +40,10 @@ export async function GET(request: Request) {
         const functionStart = Date.now();
         const debug: string[] = [];
 
-        // Step 1: Submit any leads with detected empty rooms to Kie.ai for staging.
+        // Step 1: Submit any previously-detected empty rooms to Kie.ai for staging.
         const stagingBatch = await submitStagingBatch(Math.max(1, Math.min(20, config.emails_per_day)));
         debug.push(`Submit staging batch: ${stagingBatch.submitted} submitted, ${stagingBatch.failed} failed`);
         debug.push(...stagingBatch.errors.map((e) => `Staging batch error: ${e}`));
-
-        // Step 1b: Feed high-score backlog back into Kie.ai so the email queue doesn't dry up.
-        // 5 leads × ~15s Zyte = ~75s, leaving ~195s for runPipelineSession.
-        const backlog = await scanAndStageHighScoreBacklog(5);
-        debug.push(`Backlog staging: ${backlog.staged} staged, ${backlog.skipped} skipped, ${backlog.failed} failed`);
-        debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
         // Step 2: Poll Kie.ai and move ready leads into the durable email queue.
         const queueResult = await pollAndQueueStagedLeads(20);
@@ -58,14 +52,18 @@ export async function GET(request: Request) {
         const todayCronRuns = await countTodayCronRuns();
         if (todayCronRuns >= config.sessions_per_day) return;
 
-        // Step 4: Scrape + stage new leads.
-        // Subtract time already spent on steps 1-3 so the session deadline stays accurate.
-        const sessionBudget = Math.max(60_000, 270_000 - (Date.now() - functionStart) - 10_000);
+        // Step 4: Scrape + stage new leads — give the full remaining budget to the main session.
+        const sessionBudget = Math.max(60_000, 270_000 - (Date.now() - functionStart) - 5_000);
         const result = await runPipelineSession({
             cities: config.cities,
             scrapesPerSession: config.scrapes_per_session,
             deadlineMs: Date.now() + sessionBudget,
         });
+
+        // Step 5: Backlog scan runs AFTER the main session so it never eats the scrape/vision budget.
+        const backlog = await scanAndStageHighScoreBacklog(2);
+        debug.push(`Backlog staging: ${backlog.staged} staged, ${backlog.skipped} skipped, ${backlog.failed} failed`);
+        debug.push(...backlog.errors.map((e) => `Backlog staging error: ${e}`));
 
         await logPipelineRun({
             ...result,

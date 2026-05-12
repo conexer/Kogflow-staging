@@ -3245,10 +3245,10 @@ export async function runPipelineSession(config: {
     let emptyRoomsFound = 0;
     let visionChecked = 0;
     let highScoreStaged = 0;
-    const MAX_VISION_CHECKS = 32;
+    const MAX_VISION_CHECKS = 48;
     const MIN_REDESIGN_SCORE = 15;
     const MAX_HIGH_SCORE_STAGE = 20; // max redesigns per session to control Kie.ai credits
-    const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 40_000;
+    const MIN_TIME_FOR_NEXT_VISION_BATCH_MS = 15_000;
 
     // Sort toProcess so vacant/unfurnished keyword listings come first
     toProcess.sort((a, b) => {
@@ -3264,8 +3264,8 @@ export async function runPipelineSession(config: {
 
     await log(`Checking up to ${MAX_VISION_CHECKS} leads with Gemini vision`);
 
-    // Process listings in parallel batches of 4 — cuts wall-clock time by ~4× vs sequential.
-    const VISION_CONCURRENCY = 4;
+    // Process listings in parallel batches of 6 — cuts wall-clock time by ~6× vs sequential.
+    const VISION_CONCURRENCY = 6;
 
     for (let batchStart = 0; batchStart < toProcess.length; batchStart += VISION_CONCURRENCY) {
         // Deadline guard — write SESSION_COMPLETE before Vercel's 300s hard kill.
@@ -3352,7 +3352,7 @@ export async function runPipelineSession(config: {
 
             if (useVision) {
                 let foundStageable = false;
-                for (const photo of detailPhotos.slice(1, 4)) {
+                for (const photo of detailPhotos.slice(0, 5)) {
                     const { isStageable, isEmpty, isInterior, roomType, error: roomErr } = await detectRoom(photo);
                     if (roomErr) { logs.push(`  [${listing.address}] Vision error: ${roomErr}`); continue; }
                     logs.push(`  [${listing.address}] stageable=${isStageable} empty=${isEmpty} type=${roomType}`);
