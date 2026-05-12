@@ -2281,113 +2281,113 @@ export async function sendOutreachEmail(lead: {
 
         // ── Value lines (15+ per bucket) ────────────────────────────────────
         const valueLine = pick(lead.priceReduced ? [
-            `A fresh set of staged photos right after a price adjustment can re-engage buyers who scrolled past it the first time. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — takes a few clicks and it's free to try if you want to do more rooms yourself.`,
-            `Buyers who dismissed the listing at the old price often come back when they see new photos. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> to create this in about 30 seconds — it's free to try and very easy to use.`,
-            `A new photo after a price drop can completely change how a listing performs. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per room, free to try, and works on any listing photo.`,
-            `Staged photos after a price reduction tend to bring in a fresh wave of interest. This took about a minute on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — happy to do more rooms for free, or you can try it yourself at no cost.`,
-            `A visual refresh pairs really well with a price adjustment. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's a simple web app, free to try, and you can stage a whole listing in a few minutes.`,
-            `Price drops get noticed more when they come with new photos. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few clicks, super easy to use, and free to start.`,
-            `Buyers who saw the listing before are more likely to act when there's something new to look at. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
-            `A new staged photo after a price change can re-activate buyers who had the listing saved but never moved on it. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try if you want to stage more rooms yourself.`,
-            `Staged photos at a new price point often get buyers back on the phone. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's affordable, free to start, and honestly very simple to use.`,
-            `A visual update after a price drop can make a real difference in buyer perception. This was done on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per photo, free to try, no technical skill needed.`,
-            `Buyers browsing at the new price point respond better to a furnished photo. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — easy to use, free to try, and works on any room photo.`,
-            `A fresh photo set can be the nudge buyers who are on the fence need. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> did this in a few clicks — free to start if you want to try it on a few more rooms.`,
-            `Staged photos help buyers see value — especially after a price change. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's extremely easy to use and free to try.`,
-            `Buyers often reconsider a listing when the price drops and new photos appear. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a simple web app that takes a few clicks and is free to start.`,
-            `A new visual at a new price point can completely shift buyer perception. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try and takes about 30 seconds per room.`,
+            `A fresh set of staged photos right after a price adjustment can re-engage buyers who scrolled past it the first time. I put this together using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — takes a few clicks and it's free to try if you want to do more rooms yourself.`,
+            `Buyers who dismissed the listing at the old price often come back when they see new photos. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> to create this in about 30 seconds — it's free to try and very easy to use.`,
+            `A new photo after a price drop can completely change how a listing performs. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a few clicks per room, free to try, and works on any listing photo.`,
+            `Staged photos after a price reduction tend to bring in a fresh wave of interest. This took about a minute on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — happy to do more rooms for free, or you can try it yourself at no cost.`,
+            `A visual refresh pairs really well with a price adjustment. I built this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — it's a simple web app, free to try, and you can stage a whole listing in a few minutes.`,
+            `Price drops get noticed more when they come with new photos. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — takes a few clicks, super easy to use, and free to start.`,
+            `Buyers who saw the listing before are more likely to act when there's something new to look at. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
+            `A new staged photo after a price change can re-activate buyers who had the listing saved but never moved on it. <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try if you want to stage more rooms yourself.`,
+            `Staged photos at a new price point often get buyers back on the phone. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — it's affordable, free to start, and honestly very simple to use.`,
+            `A visual update after a price drop can make a real difference in buyer perception. This was done on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a few clicks per photo, free to try, no technical skill needed.`,
+            `Buyers browsing at the new price point respond better to a furnished photo. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — easy to use, free to try, and works on any room photo.`,
+            `A fresh photo set can be the nudge buyers who are on the fence need. <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> did this in a few clicks — free to start if you want to try it on a few more rooms.`,
+            `Staged photos help buyers see value — especially after a price change. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — it's extremely easy to use and free to try.`,
+            `Buyers often reconsider a listing when the price drops and new photos appear. This was created on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a simple web app that takes a few clicks and is free to start.`,
+            `A new visual at a new price point can completely shift buyer perception. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — free to try and takes about 30 seconds per room.`,
         ] : dom >= 45 ? [
-            `Listings with staged photos tend to get more saves and scheduled showings. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
-            `Buyers often scroll past an empty room but stop at a furnished version. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to try and takes about 30 seconds per photo.`,
-            `A visual refresh at this point in the listing cycle can bring in a new wave of buyer interest. This was done on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — super simple to use, affordable, and free to start.`,
-            `Staged photos give buyers something to react to — and listings with furnished photos get more inquiries. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — a few clicks, free to try, no experience needed.`,
-            `Buyers who saw the listing before might reconsider when they see new photos. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to start and honestly takes no time at all.`,
-            `Sometimes a listing just needs one strong photo to start getting traction again. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — easy web app, a few clicks, free to try.`,
-            `A furnished room photo can completely change how buyers feel about a space. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try and takes about a minute for a whole room.`,
-            `Listings that get a visual refresh after some market time often see renewed showing activity. This was built on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple, affordable, and free to start.`,
-            `Buyers spend more time on listings with staged photos. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
-            `At this point in the listing, something new in the photos can re-ignite buyer interest. <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try and extremely easy to use.`,
-            `Staged photos help buyers picture themselves in the space. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a simple web app that takes a few clicks and is free to start.`,
-            `A fresh visual can be exactly what moves a listing that has been sitting. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to try now.`,
-            `Buyers who passed on the listing before often come back when they see new photos. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and free to start.`,
-            `A furnished photo at this stage can re-engage buyers who had the listing saved but never acted. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time.`,
-            `Listings that show furnished rooms tend to get more second looks. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — easy to use, affordable, and free to try.`,
+            `Listings with staged photos tend to get more saves and scheduled showings. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
+            `Buyers often scroll past an empty room but stop at a furnished version. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — it's free to try and takes about 30 seconds per photo.`,
+            `A visual refresh at this point in the listing cycle can bring in a new wave of buyer interest. This was done on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — super simple to use, affordable, and free to start.`,
+            `Staged photos give buyers something to react to — and listings with furnished photos get more inquiries. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — a few clicks, free to try, no experience needed.`,
+            `Buyers who saw the listing before might reconsider when they see new photos. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — it's free to start and honestly takes no time at all.`,
+            `Sometimes a listing just needs one strong photo to start getting traction again. I put this together using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — easy web app, a few clicks, free to try.`,
+            `A furnished room photo can completely change how buyers feel about a space. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — free to try and takes about a minute for a whole room.`,
+            `Listings that get a visual refresh after some market time often see renewed showing activity. This was built on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — simple, affordable, and free to start.`,
+            `Buyers spend more time on listings with staged photos. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
+            `At this point in the listing, something new in the photos can re-ignite buyer interest. <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> made this in seconds — free to try and extremely easy to use.`,
+            `Staged photos help buyers picture themselves in the space. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a simple web app that takes a few clicks and is free to start.`,
+            `A fresh visual can be exactly what moves a listing that has been sitting. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to try now.`,
+            `Buyers who passed on the listing before often come back when they see new photos. This was created on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and free to start.`,
+            `A furnished photo at this stage can re-engage buyers who had the listing saved but never acted. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time.`,
+            `Listings that show furnished rooms tend to get more second looks. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — easy to use, affordable, and free to try.`,
         ] : dom <= 7 ? [
-            `Now is a great time to make the photos pop while the listing is getting fresh traffic. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to try, and takes about 30 seconds per room.`,
-            `The first week on market is when listings get the most attention — a strong photo set now sets the tone for the whole campaign. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — free to try and super easy to use.`,
-            `Buyers make fast decisions on new listings. A furnished photo right now can be the difference between a scroll-past and a showing request. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to start, a few clicks per room.`,
-            `Great timing to have staged photos working while the listing is fresh. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's free to try and honestly takes no time at all.`,
-            `New listings get the most views in the first few days — a furnished photo right now can really move the needle. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — easy to use and free to start.`,
-            `Buyers browsing new listings respond well to furnished photos — it helps them make faster decisions. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
-            `The opening days of a listing are prime time for buyer interest. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a simple web app, affordable, and free to start.`,
-            `Buyers comparing multiple new listings spend more time on the one with furnished photos. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks per room and free to try.`,
-            `A strong first impression in the first week can set the pace for the whole listing. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to start.`,
-            `New listings get the most organic traffic — a furnished photo while it's fresh can drive real showing activity. This was made on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try, takes about 30 seconds.`,
-            `Buyers making quick decisions on new listings stop longer on furnished photos. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple, affordable, and free to start.`,
-            `The first few days on market are when photos matter most. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, extremely easy to use, and free to try.`,
-            `Staged photos help new listings make a strong first impression and get more saves. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — free to try and takes no time at all.`,
-            `Now is exactly the right time to have great photos working for you. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to start, works on any listing photo.`,
-            `A furnished photo right at launch can significantly improve how many buyers save the listing. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to try now.`,
+            `Now is a great time to make the photos pop while the listing is getting fresh traffic. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to try, and takes about 30 seconds per room.`,
+            `The first week on market is when listings get the most attention — a strong photo set now sets the tone for the whole campaign. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — free to try and super easy to use.`,
+            `Buyers make fast decisions on new listings. A furnished photo right now can be the difference between a scroll-past and a showing request. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — free to start, a few clicks per room.`,
+            `Great timing to have staged photos working while the listing is fresh. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — it's free to try and honestly takes no time at all.`,
+            `New listings get the most views in the first few days — a furnished photo right now can really move the needle. This was created on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — easy to use and free to start.`,
+            `Buyers browsing new listings respond well to furnished photos — it helps them make faster decisions. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> in a few clicks — free to try if you want to stage more rooms yourself.`,
+            `The opening days of a listing are prime time for buyer interest. I built this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a simple web app, affordable, and free to start.`,
+            `Buyers comparing multiple new listings spend more time on the one with furnished photos. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a few clicks per room and free to try.`,
+            `A strong first impression in the first week can set the pace for the whole listing. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to start.`,
+            `New listings get the most organic traffic — a furnished photo while it's fresh can drive real showing activity. This was made on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — free to try, takes about 30 seconds.`,
+            `Buyers making quick decisions on new listings stop longer on furnished photos. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — simple, affordable, and free to start.`,
+            `The first few days on market are when photos matter most. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, extremely easy to use, and free to try.`,
+            `Staged photos help new listings make a strong first impression and get more saves. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — free to try and takes no time at all.`,
+            `Now is exactly the right time to have great photos working for you. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks, free to start, works on any listing photo.`,
+            `A furnished photo right at launch can significantly improve how many buyers save the listing. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — very easy to use and free to try now.`,
         ] : [
-            `Staged photos help buyers picture themselves in the space and tend to lead to more saves and showings. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
-            `Buyers often scroll past empty rooms but stop at furnished ones. I put this together using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — it's free to start and takes about 30 seconds per photo.`,
-            `A furnished photo can make buyers feel more connected to the space right away. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — simple web app, a few clicks, and free to try now.`,
-            `Staged listings tend to get more saves, more clicks, and more showing requests. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — extremely easy to use, affordable, and free to start.`,
-            `Buyers spend more time on listings with furnished photos — and more time usually means more interest. I used <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
-            `A furnished version of a room gives buyers something to respond to emotionally. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks, very easy to use, free to start.`,
-            `Staged photos tend to lead to faster offers and stronger interest. This was created on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — simple to use, affordable, and free to try now.`,
-            `Buyers who can picture themselves in a space are more likely to schedule a showing. I built this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and completely free to try.`,
-            `A good staged photo can be the thing that makes a buyer pick up the phone. I created this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — it's an easy web app, free to start, and works on any listing photo.`,
-            `Listings with furnished photos tend to generate more inquiries. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few clicks and is free to try.`,
-            `Buyers make faster decisions when they can visualize a furnished space. I did this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> in about 30 seconds — free to try if you want to do more rooms yourself.`,
-            `A staged photo helps buyers see past an empty room and focus on the space itself. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to start.`,
-            `Staged listings get more saves and showings on average. I built this on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a simple web app that takes a few clicks and is free to try now.`,
-            `Buyers browsing multiple listings stop longer on furnished photos. I put this together on <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> — free to try, extremely easy to use, and works on any room.`,
-            `A furnished photo gives buyers a reason to imagine living there. I created this using <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — a few clicks, free to start, no technical skill needed.`,
+            `Staged photos help buyers picture themselves in the space and tend to lead to more saves and showings. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks per room, free to try, and very easy to use.`,
+            `Buyers often scroll past empty rooms but stop at furnished ones. I put this together using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — it's free to start and takes about 30 seconds per photo.`,
+            `A furnished photo can make buyers feel more connected to the space right away. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — simple web app, a few clicks, and free to try now.`,
+            `Staged listings tend to get more saves, more clicks, and more showing requests. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — extremely easy to use, affordable, and free to start.`,
+            `Buyers spend more time on listings with furnished photos — and more time usually means more interest. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — free to try and takes no time at all.`,
+            `A furnished version of a room gives buyers something to respond to emotionally. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks, very easy to use, free to start.`,
+            `Staged photos tend to lead to faster offers and stronger interest. This was created on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — simple to use, affordable, and free to try now.`,
+            `Buyers who can picture themselves in a space are more likely to schedule a showing. I built this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a few clicks per room and completely free to try.`,
+            `A good staged photo can be the thing that makes a buyer pick up the phone. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — it's an easy web app, free to start, and works on any listing photo.`,
+            `Listings with furnished photos tend to generate more inquiries. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — takes a few clicks and is free to try.`,
+            `Buyers make faster decisions when they can visualize a furnished space. I did this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> in about 30 seconds — free to try if you want to do more rooms yourself.`,
+            `A staged photo helps buyers see past an empty room and focus on the space itself. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — very easy to use, affordable, and free to start.`,
+            `Staged listings get more saves and showings on average. I built this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a simple web app that takes a few clicks and is free to try now.`,
+            `Buyers browsing multiple listings stop longer on furnished photos. I put this together on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — free to try, extremely easy to use, and works on any room.`,
+            `A furnished photo gives buyers a reason to imagine living there. I created this using <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — a few clicks, free to start, no technical skill needed.`,
         ]);
 
         // ── Video walkthrough lines (12 variations) ─────────────────────────
         const videoLine = pick([
             `The same app also generates <strong>virtual video walkthroughs</strong> — buyers can take an immersive tour of the property from their phone before ever visiting.`,
-            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> also does <strong>virtual video walkthroughs</strong> in a few clicks — buyers get a full tour experience without setting foot in the property.`,
+            `<a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> also does <strong>virtual video walkthroughs</strong> in a few clicks — buyers get a full tour experience without setting foot in the property.`,
             `Beyond photos, the same web app can turn any staged room into a <strong>virtual video walkthrough</strong> — great for out-of-town buyers who want to explore before committing to a showing.`,
             `It also generates <strong>virtual video walkthroughs</strong> from any staged photo — same app, same few clicks, and buyers get an immersive tour from their phone.`,
-            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> can also create a <strong>virtual video walkthrough</strong> from the staged image — a useful tool for buyers doing research before scheduling a visit.`,
+            `<a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> can also create a <strong>virtual video walkthrough</strong> from the staged image — a useful tool for buyers doing research before scheduling a visit.`,
             `The app also does <strong>virtual video walkthroughs</strong> — buyers can move through the space remotely, which tends to drive higher-quality showing requests.`,
             `You can also generate a <strong>virtual video walkthrough</strong> right from the same app — buyers get a full property tour from wherever they are before deciding to visit.`,
-            `<a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> also produces <strong>virtual video walkthroughs</strong> from staged photos — an immersive experience that helps out-of-town buyers make faster decisions.`,
+            `<a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> also produces <strong>virtual video walkthroughs</strong> from staged photos — an immersive experience that helps out-of-town buyers make faster decisions.`,
             `Same app also builds <strong>virtual video walkthroughs</strong> in a few clicks — buyers can explore the staged property remotely before committing to a showing.`,
-            `Beyond the staged photo, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow</a> can generate a <strong>virtual video walkthrough</strong> — gives buyers who haven't visited yet a real feel for the space.`,
+            `Beyond the staged photo, <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> can generate a <strong>virtual video walkthrough</strong> — gives buyers who haven't visited yet a real feel for the space.`,
             `It also creates <strong>virtual video walkthroughs</strong> — same simple process, a few more clicks, and buyers get a full tour experience from their phone.`,
             `The same tool also does <strong>virtual video walkthroughs</strong> from any staged room — useful for listings that attract a lot of remote or out-of-state buyer interest.`,
         ]);
 
         // ── Closing lines (12 variations) ────────────────────────────────────
         const closingLine = pick([
-            `It's free to try at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> — no credit card needed. Or just let me know if you want me to do a few more rooms first.`,
-            `You can try it free at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> — takes a few minutes to stage a whole listing. Happy to do more rooms for you at no charge in the meantime.`,
-            `Free to start at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> if you want to explore it — or just reply and I'll put together more rooms for you.`,
-            `Happy to stage more rooms for free — or feel free to try it yourself at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>. No credit card, no commitment.`,
-            `No strings attached — if you want more rooms done, just let me know. And if you want to try it yourself, it's free to start at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>.`,
-            `I can do more rooms for free — or if you want to try it yourself, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> is free to start and takes a few clicks.`,
-            `Either way, happy to help — just reply if you want more rooms done. You can also try it free at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> anytime.`,
-            `Free to try at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> — no commitment needed. Happy to do more rooms for you first if you'd like to see a few more before you try it.`,
-            `Just let me know if you want more rooms — happy to do them for free. The app itself is also free to try at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> if you want to take it for a spin.`,
-            `No obligation — happy to stage more rooms for you at no charge. You can also start free at <a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a> whenever you're ready.`,
-            `I'm happy to do more rooms for free — no pitch, no pressure. If you ever want to try it yourself, <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a> is free to start.`,
-            `Happy to keep going with more rooms at no cost — just reply. And when you're ready to try it yourself, it's free to start at <a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>.`,
+            `It's free to try at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — no credit card needed. Or just let me know if you want me to do a few more rooms first.`,
+            `You can try it free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — takes a few minutes to stage a whole listing. Happy to do more rooms for you at no charge in the meantime.`,
+            `Free to start at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> if you want to explore it — or just reply and I'll put together more rooms for you.`,
+            `Happy to stage more rooms for free — or feel free to try it yourself at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>. No credit card, no commitment.`,
+            `No strings attached — if you want more rooms done, just let me know. And if you want to try it yourself, it's free to start at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>.`,
+            `I can do more rooms for free — or if you want to try it yourself, <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> is free to start and takes a few clicks.`,
+            `Either way, happy to help — just reply if you want more rooms done. You can also try it free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> anytime.`,
+            `Free to try at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> — no commitment needed. Happy to do more rooms for you first if you'd like to see a few more before you try it.`,
+            `Just let me know if you want more rooms — happy to do them for free. The app itself is also free to try at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> if you want to take it for a spin.`,
+            `No obligation — happy to stage more rooms for you at no charge. You can also start free at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> whenever you're ready.`,
+            `I'm happy to do more rooms for free — no pitch, no pressure. If you ever want to try it yourself, <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a> is free to start.`,
+            `Happy to keep going with more rooms at no cost — just reply. And when you're ready to try it yourself, it's free to start at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>.`,
         ]);
 
         // ── Sign-offs (8 variations) ─────────────────────────────────────────
         const signoff = pick([
-            `– Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
-            `Best,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
-            `Thanks,<br>Minh @ Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
-            `– Minh at Kogflow<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
-            `Talk soon,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
-            `Cheers,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
-            `– Minh<br>Kogflow — AI Virtual Staging<br><a href="https://kogflow.com" style="color:#7c3aed;">kogflow.com</a>`,
-            `Best regards,<br>Minh<br><a href="https://kogflow.com" style="color:#7c3aed;">Kogflow.com</a>`,
+            `– Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `Best,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `Thanks,<br>Minh @ Kogflow<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `– Minh at Kogflow<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `Talk soon,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `Cheers,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `– Minh<br>Kogflow — AI Virtual Staging<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
+            `Best regards,<br>Minh<br><a href="https://bit.ly/kogflow" style="color:#7c3aed;">bit.ly/kogflow</a>`,
         ]);
 
         const html = `<!DOCTYPE html>
@@ -2422,7 +2422,7 @@ export async function sendOutreachEmail(lead: {
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
               <tr>
                 <td style="background:#7c3aed;border-radius:8px;padding:12px 24px;">
-                  <a href="https://kogflow.com" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
+                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
                 </td>
               </tr>
             </table>
@@ -4064,7 +4064,7 @@ async function getKogflowKnowledgeBase(): Promise<string> {
     if (_kbCache && Date.now() - _kbFetchedAt < 86_400_000) return _kbCache;
 
     const staticKb = `
-KOGFLOW — AI Virtual Staging Platform (kogflow.com)
+KOGFLOW — AI Virtual Staging Platform (bit.ly/kogflow)
 
 WHAT IT DOES:
 Kogflow uses AI to virtually stage empty or poorly furnished rooms in real estate photos.
@@ -4072,7 +4072,7 @@ Upload a photo, AI adds furniture, download the staged image in seconds.
 It also generates virtual video walkthroughs from staged images.
 
 HOW TO STAGE AN IMAGE (step by step):
-1. Go to https://kogflow.com and create a free account (no credit card needed)
+1. Go to https://bit.ly/kogflow and create a free account (no credit card needed)
 2. Click "New Project" or drag and drop a room photo onto the dashboard
 3. Select a staging style (Modern, Scandinavian, Coastal, etc.)
 4. Choose the room type (Living Room, Bedroom, Kitchen, etc.)
@@ -4093,8 +4093,8 @@ PRICING:
 - All plans: 7-day money-back guarantee
 
 KEY LINKS:
-- Sign up free: https://kogflow.com
-- Pricing: https://kogflow.com/pricing
+- Sign up free: https://bit.ly/kogflow
+- Pricing: https://bit.ly/kogflow
 
 COMMON QUESTIONS:
 Q: How long does staging take? A: Usually 30-60 seconds per image.
@@ -4142,18 +4142,18 @@ async function generateAiReply(params: {
     const baseUrl = process.env.INFERMATIC_BASE_URL || 'https://api.totalgpt.ai';
     const model = process.env.INFERMATIC_MODEL || 'Meta-Llama-3.3-70B-Instruct';
 
-    const system = `You are a helpful assistant responding on behalf of Kogflow AI Virtual Staging (kogflow.com).
+    const system = `You are a helpful assistant responding on behalf of Kogflow AI Virtual Staging (bit.ly/kogflow).
 A real estate agent received a cold outreach email from Kogflow showing a free AI-staged version of their listing and has replied.
 Respond helpfully, warmly, and concisely.
 
 RULES:
 - Be brief (under 150 words total)
-- If they want to try it: guide them to kogflow.com with clear next steps
-- If they ask how to do something: give numbered steps AND a direct link
-- If they ask about pricing: quote exact figures, link to kogflow.com/pricing
+- If they want to try it: guide them to https://bit.ly/kogflow with clear next steps
+- If they ask how to do something: give numbered steps AND a direct link to https://bit.ly/kogflow
+- If they ask about pricing: quote exact figures, link to https://bit.ly/kogflow
 - If they say unsubscribe / remove me / stop / not interested: confirm removal politely
 - Never invent features or pricing not in the knowledge base
-- End every reply with exactly: — Minh\nKogflow — kogflow.com
+- End every reply with exactly: — Minh\nKogflow — https://bit.ly/kogflow
 - Plain text only, no markdown
 
 KNOWLEDGE BASE:
@@ -4300,7 +4300,7 @@ export async function checkAndReplyToOutreach(): Promise<{ checked: number; repl
                 .from('outreach_leads').select('id, address').eq('gmail_thread_id', threadId).single();
 
             const aiDraft = isUnsub
-                ? `Hi ${senderName || 'there'},\n\nAbsolutely — I've removed you from our list. You won't hear from us again. Sorry for any inconvenience and best of luck with your listings!\n\n— Minh\nKogflow — kogflow.com`
+                ? `Hi ${senderName || 'there'},\n\nAbsolutely — I've removed you from our list. You won't hear from us again. Sorry for any inconvenience and best of luck with your listings!\n\n— Minh\nKogflow — https://bit.ly/kogflow`
                 : await generateAiReply({ senderName, incomingBody, originalAddress: lead?.address || 'your listing', kb });
 
             await supabase.from('outreach_replies').insert({
