@@ -31,15 +31,8 @@ export async function GET(request: Request) {
     });
 
     const { config } = await loadPipelineConfig();
-    if (!config) {
-        await logPipelineRun({ processed: 0, errors: ['No config found'], debug: ['Cron skipped: no pipeline config'], trigger: 'cron' });
-        return NextResponse.json({ skipped: true, reason: 'No config found' });
-    }
-
-    if (!config.cron_enabled) {
-        await logPipelineRun({ processed: 0, errors: [], debug: ['Cron skipped: schedule paused'], trigger: 'cron' });
-        return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
-    }
+    if (!config) return NextResponse.json({ skipped: true, reason: 'No config found' });
+    if (!config.cron_enabled) return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
 
     // Schedule the long-running work to run after the 202 response is sent.
     // functionStart is captured here so the 270s deadline counts from when actual work begins.
@@ -61,21 +54,9 @@ export async function GET(request: Request) {
         // Step 2: Poll Kie.ai and move ready leads into the durable email queue.
         const queueResult = await pollAndQueueStagedLeads(20);
 
-        // Step 3: Check if we've already hit today's cron session limit.
+        // Step 3: Check if we've already hit today's cron session limit (don't log — logging counts as a session).
         const todayCronRuns = await countTodayCronRuns();
-        if (todayCronRuns >= config.sessions_per_day) {
-            await logPipelineRun({
-                processed: 0,
-                errors: [],
-                debug: [
-                    ...debug,
-                    ...queueResult.debug,
-                    `Cron skipped: already ran ${todayCronRuns} cron sessions today (limit: ${config.sessions_per_day})`,
-                ],
-                trigger: 'cron',
-            });
-            return;
-        }
+        if (todayCronRuns >= config.sessions_per_day) return;
 
         // Step 4: Scrape + stage new leads.
         // Subtract time already spent on steps 1-3 so the session deadline stays accurate.
