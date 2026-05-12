@@ -1,6 +1,7 @@
 import { after } from 'next/server';
 import { NextResponse } from 'next/server';
 import { loadPipelineConfig, runPipelineSession, logPipelineRun, pollAndQueueStagedLeads, scanAndStageHighScoreBacklog, submitStagingBatch, countTodayCronRuns } from '@/app/actions/outreach';
+import { sendNextQueuedTCEmail, queueHighScoreTCLeads } from '@/app/actions/outreach-tc';
 import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 300; // Vercel Pro max
@@ -22,6 +23,12 @@ export async function GET(request: Request) {
         }).then(null, () => {});
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Always drain TC email queue on every cron tick, regardless of realtor pipeline state.
+    after(async () => {
+        await queueHighScoreTCLeads(30);
+        await sendNextQueuedTCEmail();
+    });
 
     const { config } = await loadPipelineConfig();
     if (!config) {

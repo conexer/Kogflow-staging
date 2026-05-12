@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import {
-    Search, MapPin, Star, Clock, TrendingDown, Image, Mail,
+    Search, MapPin, Star, Clock, TrendingDown, Image, Mail, Users,
     Play, Settings, RefreshCw, CheckCircle, AlertCircle,
     Zap, Database, Send, BarChart2, Copy, Terminal,
     ChevronRight, ExternalLink
@@ -637,6 +637,12 @@ export default function OutreachPage() {
                         <p className="text-sm text-muted-foreground">Autonomous Kogflow Beta Outreach — HAR.com & homes.com → Moondream → Kie.ai → Gmail</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <a
+                            href="/outreach-tc"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 text-violet-400 border border-violet-500/30 rounded-lg text-sm font-medium hover:bg-violet-500/20 transition-colors"
+                        >
+                            <Users className="w-4 h-4" /> TC Outreach
+                        </a>
                         {dbReady === false && (
                             <button onClick={() => setActiveTab('setup')} className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 text-amber-500 rounded-full text-sm font-medium hover:bg-amber-500/20">
                                 <AlertCircle className="w-4 h-4" /> DB Setup Required
