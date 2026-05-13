@@ -2281,7 +2281,7 @@ export async function sendOutreachEmail(lead: {
 
         // ── Value lines (15+ per bucket) ────────────────────────────────────
         const valueLine = pick(lead.priceReduced ? [
-            `A fresh staged photo right after a price adjustment can pull buyers back in. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a web app where you upload any listing photo and get a staged room in one click. Extremely affordable and free to start.`,
+            `A fresh staged photo right after a price adjustment can pull buyers back in. I created this on <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> at <a href="https://bit.ly/kogflow" style="color:#7c3aed;">https://bit.ly/kogflow</a> — a web app where you upload any listing photo and get a staged room in one click. Extremely affordable and free to start.`,
             `Buyers who passed at the old price often come back when they see new photos. I built this with <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> — a website that stages any room in one click, in seconds. Much cheaper than traditional staging, free to try.`,
             `A new photo after a price drop can completely reset buyer interest. I used <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> for this — a web app that takes one click to go from an empty room to a fully furnished photo. Free to start.`,
             `Staged photos after a price reduction tend to bring in a fresh wave of interest. <a href="https://bit.ly/kogflow" style="color:#7c3aed;">Kogflow</a> made this — a one-click web app for virtual staging. Extremely affordable compared to traditional staging, and free to try.`,
@@ -2399,8 +2399,8 @@ export async function sendOutreachEmail(lead: {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
           <td style="background:#7c3aed;padding:20px 32px;">
-            <a href="https://bit.ly/kogflow" style="text-decoration:none;"><p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p></a>
-            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging &mdash; <a href="https://bit.ly/kogflow" style="color:#ede9fe;">bit.ly/kogflow</a></p>
+            <p style="margin:0;"><a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;text-decoration:none;">Kogflow</a></p>
+            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging &mdash; <a href="https://bit.ly/kogflow" style="color:#ede9fe;text-decoration:underline;">https://bit.ly/kogflow</a></p>
           </td>
         </tr>
         <tr>
@@ -2419,13 +2419,14 @@ export async function sendOutreachEmail(lead: {
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
               ${closingLine}
             </p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
               <tr>
                 <td style="background:#7c3aed;border-radius:8px;padding:12px 24px;">
-                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
+                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">Try Kogflow — 1-Click Virtual Staging</a>
                 </td>
               </tr>
             </table>
+            <p style="margin:0 0 24px;font-size:14px;color:#7c3aed;"><a href="https://bit.ly/kogflow" style="color:#7c3aed;font-weight:600;text-decoration:underline;">https://bit.ly/kogflow</a></p>
             <p style="margin:0;font-size:15px;color:#374151;">${signoff}</p>
           </td>
         </tr>

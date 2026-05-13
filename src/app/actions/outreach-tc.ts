@@ -664,8 +664,8 @@ function buildTCEmailBody(
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
           <td style="background:#7c3aed;padding:20px 32px;">
-            <a href="https://bit.ly/kogflow" style="text-decoration:none;"><p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p></a>
-            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging &mdash; <a href="https://bit.ly/kogflow" style="color:#ede9fe;">bit.ly/kogflow</a></p>
+            <p style="margin:0;"><a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;text-decoration:none;">Kogflow</a></p>
+            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging &mdash; <a href="https://bit.ly/kogflow" style="color:#ede9fe;text-decoration:underline;">https://bit.ly/kogflow</a></p>
           </td>
         </tr>
         <tr>
@@ -676,13 +676,14 @@ function buildTCEmailBody(
             <p style="margin:16px 0 16px;font-size:15px;color:#374151;line-height:1.6;">${valueLine}</p>
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">${videoLine}</p>
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">${closingLine}</p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
               <tr>
                 <td style="background:#7c3aed;border-radius:8px;padding:12px 24px;">
-                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See More Examples</a>
+                  <a href="https://bit.ly/kogflow" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">Try Kogflow — 1-Click Virtual Staging</a>
                 </td>
               </tr>
             </table>
+            <p style="margin:0 0 24px;font-size:14px;color:#7c3aed;"><a href="https://bit.ly/kogflow" style="color:#7c3aed;font-weight:600;text-decoration:underline;">https://bit.ly/kogflow</a></p>
             <p style="margin:0;font-size:15px;color:#374151;">${signoff}</p>
           </td>
         </tr>
