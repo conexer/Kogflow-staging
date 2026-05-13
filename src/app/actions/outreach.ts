@@ -2399,8 +2399,8 @@ export async function sendOutreachEmail(lead: {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
           <td style="background:#7c3aed;padding:20px 32px;">
-            <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p>
-            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging</p>
+            <a href="https://bit.ly/kogflow" style="text-decoration:none;"><p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Kogflow</p></a>
+            <p style="margin:4px 0 0;color:#ede9fe;font-size:13px;">AI Virtual Staging &mdash; <a href="https://bit.ly/kogflow" style="color:#ede9fe;">bit.ly/kogflow</a></p>
           </td>
         </tr>
         <tr>
