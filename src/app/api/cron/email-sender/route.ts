@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const batchSize = Math.min(20, Math.max(1, parseInt(url.searchParams.get('batch') ?? '5', 10)));
 
-    const queueResult = await pollAndQueueStagedLeads(10);
+    const queueResult = await pollAndQueueStagedLeads(50);
 
     let totalSent = 0, totalSkipped = 0, totalFailed = 0;
     const errors: string[] = [];
@@ -25,8 +25,11 @@ export async function GET(request: Request) {
         totalFailed += result.failed;
         errors.push(...result.errors);
         debug.push(...result.debug);
-        // Stop early if nothing left in queue or daily cap hit
-        if (result.sent === 0 && result.skipped === 0) break;
+        // Stop if daily cap hit or a hard failure — but not just because send_after
+        // is in the near future (reason 'No queued email ready' is expected between ticks).
+        const cappedOrFailed = result.reason?.includes('cap') || result.failed > 0;
+        if (cappedOrFailed) break;
+        if (result.sent === 0 && result.skipped === 0 && i > 0) break;
     }
 
     return NextResponse.json({

@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         debug.push(...stagingBatch.errors.map((e) => `Staging batch error: ${e}`));
 
         // Step 2: Poll Kie.ai and move ready leads into the durable email queue.
-        const queueResult = await pollAndQueueStagedLeads(20);
+        const queueResult = await pollAndQueueStagedLeads(50);
 
         // Step 3: Check if we've already hit today's cron session limit (don't log — logging counts as a session).
         const todayCronRuns = await countTodayCronRuns();

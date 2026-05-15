@@ -1461,6 +1461,9 @@ export async function pollAndEmailStagedLeads(limit?: number): Promise<{ emailed
 
 async function getNextQueueSendAfter(supabase: any): Promise<string> {
     const now = Date.now();
+    // Never schedule more than 2 hours out — prevents stale backlogs from
+    // pushing new emails past the end of the daily cron window.
+    const MAX_LOOKAHEAD_MS = 2 * 60 * 60 * 1000;
     let nextMs = now;
 
     const { data: pending } = await supabase
@@ -1473,7 +1476,7 @@ async function getNextQueueSendAfter(supabase: any): Promise<string> {
 
     const pendingRow = pending as { send_after?: string } | null;
     const pendingMs = pendingRow?.send_after ? new Date(pendingRow.send_after).getTime() : 0;
-    if (pendingMs > now) nextMs = pendingMs + 60_000;
+    if (pendingMs > now) nextMs = Math.min(pendingMs + 60_000, now + MAX_LOOKAHEAD_MS);
 
     const { data: lastSent } = await supabase
         .from('outreach_email_queue')
@@ -1486,7 +1489,7 @@ async function getNextQueueSendAfter(supabase: any): Promise<string> {
 
     const lastSentRow = lastSent as { sent_at?: string } | null;
     const lastSentMs = lastSentRow?.sent_at ? new Date(lastSentRow.sent_at).getTime() + 60_000 : 0;
-    nextMs = Math.max(nextMs, lastSentMs);
+    nextMs = Math.min(Math.max(nextMs, lastSentMs), now + MAX_LOOKAHEAD_MS);
 
     return new Date(nextMs).toISOString();
 }
