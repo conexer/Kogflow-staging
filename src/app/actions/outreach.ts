@@ -1836,9 +1836,13 @@ export async function stageEmptyRoom(imageUrl: string, roomType: string, redesig
 
     try {
         const sourceImageUrl = await uploadSourceImageForStaging(imageUrl);
+        // Backup prompts (original — generic modern):
+        // redesign: `Restyle this ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`
+        // empty:    `Virtually stage this empty ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`
+        const luxuryBase = `ultra luxury coastal farmhouse ${roomType} staged for a highly curated open house. Design features: wide-plank whitewashed or driftwood-toned hardwood floors, shiplap and board-and-batten accent walls in crisp coastal whites, exposed natural wood ceiling beams, a breezy palette of soft whites, warm sand, ocean blue, and sage green, layered linen, jute, and woven rattan textiles, statement brushed brass and matte black coastal lighting fixtures, custom built-ins with curated coastal styling, organic decor — sea-glass vases, bleached coral, driftwood sculptures, woven baskets — oversized coastal artwork in weathered white frames, and a cohesive editorial layout used by top real estate stagers for ultra-luxury coastal MLS listings. Every piece intentionally placed for maximum buyer appeal at a premium open house.`;
         const prompt = redesign
-            ? `Restyle this ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`
-            : `Virtually stage this empty ${roomType} for a real estate listing with tasteful modern furniture and decor. Preserve the room layout, walls, windows, floors, ceiling, and camera angle. Photorealistic MLS listing photo.`;
+            ? `Completely restyle and redesign this ${roomType} into an ${luxuryBase} Remove all existing furniture and decor and replace with the new design. Preserve only the room architecture — walls, windows, floors, ceiling, doors, and camera angle. Photorealistic MLS listing photo.`
+            : `Virtually stage this empty ${roomType} as an ${luxuryBase} Preserve the room architecture — walls, windows, floors, ceiling, doors, and camera angle. Photorealistic MLS listing photo.`;
 
         const res = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
             method: 'POST',
