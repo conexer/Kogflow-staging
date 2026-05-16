@@ -22,6 +22,13 @@ export async function GET(request: Request) {
     if (!config) return NextResponse.json({ skipped: true, reason: 'No config found' });
     if (!config.cron_enabled) return NextResponse.json({ skipped: true, reason: 'Schedule paused' });
 
+    const ptHour = parseInt(new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false,
+    }).format(new Date()), 10);
+    if (ptHour < 8 || ptHour >= 18) {
+        return NextResponse.json({ skipped: true, reason: `Outside business hours (${ptHour}h PT)` });
+    }
+
     after(async () => {
         const functionStart = Date.now();
         const debug: string[] = [];

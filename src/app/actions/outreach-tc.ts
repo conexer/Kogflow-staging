@@ -793,12 +793,10 @@ export async function sendNextQueuedTCEmail(): Promise<{ sent: number; skipped: 
     const { config } = await loadTCPipelineConfig();
     const dailyLimit = config?.emails_per_day ?? 30;
 
-    const windowStart = new Date();
-    windowStart.setHours(0, 0, 0, 0);
     const { count: sentToday } = await supabase
         .from('tc_leads')
         .select('*', { count: 'exact', head: true })
-        .gte('email_sent_at', windowStart.toISOString());
+        .gte('email_sent_at', startOfPTDay().toISOString());
 
     if ((sentToday ?? 0) >= dailyLimit) {
         debug.push(`Daily cap reached (${sentToday}/${dailyLimit})`);
@@ -878,10 +876,9 @@ export async function getTCLeadStats() {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data } = await supabase.from('tc_leads').select('status, icp_score');
     const leads = data || [];
-    const today = new Date(); today.setHours(0, 0, 0, 0);
     const { count: sentToday } = await supabase
         .from('tc_leads').select('*', { count: 'exact', head: true })
-        .gte('email_sent_at', today.toISOString());
+        .gte('email_sent_at', startOfPTDay().toISOString());
     const { count: queued } = await supabase
         .from('tc_email_queue').select('*', { count: 'exact', head: true }).eq('status', 'queued');
 
@@ -923,13 +920,25 @@ export async function logTCRun(run: { processed: number; emails_sent?: number; e
     });
 }
 
+function startOfPTDay(): Date {
+    const now = new Date();
+    const ptDateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); // "YYYY-MM-DD"
+    const tzParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset',
+    }).formatToParts(now);
+    const tzStr = tzParts.find(p => p.type === 'timeZoneName')?.value ?? 'GMT-7'; // "GMT-7" or "GMT-8"
+    const offsetH = parseInt(tzStr.replace('GMT', ''), 10);
+    const sign = offsetH >= 0 ? '+' : '-';
+    const isoOffset = `${sign}${String(Math.abs(offsetH)).padStart(2, '0')}:00`;
+    return new Date(`${ptDateStr}T00:00:00${isoOffset}`);
+}
+
 export async function countTodayTCCronRuns(): Promise<number> {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
     const { count } = await supabase.from('tc_pipeline_runs')
         .select('*', { count: 'exact', head: true })
         .eq('trigger', 'cron')
-        .gte('ran_at', today.toISOString());
+        .gte('ran_at', startOfPTDay().toISOString());
     return count ?? 0;
 }
 
